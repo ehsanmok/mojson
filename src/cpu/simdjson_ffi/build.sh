@@ -58,8 +58,15 @@ mkdir -p "$BUILD_DIR"
 
 echo "Building libsimdjson_wrapper.so..."
 
+# Use clang++ on macOS (ABI compatible with libc++), g++ on Linux
+if [[ "$(uname)" == "Darwin" ]]; then
+    CXX="clang++"
+else
+    CXX="g++"
+fi
+
 # Build the wrapper library, linking against installed simdjson
-if g++ -O3 -std=c++17 -fPIC -DNDEBUG -shared \
+if $CXX -O3 -std=c++17 -fPIC -DNDEBUG -shared \
     -o "$TARGET" \
     "$SOURCE" \
     -I"$CONDA_PREFIX/include" \

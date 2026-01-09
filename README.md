@@ -4,7 +4,7 @@ Fast JSON parsing library for Mojo with Python-compatible API and GPU accelerati
 
 ## Performance
 
-### GPU: 1.85x Faster than cuJSON
+### GPU: 1.85x Faster than cuJSON (NVIDIA)
 
 | Parser | Throughput | Speedup |
 |--------|------------|---------|
@@ -12,6 +12,16 @@ Fast JSON parsing library for Mojo with Python-compatible API and GPU accelerati
 | **mojson GPU** | **8.5 GB/s** | **1.85x faster** |
 
 *Benchmark: 804MB twitter_large_record.json on NVIDIA B200 GPU*
+
+### GPU: Apple Silicon (Mac)
+
+| Metric | Time | Throughput |
+|--------|------|------------|
+| Raw GPU parse | 270 ms | 3.1 GB/s |
+| Pinned memory path | 257 ms | 3.3 GB/s |
+| Full `loads[target='gpu']` | 498 ms | 1.7 GB/s |
+
+*Benchmark: 804MB twitter_large_record.json on Apple M3 Pro GPU*
 
 ### CPU
 
