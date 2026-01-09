@@ -1,5 +1,0 @@
-# Ignore all .exe files
-*.exe
-*.out
-*.json
-*.jsonl

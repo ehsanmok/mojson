@@ -4,29 +4,28 @@ Benchmarks comparing mojson against reference implementations.
 
 ## Setup
 
-### 1. Clone with submodules
-
-```bash
-git clone --recursive https://github.com/user/mojson.git
-cd mojson
-
-# Or if already cloned:
-git submodule update --init --recursive
-```
-
-### 2. Install dependencies
+### 1. Install dependencies
 
 ```bash
 pixi install  # Installs Mojo, simdjson, and auto-builds FFI
 ```
 
-### 3. Build cuJSON (for comparison benchmarks)
+### 2. (Optional) Download cuJSON for NVIDIA GPU comparison
+
+cuJSON is only needed if you want to compare mojson against cuJSON on NVIDIA GPUs:
+
+```bash
+cd benchmark
+git clone https://github.com/AutomataLab/cuJSON.git
+```
+
+Then build it:
 
 ```bash
 pixi run build-cujson
 ```
 
-This builds `benchmark/cuJSON/build/cujson_benchmark` from the pinned submodule.
+This builds `benchmark/cuJSON/build/cujson_benchmark`.
 
 ## Running Benchmarks
 
@@ -37,13 +36,12 @@ pixi run bench-cpu
 # GPU benchmark (mojson only)
 pixi run bench-gpu
 
-# GPU benchmark (mojson vs cuJSON) - apples-to-apples comparison
+# GPU benchmark (mojson vs cuJSON) - requires cuJSON download (see above)
 pixi run bench-gpu-cujson
 
 # With custom dataset path
 pixi run bench-cpu benchmark/datasets/citm_catalog.json
 pixi run bench-gpu benchmark/datasets/twitter_large_record.json
-pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
 ```
 
 ## Results (NVIDIA H100, 804MB twitter_large_record.json)
@@ -66,16 +64,12 @@ pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
 
 ### cuJSON Version
 
-cuJSON is pinned as a git submodule:
+For reproducible comparisons, use commit `2ac7d3dcd7ad1ff64ebdb14022bf94c59b3b4953`:
 
-```
-benchmark/cuJSON @ 2ac7d3dcd7ad1ff64ebdb14022bf94c59b3b4953
-https://github.com/AutomataLab/cuJSON
-```
-
-To verify:
 ```bash
-cd benchmark/cuJSON && git rev-parse HEAD
+cd benchmark
+git clone https://github.com/AutomataLab/cuJSON.git
+cd cuJSON && git checkout 2ac7d3dcd7ad1ff64ebdb14022bf94c59b3b4953
 ```
 
 ### Build Configuration
