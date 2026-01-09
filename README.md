@@ -98,8 +98,7 @@ flowchart LR
 ## Quick Start
 
 ```bash
-# Clone with submodules (for benchmark reproducibility)
-git clone --recursive https://github.com/user/mojson.git
+git clone https://github.com/user/mojson.git
 cd mojson
 
 # Install dependencies + auto-build FFI
@@ -291,7 +290,7 @@ benchmark/            # Performance benchmarks
 ## Requirements
 
 - Mojo (latest nightly with GPU support)
-- NVIDIA GPU with CUDA (for GPU backend)
+- GPU for acceleration (NVIDIA with CUDA or Apple Silicon)
 - pixi (dependencies installed automatically)
 
 ## License

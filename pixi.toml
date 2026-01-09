@@ -16,6 +16,8 @@ build = "bash src/cpu/simdjson_ffi/build.sh"
 # Download benchmark datasets from Google Drive (cuJSON datasets)
 # Full folder: https://drive.google.com/drive/folders/1PkDEy0zWOkVREfL7VuINI-m9wJe45P2Q
 download-twitter-large = "gdown -O benchmark/datasets/twitter_large_record.json 1mdF4HT7s0Jp4XZ0nOxY7lQpcwRZzCjE1"
+download-walmart-large = "gdown -O benchmark/datasets/walmart_large_record.json 10vicgS7dPa4aL5PwEjqAvpAKCXYLblMt"
+download-wiki-large = "gdown -O benchmark/datasets/wiki_large_record.json 1bXdzhfWSdrnpg9WKOeV-oanYIT2j4yLE"
 
 # Build benchmark binaries
 build-bench-cpu = { cmd = "mkdir -p benchmark/build && mojo build -I . -o benchmark/build/bench_cpu benchmark/mojo/bench_cpu.mojo", depends-on = ["build"] }
@@ -56,7 +58,7 @@ simdjson = ">=4.2.4,<5"
 [feature.dev.dependencies]
 make = ">=4.4.1,<5"
 gxx = ">=13"              # g++ for Linux (macOS uses system clang++ from Xcode CLT)
-git = ">=2"               # For submodule operations
+git = ">=2"               # For cloning cuJSON (optional, NVIDIA benchmarks only)
 
 [feature.dev.pypi-dependencies]
 gdown = ">=5.0"           # Google Drive CLI for downloading benchmark datasets

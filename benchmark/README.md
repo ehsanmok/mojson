@@ -93,17 +93,12 @@ Adjust `-arch=sm_XX` for your GPU (e.g., `sm_80` for A100, `sm_89` for RTX 4090)
 
 ### Download (large, for GPU benchmarks)
 
+Use pixi tasks (gdown is included in dev dependencies):
+
 ```bash
-cd benchmark/datasets
-
-# twitter_large_record.json (804MB) - primary benchmark file
-gdown 1mdF4HT7s0Jp4XZ0nOxY7lQpcwRZzCjE1 -O twitter_large_record.json
-
-# walmart_large_record.json (950MB)
-gdown 10vicgS7dPa4aL5PwEjqAvpAKCXYLblMt -O walmart_large_record.json
-
-# wiki_large_record.json (1.1GB)
-gdown 1bXdzhfWSdrnpg9WKOeV-oanYIT2j4yLE -O wiki_large_record.json
+pixi run download-twitter-large   # 804MB - primary benchmark file
+pixi run download-walmart-large   # 950MB
+pixi run download-wiki-large      # 1.1GB
 ```
 
 Datasets from [cuJSON Google Drive](https://drive.google.com/drive/folders/1PkDEy0zWOkVREfL7VuINI-m9wJe45P2Q).
