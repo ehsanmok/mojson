@@ -21,7 +21,7 @@ download-twitter-large = "gdown -O benchmark/datasets/twitter_large_record.json 
 build-bench-cpu = { cmd = "mkdir -p benchmark/build && mojo build -I . -o benchmark/build/bench_cpu benchmark/mojo/bench_cpu.mojo", depends-on = ["build"] }
 build-bench-gpu = { cmd = "mkdir -p benchmark/build && mojo build -I . -o benchmark/build/bench_gpu benchmark/mojo/bench_gpu.mojo", depends-on = ["build"] }
 build-bench-simdjson = { cmd = "bash -c 'mkdir -p benchmark/build && CXX=$(if [[ $(uname) == Darwin ]]; then echo clang++; else echo g++; fi) && $CXX -O3 -std=c++17 -o benchmark/build/bench_simdjson benchmark/cpp/bench_simdjson.cpp -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib -lsimdjson -Wl,-rpath,$CONDA_PREFIX/lib'", depends-on = ["build"] }
-build-cujson = "cd benchmark && mkdir -p cuJSON/build && nvcc -O3 -w -std=c++17 -arch=sm_100 -o cuJSON/build/cujson_benchmark cuJSON/paper_reproduced/src/cuJSON-standardjson.cu"
+build-cujson = "bash -c 'cd benchmark && if [ ! -d cuJSON ]; then echo \"Error: cuJSON not found. Download it first:\\n  cd benchmark && git clone https://github.com/AutomataLab/cuJSON.git\" && exit 1; fi && mkdir -p cuJSON/build && nvcc -O3 -w -std=c++17 -arch=sm_100 -o cuJSON/build/cujson_benchmark cuJSON/paper_reproduced/src/cuJSON-standardjson.cu'"
 
 # Tests
 tests = "mojo -I . tests/test_value.mojo && mojo -I . tests/test_parser.mojo && mojo -I . tests/test_serialize.mojo && mojo -I . tests/test_e2e.mojo && mojo -I . tests/test_gpu.mojo"
@@ -44,9 +44,10 @@ example-gpu = "mojo -I . examples/04_gpu_parsing.mojo"
 example-errors = "mojo -I . examples/05_error_handling.mojo"
 examples = "mojo -I . examples/01_basic_parsing.mojo && mojo -I . examples/02_file_operations.mojo && mojo -I . examples/03_value_types.mojo && mojo -I . examples/04_gpu_parsing.mojo && mojo -I . examples/05_error_handling.mojo"
 
-# GPU benchmark vs cuJSON
+# GPU benchmark vs cuJSON (NVIDIA only, requires manual cuJSON download)
 # Usage: pixi run bench-gpu-cujson -- path/to/file.json
-bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- mojson GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu", "build-cujson"] }
+# First: cd benchmark && git clone https://github.com/AutomataLab/cuJSON.git
+bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; if [ ! -f benchmark/cuJSON/build/cujson_benchmark ]; then echo \"Error: cuJSON not built. Run: pixi run build-cujson\" && exit 1; fi; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- mojson GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu"] }
 
 [dependencies]
 mojo = "<1.0"

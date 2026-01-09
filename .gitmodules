@@ -1,3 +1,0 @@
-[submodule "benchmark/cuJSON"]
-	path = benchmark/cuJSON
-	url = https://github.com/AutomataLab/cuJSON.git

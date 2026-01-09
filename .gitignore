@@ -20,6 +20,9 @@ benchmark/datasets/twitter_large_record.json
 benchmark/datasets/walmart_large_record.json
 benchmark/datasets/wiki_large_record.json
 
+# cuJSON (download on-demand for NVIDIA GPU benchmarks)
+benchmark/cuJSON/
+
 # build directories
 build/
 
