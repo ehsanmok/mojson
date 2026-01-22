@@ -2,106 +2,25 @@
 
 Fast JSON parsing library for Mojo with Python-compatible API and GPU acceleration.
 
-## Performance
+* **Cross-platform GPU support:** Powered by Mojo kernels that work across NVIDIA and Apple Silicon GPUs.
 
-### GPU: 1.85x Faster than cuJSON (NVIDIA)
+* **2x faster than cuJSON** on NVIDIA B200 (7.0 GB/s vs 3.6 GB/s on 804MB files)
 
-| Parser | Throughput | Speedup |
-|--------|------------|---------|
-| cuJSON (CUDA C++) | 4.6 GB/s | baseline |
-| **mojson GPU** | **8.5 GB/s** | **1.85x faster** |
+## Requirements
 
-*Benchmark: 804MB twitter_large_record.json on NVIDIA B200 GPU*
+* Install [pixi](https://pixi.prefix.dev/latest/installation/).
+* Compatible
+  - [system](https://docs.modular.com/max/packages#system-requirements)
+  - Compatible [GPU](https://docs.modular.com/max/packages#gpu-compatibility) if want to use the GPU acceleration
 
-### GPU: Apple Silicon (Mac)
-
-| Metric | Time | Throughput |
-|--------|------|------------|
-| Raw GPU parse | 270 ms | 3.1 GB/s |
-| Pinned memory path | 257 ms | 3.3 GB/s |
-| Full `loads[target='gpu']` | 498 ms | 1.7 GB/s |
-
-*Benchmark: 804MB twitter_large_record.json on Apple M3 Pro GPU*
-
-### CPU
-
-Uses [simdjson](https://github.com/simdjson/simdjson) under the hood via FFI for maximum compatibility and performance.
-
-## Architecture
-
-```mermaid
-graph TB
-    subgraph "mojson API"
-        loads["loads(json_string)"]
-        dumps["dumps(value)"]
-    end
-
-    subgraph "CPU Backend"
-        simdjson["simdjson FFI"]
-        cpu_parse["Parse & Build Value Tree"]
-    end
-
-    subgraph "GPU Backend"
-        gpu_kernels["GPU Kernels"]
-        stream_compact["Stream Compaction"]
-        bracket_match["Bracket Matching"]
-        tree_build["Value Tree Builder"]
-    end
-
-    loads -->|"target='cpu'"| simdjson
-    loads -->|"target='gpu'"| gpu_kernels
-    simdjson --> cpu_parse
-    gpu_kernels --> stream_compact
-    stream_compact --> bracket_match
-    bracket_match --> tree_build
-    cpu_parse --> dumps
-    tree_build --> dumps
-```
-
-## GPU Pipeline
-
-```mermaid
-flowchart LR
-    subgraph "Phase 1: Transfer"
-        A[JSON Bytes] -->|H2D| B[GPU Memory]
-    end
-
-    subgraph "Phase 2: GPU Kernels"
-        B --> C[Quote Detection]
-        C --> D[Prefix Sum]
-        D --> E[Structural Bitmap]
-    end
-
-    subgraph "Phase 3: Extract"
-        E --> F[Stream Compaction]
-        F --> G[Position Array]
-    end
-
-    subgraph "Phase 4: Build"
-        G --> H[Bracket Matching]
-        H --> I[Value Tree]
-    end
-
-    style A fill:#e1f5fe
-    style I fill:#c8e6c9
-```
-
-## Why mojson is Faster
-
-| Optimization | Impact |
-|--------------|--------|
-| **GPU Stream Compaction** | Reduces D2H transfer from 160ms to 50ms (main speedup) |
-| **Pinned Memory** | Fast H2D transfer (~15ms) |
-| **Hierarchical Prefix Sums** | Efficient parallel scans using block primitives |
-| **Fused Kernels** | Single-pass quote detection + structural bitmap |
-
-## Quick Start
+## Installation
 
 ```bash
-git clone https://github.com/user/mojson.git
+# Clone with submodules
+git clone --recursive https://github.com/ehsanmok/mojson.git
 cd mojson
 
-# Install dependencies + auto-build FFI
+# Install dependencies (auto-builds simdjson FFI)
 pixi install
 
 # Run tests
@@ -109,13 +28,101 @@ pixi run tests-cpu  # CPU tests
 pixi run tests-gpu  # GPU tests
 ```
 
+## API
+
+### Core JSON API
+
+Simple, Pythonic API for working with JSON values:
+
+```mojo
+from mojson import loads, dumps, load, dump
+
+# Parse JSON strings
+var data = loads('{"name": "Alice", "age": 30}')
+print(data["name"].string_value())  # "Alice"
+print(dumps(data))                  # {"name":"Alice","age":30}
+
+# GPU-accelerated parsing for large files (>100MB)
+var gpu_data = loads[target="gpu"](large_json_string)
+
+# File I/O
+with open("data.json", "r") as f:
+    var file_data = load(f)
+
+with open("output.json", "w") as f:
+    dump(data, f)
+```
+
+### Struct Serialization (Optional)
+
+Type-safe serialization/deserialization for your structs:
+
+```mojo
+from mojson.serialize import Serializable, serialize, to_json_value
+from mojson.deserialize import Deserializable, deserialize, get_string, get_int
+
+@fieldwise_init
+struct Person(Serializable, Deserializable):
+    var name: String
+    var age: Int
+
+    fn to_json(self) -> String:
+        return '{"name":' + to_json_value(self.name) + ',"age":' + to_json_value(self.age) + '}'
+
+    @staticmethod
+    fn from_json(json: Value) raises -> Self:
+        return Self(name=get_string(json, "name"), age=get_int(json, "age"))
+
+# Serialize and deserialize
+var person = Person(name="Alice", age=30)
+var json_str = serialize(person)            # {"name":"Alice","age":30}
+var restored = deserialize[Person](json_str)
+print(restored.name)                        # Alice
+```
+
+**Core API Reference**
+
+| Function | Description |
+|----------|-------------|
+| `loads(s)` | Parse JSON string (CPU default) |
+| `loads[target="gpu"](s)` | Parse JSON string (GPU accelerated) |
+| `dumps(v)` | Serialize Value to JSON string |
+| `load(f)` | Parse JSON from FileHandle |
+| `dump(v, f)` | Serialize Value to FileHandle |
+
+**Struct Serialization API** (Optional)
+
+| Function/Trait | Description |
+|---------------|-------------|
+| `serialize(obj)` | Serialize Serializable object to JSON string |
+| `deserialize[T](s)` | Deserialize JSON string to type T |
+| `Serializable` | Trait requiring `fn to_json(self) -> String` |
+| `Deserializable` | Trait requiring `@staticmethod fn from_json(Value) -> Self` |
+
+### Value Type
+
+The `Value` struct represents any JSON value with Python-like accessors:
+
+```mojo
+# Type checking
+v.is_null() / is_bool() / is_int() / is_float() / is_string() / is_array() / is_object()
+
+# Value extraction
+v.bool_value() / int_value() / float_value() / string_value()
+
+# Array/Object access
+data["key"]           # Object access
+data[0]               # Array access
+```
+
+
 ## Examples
 
 See the `examples/` directory for complete working examples:
 
 ```bash
-pixi run examples         # Run all examples
-# Or run directly
+pixi run examples  # Run all examples
+# Or run individually
 pixi run mojo -I . examples/01_basic_parsing.mojo
 ```
 
@@ -126,173 +133,111 @@ pixi run mojo -I . examples/01_basic_parsing.mojo
 | `03_value_types.mojo` | Type checking (`is_*`), value extraction (`*_value()`), metadata |
 | `04_gpu_parsing.mojo` | GPU-accelerated parsing with `loads[target="gpu"]()` |
 | `05_error_handling.mojo` | Try/except error handling, batch processing with recovery |
+| `06_struct_serde.mojo` | Struct serialization/deserialization with `Serializable`/`Deserializable` traits |
 
-## Usage
+## Performance
 
-```mojo
-from mojson import loads, dumps
+### GPU: 2x Faster than cuJSON (NVIDIA B200)
 
-# CPU (default) - like Python's json.loads()
-var data = loads('{"name": "Alice", "age": 30}')
+| Parser | Time (804MB file) | Throughput | Speedup |
+|--------|-------------------|------------|---------|
+| cuJSON (CUDA C++) | 236 ms | 3.6 GB/s | baseline |
+| **mojson GPU** | **121 ms** | **7.0 GB/s** | **2.0x faster** |
 
-# GPU acceleration for large files
-var data = loads[target="gpu"](large_json_string)
+*Benchmark: twitter_large_record.json on NVIDIA B200. Pinned memory path (comparable scope to cuJSON). Averages from warmed-up runs.*
 
-# Serialize - like Python's json.dumps()
-print(dumps(data))
+**Key optimization:** GPU stream compaction reduces D2H transfer by extracting only position indices instead of transferring all structural character data (465MB → 4MB).
 
-from mojson import load, dump
+#### Detailed GPU Performance (NVIDIA B200)
 
-# File operations - like Python's json.load() / json.dump()
-with open("data.json", "r") as f:
-    var config = load(f)              # CPU (default)
-    var config = load[target="gpu"](f)  # GPU
+| Dataset | Size | Raw GPU Parse | Pinned Memory Path | Full `loads[target='gpu']` |
+|---------|------|---------------|-------------------|---------------------------|
+| **twitter.json** | 617 KB | 1.7 GB/s | **2.3 GB/s** | 0.23 GB/s |
+| **citm_catalog.json** | 1.7 MB | 2.2 GB/s | **3.1 GB/s** | 0.19 GB/s |
+| **twitter_large_record.json** | 804 MB | 3.7 GB/s | **7.0 GB/s** | 1.5 GB/s |
 
-with open("output.json", "w") as f:
-    dump(data, f)
-```
+**Pinned memory path** = H2D + GPU kernels + stream compaction + D2H + bracket matching
 
-## API
+### GPU: Apple Silicon (macOS M3 Pro)
 
-| Function | Description |
-|----------|-------------|
-| `loads(s)` | Parse JSON string (CPU) |
-| `loads[target="gpu"](s)` | Parse JSON string (GPU) |
-| `dumps(v)` | Serialize Value to JSON |
-| `load(f)` | Parse from FileHandle |
-| `dump(v, f)` | Serialize to FileHandle |
+| Metric | Time | Throughput |
+|--------|------|------------|
+| Raw GPU parse | 270 ms | 3.1 GB/s |
+| Pinned memory path | 257 ms | 3.3 GB/s |
+| Full `loads[target='gpu']` | 498 ms | 1.7 GB/s |
 
-## Value Type
+*Benchmark: 804MB twitter_large_record.json on Apple M3 Pro GPU*
 
-```mojo
-# Type checking
-v.is_null() / is_bool() / is_int() / is_float() / is_string() / is_array() / is_object()
+### CPU (NVIDIA B200)
 
-# Value extraction
-v.bool_value() / int_value() / float_value() / string_value()
-```
+| Dataset | Size | Throughput | Time |
+|---------|------|------------|------|
+| **twitter.json** | 617 KB | **1.62 GB/s** | 0.39 ms |
+| **citm_catalog.json** | 1.7 MB | **1.69 GB/s** | 1.02 ms |
+
+Uses [simdjson](https://github.com/simdjson/simdjson) via FFI for maximum compatibility and battle-tested correctness.
+
+### When to Use GPU
+
+- **GPU:** Large files (>100MB) - 1.85x faster than cuJSON for parser output
+- **CPU:** Small files (<1MB) - simdjson is faster due to zero GPU launch overhead
 
 ## Benchmarks
 
 ```bash
-# CPU benchmark
-pixi run bench-cpu
-
-# GPU benchmark (804MB file)
-pixi run bench-gpu benchmark/datasets/twitter_large_record.json
-```
-
-See [benchmark/README.md](./benchmark/README.md) for full setup, reproducibility details, and dataset downloads.
-
-## Benchmarking Methodology
-
-### What We Measure
-
-mojson reports three metrics to provide a complete picture:
-
-| Metric | What It Includes | Use Case |
-|--------|------------------|----------|
-| **Pinned memory path** | H2D + GPU kernels + stream compaction + D2H + bracket matching | Direct comparison with cuJSON |
-| **Raw GPU parse** | Pinned path + pageable→pinned memcpy | End-to-end from file buffer |
-| **Full `loads[target='gpu']`** | Everything + Value tree construction | Real-world application performance |
-
-### Apples-to-Apples Comparison with cuJSON
-
-[cuJSON](https://github.com/AutomataLab/cuJSON) is the state-of-the-art GPU JSON parser. Both benchmarks measure the same scope:
-
-| Step | cuJSON | mojson |
-|------|--------|--------|
-| Input memory | Pinned (cudaMallocHost) | Pinned (HostBuffer) |
-| H2D transfer | ✓ | ✓ |
-| GPU kernels | Validation + Tokenization | Quote detection + Prefix sums + Structural bitmap |
-| Bracket matching | GPU (Parser kernel) | CPU (stack algorithm) |
-| D2H transfer | ✓ (465MB for 804MB input) | ✓ (much smaller via stream compaction) |
-
-**On 804MB twitter_large_record.json:**
-
-```
-cuJSON breakdown:         mojson pinned breakdown:
-├─ H2D:        15.2 ms    ├─ H2D:          ~15 ms
-├─ Validation:  1.5 ms    ├─ GPU kernels:  ~25 ms
-├─ Tokenize:    5.5 ms    ├─ Stream compact + D2H: ~50 ms
-├─ Parser:      1.4 ms    └─ Bracket match: ~10 ms
-└─ D2H:       158.6 ms
-────────────────────      ────────────────────────
-TOTAL:        182.2 ms    TOTAL:           99.3 ms
-Throughput:   4.6 GB/s    Throughput:      8.5 GB/s
-```
-
-### Why mojson is Faster
-
-The 1.85x speedup comes from **GPU stream compaction**:
-
-- cuJSON transfers **all** structural character data back to CPU (465MB for 804MB input)
-- mojson uses parallel stream compaction on GPU to extract only position indices
-- This reduces D2H transfer from ~160ms to ~50ms
-
-Both parsers output the same result: structural character positions and bracket pair mappings. cuJSON does bracket matching on GPU while mojson does it on CPU, but both are included in the timing.
-
-### What About the "Raw GPU Parse" Metric?
-
-The "Raw GPU parse" adds pageable→pinned memcpy overhead (~115ms for 804MB):
-
-| Metric | Time | Throughput |
-|--------|------|------------|
-| cuJSON (from pinned) | 182 ms | 4.6 GB/s |
-| mojson pinned | 99 ms | 8.5 GB/s |
-| mojson raw (from pageable) | 215 ms | 3.9 GB/s |
-
-The raw metric is slower because it simulates reading from a standard buffer. cuJSON's benchmark assumes data is already in pinned memory (via `cudaMallocHost`).
-
-### End-to-End Performance
-
-For real applications using `loads[target='gpu']()`:
-
-- Full pipeline adds ~400ms for Value tree construction (CPU-bound)
-- Total: ~540ms for 804MB → 1.6 GB/s end-to-end
-- Still faster than CPU parsing for large files (>100MB)
-
-For small files (<1MB), CPU parsing via simdjson is faster due to GPU launch overhead.
-
-### Benchmark Commands
-
-```bash
-# Compare mojson GPU vs cuJSON (same scope)
+# GPU benchmark (mojson vs cuJSON)
 pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
 
-# GPU benchmark with detailed timing breakdown
-pixi run bench-gpu [path/to/file.json]
-
-# Compare mojson CPU vs native simdjson
-pixi run bench-cpu [path/to/file.json]
+# CPU benchmark (mojson vs simdjson)
+pixi run bench-cpu
 ```
+
+**Download large benchmark files:**
+
+```bash
+cd benchmark/datasets
+# twitter_large_record.json (804MB) - primary benchmark file
+gdown 1mdF4HT7s0Jp4XZ0nOxY7lQpcwRZzCjE1 -O twitter_large_record.json
+```
+
+See [benchmark/README.md](./benchmark/README.md) for full benchmarking methodology, reproducibility details, and dataset sources.
+
+## Documentation
+
+- [Architecture Overview](./docs/architecture.md) - CPU/GPU backend design, pipeline details
+- [Performance Deep Dive](./docs/performance.md) - Why mojson is faster, optimization techniques
+- [Examples](./examples/README.md) - Complete usage examples
 
 ## Project Structure
 
 ```
 src/
-  __init__.mojo       # Public API: loads, dumps, Value
-  parser.mojo         # Unified CPU/GPU parser
-  value.mojo          # Value type
-  serialize.mojo      # JSON serialization
-  cpu/                # CPU backend
-    simdjson_ffi.mojo # simdjson FFI bindings
-    simdjson_ffi/     # C++ wrapper (auto-built)
-  gpu/                # GPU backend
-    parser.mojo       # GPU parser
-    kernels.mojo      # CUDA-style kernels
-    stream_compact.mojo
-examples/             # Usage examples
-tests/                # Unit tests
-benchmark/            # Performance benchmarks
+  __init__.mojo          # Public API: loads, dumps, load, dump, Value
+  parser.mojo            # Unified CPU/GPU parser
+  value.mojo             # Value type
+  serialize.mojo         # JSON serialization
+  cpu/
+    simdjson_ffi.mojo    # simdjson FFI bindings
+    simdjson_ffi/        # C++ wrapper (auto-built)
+  gpu/
+    parser.mojo          # GPU parser
+    kernels.mojo         # CUDA-style kernels
+    stream_compact.mojo  # GPU stream compaction
+examples/                # Usage examples
+tests/                   # Unit tests
+benchmark/               # Performance benchmarks
+docs/                    # Documentation
 ```
 
+<<<<<<< HEAD
 ## Requirements
 
 - Mojo (latest nightly with GPU support)
 - GPU for acceleration (NVIDIA with CUDA or Apple Silicon)
 - pixi (dependencies installed automatically)
 
+=======
+>>>>>>> f444f26 (Add Serialize and Deserialize traits and update perf)
 ## License
 
 [MIT LICENSE](./LICENSE)

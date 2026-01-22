@@ -188,6 +188,37 @@ struct Value(Copyable, Movable, Stringable, Writable):
 
     fn __ne__(self, other: Value) -> Bool:
         return not self.__eq__(other)
+    
+    fn get(self, key: String) raises -> String:
+        """Get a field value from a JSON object as a string.
+        
+        This is a helper for deserialization. For objects, it parses
+        the raw JSON to extract the field value.
+        
+        Args:
+            key: The field name to extract
+        
+        Returns:
+            The raw JSON value as a string
+        
+        Raises:
+            Error if not an object or key not found
+        """
+        if not self.is_object():
+            raise Error("get() can only be called on JSON objects")
+        
+        # Check if key exists
+        var found = False
+        for i in range(len(self._keys)):
+            if self._keys[i] == key:
+                found = True
+                break
+        
+        if not found:
+            raise Error("Key '" + key + "' not found in JSON object")
+        
+        # Parse the raw JSON to extract the value
+        return _extract_field_value(self._raw, key)
 
 
 fn make_array_value(raw: String, count: Int) -> Value:
@@ -207,3 +238,130 @@ fn make_object_value(raw: String, var keys: List[String]) -> Value:
     v._count = len(keys)
     v._keys = keys^
     return v^
+
+
+fn _extract_field_value(raw: String, key: String) raises -> String:
+    """Extract a field's value from raw JSON object string.
+    
+    Args:
+        raw: Raw JSON object string (e.g., '{"a": 1, "b": "hello"}')
+        key: Field name to extract
+    
+    Returns:
+        The raw JSON value as a string (e.g., '1' or '"hello"')
+    """
+    var raw_bytes = raw.as_bytes()
+    var in_string = False
+    var escaped = False
+    var depth = 0
+    var i = 0
+    var n = len(raw_bytes)
+    
+    # Skip opening brace and whitespace
+    while i < n and (raw_bytes[i] == ord("{") or raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+        if raw_bytes[i] == ord("{"):
+            depth = 1
+        i += 1
+    
+    # Search for the key
+    while i < n:
+        # Skip whitespace
+        while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+            i += 1
+        
+        if i >= n:
+            break
+        
+        # Check if we're at a key (starts with ")
+        if raw_bytes[i] == ord('"') and not in_string:
+            i += 1  # Skip opening quote
+            var key_start = i
+            
+            # Read the key
+            while i < n and raw_bytes[i] != ord('"'):
+                if raw_bytes[i] == ord("\\"):
+                    i += 2  # Skip escaped character
+                else:
+                    i += 1
+            
+            var found_key = raw[key_start:i]
+            i += 1  # Skip closing quote
+            
+            # Skip whitespace and colon
+            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord(":")):
+                i += 1
+            
+            # If this is our key, extract the value
+            if found_key == key:
+                return _extract_json_value(raw, i)
+            else:
+                # Skip this value
+                _ = _extract_json_value(raw, i)
+                # Find next comma or end
+                while i < n and raw_bytes[i] != ord(",") and raw_bytes[i] != ord("}"):
+                    i += 1
+                if i < n and raw_bytes[i] == ord(","):
+                    i += 1
+        else:
+            i += 1
+    
+    raise Error("Key not found in JSON object")
+
+
+fn _extract_json_value(raw: String, start: Int) raises -> String:
+    """Extract a single JSON value starting at position start."""
+    var raw_bytes = raw.as_bytes()
+    var i = start
+    var n = len(raw_bytes)
+    
+    # Skip leading whitespace
+    while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+        i += 1
+    
+    if i >= n:
+        raise Error("Unexpected end of JSON")
+    
+    var first_char = raw_bytes[i]
+    
+    # String value
+    if first_char == ord('"'):
+        var value_start = i
+        i += 1
+        while i < n:
+            if raw_bytes[i] == ord("\\"):
+                i += 2  # Skip escaped character
+            elif raw_bytes[i] == ord('"'):
+                return String(raw[value_start:i+1])
+            else:
+                i += 1
+        raise Error("Unterminated string")
+    
+    # Object or array
+    elif first_char == ord("{") or first_char == ord("["):
+        var close_char = ord("}") if first_char == ord("{") else ord("]")
+        var depth = 1
+        var value_start = i
+        i += 1
+        var in_string = False
+        
+        while i < n and depth > 0:
+            if raw_bytes[i] == ord("\\") and in_string:
+                i += 2
+                continue
+            elif raw_bytes[i] == ord('"'):
+                in_string = not in_string
+            elif not in_string:
+                if raw_bytes[i] == first_char:
+                    depth += 1
+                elif raw_bytes[i] == close_char:
+                    depth -= 1
+            i += 1
+        
+        return String(raw[value_start:i])
+    
+    # null, true, false, or number
+    else:
+        var value_start = i
+        while i < n and raw_bytes[i] != ord(",") and raw_bytes[i] != ord("}") and raw_bytes[i] != ord("]") and raw_bytes[i] != ord(" ") and raw_bytes[i] != ord("\t") and raw_bytes[i] != ord("\n"):
+            i += 1
+        return String(raw[value_start:i])

@@ -7,7 +7,8 @@
 # 4. Fused kernels
 
 from gpu.host import DeviceContext, DeviceBuffer, HostBuffer
-from gpu import block_dim, block_idx, thread_idx, barrier, block, global_idx
+from gpu import block_dim, block_idx, thread_idx, barrier, global_idx
+from gpu.primitives import block
 from gpu.memory import AddressSpace
 from collections import List
 from memory import UnsafePointer, memcpy

@@ -9,7 +9,8 @@
 # 3. Scatter: Each thread writes positions using CTZ to extract set bits
 
 from gpu.host import DeviceContext, DeviceBuffer
-from gpu import block_dim, block_idx, thread_idx, barrier, block
+from gpu import block_dim, block_idx, thread_idx, barrier
+from gpu.primitives import block
 from collections import List
 from memory import UnsafePointer, memcpy
 from math import ceildiv
