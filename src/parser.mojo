@@ -190,8 +190,10 @@ fn _build_value(mut iter: JSONIterator, json: String) raises -> Value:
     if c == ord("-") or (c >= ord("0") and c <= ord("9")):
         var s = iter.get_value()
         var is_float = False
-        for i in range(len(s)):
-            if s[i] == "." or s[i] == "e" or s[i] == "E":
+        var s_bytes = s.as_bytes()
+        for i in range(len(s_bytes)):
+            var ch = s_bytes[i]
+            if ch == ord(".") or ch == ord("e") or ch == ord("E"):
                 is_float = True
                 break
         if is_float:
@@ -208,29 +210,30 @@ fn _build_value(mut iter: JSONIterator, json: String) raises -> Value:
 fn _build_array(mut iter: JSONIterator, json: String) raises -> Value:
     """Build an array Value."""
     var raw = iter.get_value()
+    var raw_bytes = raw.as_bytes()
     var count = 0
     var depth = 0
     var in_string = False
     var escaped = False
 
-    for i in range(len(raw)):
-        var c = raw[i]
+    for i in range(len(raw_bytes)):
+        var c = raw_bytes[i]
         if escaped:
             escaped = False
             continue
-        if c == "\\":
+        if c == ord("\\"):
             escaped = True
             continue
-        if c == '"':
+        if c == ord('"'):
             in_string = not in_string
             continue
         if in_string:
             continue
-        if c == "[" or c == "{":
+        if c == ord("[") or c == ord("{"):
             depth += 1
-        elif c == "]" or c == "}":
+        elif c == ord("]") or c == ord("}"):
             depth -= 1
-        elif c == "," and depth == 1:
+        elif c == ord(",") and depth == 1:
             count += 1
 
     if len(raw) > 2:
@@ -250,15 +253,15 @@ fn _build_object(mut iter: JSONIterator, json: String) raises -> Value:
     var key_start = -1
     var expect_key = True
 
-    for i in range(len(raw)):
-        var c = raw[i]
+    for i in range(len(raw_bytes)):
+        var c = raw_bytes[i]
         if escaped:
             escaped = False
             continue
-        if c == "\\":
+        if c == ord("\\"):
             escaped = True
             continue
-        if c == '"':
+        if c == ord('"'):
             if not in_string:
                 in_string = True
                 if depth == 1 and expect_key:
@@ -279,13 +282,13 @@ fn _build_object(mut iter: JSONIterator, json: String) raises -> Value:
             continue
         if in_string:
             continue
-        if c == "{" or c == "[":
+        if c == ord("{") or c == ord("["):
             depth += 1
-        elif c == "}" or c == "]":
+        elif c == ord("}") or c == ord("]"):
             depth -= 1
-        elif c == ":" and depth == 1:
+        elif c == ord(":") and depth == 1:
             expect_key = False
-        elif c == "," and depth == 1:
+        elif c == ord(",") and depth == 1:
             expect_key = True
 
     return make_object_value(raw, keys^)

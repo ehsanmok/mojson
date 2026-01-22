@@ -11,11 +11,12 @@ From the project root directory:
 pixi run examples
 
 # Run individual examples
-pixi run example-basic   # 01_basic_parsing.mojo
-pixi run example-files   # 02_file_operations.mojo
-pixi run example-value   # 03_value_types.mojo
-pixi run example-gpu     # 04_gpu_parsing.mojo (requires GPU)
-pixi run example-errors  # 05_error_handling.mojo
+pixi run example-basic        # 01_basic_parsing.mojo
+pixi run example-files        # 02_file_operations.mojo
+pixi run example-value        # 03_value_types.mojo
+pixi run example-gpu          # 04_gpu_parsing.mojo (requires GPU)
+pixi run example-errors       # 05_error_handling.mojo
+pixi run example-deserialize  # 06_deserialization.mojo
 
 # Or run directly with mojo (from project root)
 pixi run mojo -I . examples/01_basic_parsing.mojo
@@ -55,6 +56,15 @@ Handling JSON parse errors gracefully.
 - Using try/except for error handling
 - Batch processing with error recovery
 - Examples of valid and invalid JSON
+
+### 06_struct_serde.mojo
+Type-safe struct serialization and deserialization.
+- Implement `Serializable` trait with `to_json()` method
+- Implement `Deserializable` trait with `from_json()` static method
+- Use `serialize()` and `deserialize[T]()` helpers
+- GPU-accelerated deserialization support
+- Full round-trip examples
+
 
 ## API Quick Reference
 
