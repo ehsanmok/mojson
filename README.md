@@ -8,10 +8,18 @@ Fast JSON parsing library for Mojo with Python-compatible API and GPU accelerati
 
 ## Requirements
 
-* Install [pixi](https://pixi.prefix.dev/latest/installation/).
-* Compatible
-  - [system](https://docs.modular.com/max/packages#system-requirements)
-  - Compatible [GPU](https://docs.modular.com/max/packages#gpu-compatibility) if want to use the GPU acceleration
+### System Requirements
+- **Mojo/MAX SDK**: See [system requirements](https://docs.modular.com/max/packages#system-requirements) for supported platforms (Linux, macOS)
+- **Package Manager**: [pixi](https://pixi.prefix.dev/latest/installation/) for dependency management and task automation
+- **CPU Backend**: Requires C++17 compiler (for simdjson FFI wrapper)
+
+### GPU Acceleration (Optional)
+For GPU-accelerated parsing, you need:
+- **NVIDIA GPU**: CUDA-compatible device (compute capability 7.0+)
+- **Apple Silicon**: M1/M2/M3 with Metal support
+- See [GPU compatibility](https://docs.modular.com/max/packages#gpu-compatibility) for full requirements
+
+> **Note**: GPU parsing is optional. The library works fully on CPU-only systems using the simdjson backend.
 
 ## Installation
 
@@ -229,15 +237,6 @@ benchmark/               # Performance benchmarks
 docs/                    # Documentation
 ```
 
-<<<<<<< HEAD
-## Requirements
-
-- Mojo (latest nightly with GPU support)
-- GPU for acceleration (NVIDIA with CUDA or Apple Silicon)
-- pixi (dependencies installed automatically)
-
-=======
->>>>>>> f444f26 (Add Serialize and Deserialize traits and update perf)
 ## License
 
 [MIT LICENSE](./LICENSE)
