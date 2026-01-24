@@ -375,33 +375,9 @@ struct JSONIterator:
             )
             return String(unsafe_from_utf8=bytes^)
 
-        # Slow path: handle escapes
-        var bytes = List[UInt8](capacity=end_pos - i)
-        var escaped = False
-
-        while i < end_pos:
-            var c = self.input_data[i]
-
-            if escaped:
-                if c == ord("n"):
-                    bytes.append(0x0A)
-                elif c == ord("t"):
-                    bytes.append(0x09)
-                elif c == ord("r"):
-                    bytes.append(0x0D)
-                elif c == ord("\\"):
-                    bytes.append(0x5C)
-                elif c == ord('"'):
-                    bytes.append(0x22)
-                else:
-                    bytes.append(c)
-                escaped = False
-            elif c == 0x5C:
-                escaped = True
-            else:
-                bytes.append(c)
-            i += 1
-
+        # Slow path: handle escapes (including \uXXXX unicode)
+        from .unicode import unescape_json_string
+        var bytes = unescape_json_string(self.input_data, i, end_pos)
         return String(unsafe_from_utf8=bytes^)
 
     fn _extract_range(self, start: Int, end: Int) raises -> String:
@@ -430,3 +406,14 @@ struct JSONIterator:
             return 0
 
         return self.input_data[pos]
+
+    fn get_position(self) -> Int:
+        """Get the current byte position in the input."""
+        if self.current_pos >= self.result.total_result_size():
+            return self.size()
+        
+        var pos = Int(self.result.structural[self.current_pos])
+        if pos >= self.size():
+            return self.size()
+        
+        return pos

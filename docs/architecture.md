@@ -116,27 +116,9 @@ flowchart LR
 
 ## Value Type
 
-The `Value` struct is the core data type representing any JSON value:
+The `Value` struct represents any JSON value (null, bool, int, float, string, array, object).
 
-```mojo
-struct Value:
-    # JSON types: null, bool, int, float, string, array, object
-    
-    # Type checking
-    fn is_null(self) -> Bool
-    fn is_bool(self) -> Bool
-    fn is_int(self) -> Bool
-    fn is_float(self) -> Bool
-    fn is_string(self) -> Bool
-    fn is_array(self) -> Bool
-    fn is_object(self) -> Bool
-    
-    # Value extraction
-    fn bool_value(self) raises -> Bool
-    fn int_value(self) raises -> Int64
-    fn float_value(self) raises -> Float64
-    fn string_value(self) raises -> String
-```
+See [API Reference](./api.md) for complete `Value` methods.
 
 ## Directory Structure
 
@@ -148,13 +130,18 @@ src/
 ├── value.mojo                 # Value type definition
 ├── types.mojo                 # JSONInput, JSONResult types
 ├── iterator.mojo              # JSONIterator for traversing results
+├── ndjson.mojo                # NDJSON parsing/serialization
+├── lazy.mojo                  # On-demand lazy parsing
+├── streaming.mojo             # Streaming parser for large files
+├── config.mojo                # Parser/Serializer configuration
+├── errors.mojo                # Error formatting with line/column
+├── unicode.mojo               # Unicode escape handling
+├── patch.mojo                 # JSON Patch & Merge Patch (RFC 6902/7396)
+├── jsonpath.mojo              # JSONPath query language
+├── schema.mojo                # JSON Schema validation
 ├── cpu/
 │   ├── simdjson_ffi.mojo     # simdjson FFI bindings
 │   └── simdjson_ffi/         # C++ simdjson wrapper
-│       ├── build.sh          # Build script
-│       ├── Makefile
-│       ├── simdjson_wrapper.cpp
-│       └── simdjson_wrapper.h
 └── gpu/
     ├── parser.mojo            # GPU parser implementation
     ├── kernels.mojo           # GPU kernel functions
@@ -163,8 +150,15 @@ src/
 
 tests/
 ├── test_value.mojo            # Value type tests
-├── test_parser.mojo           # CPU parser tests (loads)
+├── test_parser.mojo           # Parser tests (loads)
 ├── test_serialize.mojo        # Serialization tests (dumps)
+├── test_ndjson.mojo           # NDJSON tests
+├── test_lazy.mojo             # Lazy parsing tests
+├── test_streaming.mojo        # Streaming parser tests
+├── test_config.mojo           # Config tests
+├── test_patch.mojo            # JSON Patch tests
+├── test_jsonpath.mojo         # JSONPath tests
+├── test_schema.mojo           # JSON Schema tests
 └── test_gpu.mojo              # GPU parser tests
 
 benchmark/
