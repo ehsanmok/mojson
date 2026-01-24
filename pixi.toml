@@ -38,6 +38,10 @@ tests-e2e-gpu = "MOJSON_TEST_GPU=1 mojo -I . tests/test_e2e.mojo"
 bench-cpu = { cmd = "bash -c 'F=\"${1:-benchmark/datasets/twitter.json}\"; benchmark/build/bench_simdjson \"$F\" && echo && benchmark/build/bench_cpu \"$F\"' _", depends-on = ["build-bench-cpu", "build-bench-simdjson"] }
 bench-gpu = { cmd = "bash -c 'benchmark/build/bench_gpu \"${1:-benchmark/datasets/twitter.json}\"' _", depends-on = ["build-bench-gpu"] }
 
+# Run all GPU benchmarks (3 runs each, all datasets)
+# Usage: pixi run bench-gpu-all
+bench-gpu-all = "bash -c 'for i in 1 2 3; do for f in benchmark/datasets/*.json; do echo \"=== Run $i: $f ===\"; mojo run -I . benchmark/mojo/bench_gpu.mojo \"$f\"; done; done'"
+
 # Examples
 example-basic = "mojo -I . examples/01_basic_parsing.mojo"
 example-files = "mojo -I . examples/02_file_operations.mojo"
