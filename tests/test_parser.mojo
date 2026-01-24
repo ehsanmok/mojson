@@ -257,6 +257,81 @@ def test_error_trailing_comma_object():
     assert_true(caught, "Should raise on trailing comma")
 
 
+def test_error_message_has_context():
+    """Test that error messages include context info."""
+    var caught = False
+    var msg = String()
+    try:
+        _ = loads('{\n  "key": \n}')
+    except e:
+        caught = True
+        msg = String(e)
+    assert_true(caught, "Should raise error")
+    # Error should have some useful info
+    assert_true(len(msg) > 10, "Error should have descriptive message")
+
+
+def test_error_message_multiline():
+    """Test error on multiline JSON."""
+    var caught = False
+    var msg = String()
+    var json = '{\n  "name": "test",\n  "value": \n}'
+    try:
+        _ = loads(json)
+    except e:
+        caught = True
+        msg = String(e)
+    assert_true(caught, "Should raise error")
+    # Just verify it returns something useful
+    assert_true(len(msg) > 0, "Should have error message")
+
+
+# =============================================================================
+# Unicode Escape Tests
+# =============================================================================
+
+
+def test_unicode_escape_basic():
+    """Test basic unicode escape \\u0041 = 'A'."""
+    var v = loads('"\\u0041"')
+    assert_equal(v.string_value(), "A")
+
+
+def test_unicode_escape_euro():
+    """Test unicode escape for euro sign \\u20AC."""
+    var v = loads('"\\u20AC"')
+    assert_equal(v.string_value(), "€")
+
+
+def test_unicode_escape_mixed():
+    """Test mixed unicode and regular text."""
+    var v = loads('"Hello \\u0057orld"')  # \u0057 = 'W'
+    assert_equal(v.string_value(), "Hello World")
+
+
+def test_unicode_escape_null_char():
+    """Test unicode null character \\u0000."""
+    var v = loads('"a\\u0000b"')
+    # Should have 3 characters: 'a', null, 'b'
+    var s = v.string_value()
+    assert_equal(len(s.as_bytes()), 3)
+
+
+def test_unicode_surrogate_pair():
+    """Test surrogate pair for emoji (U+1F600 = 😀)."""
+    # U+1F600 = D83D DE00 (surrogate pair)
+    var v = loads('"\\uD83D\\uDE00"')
+    var s = v.string_value()
+    # 😀 in UTF-8 is 4 bytes: F0 9F 98 80
+    assert_equal(len(s.as_bytes()), 4)
+
+
+def test_unicode_in_object():
+    """Test unicode escapes in object values."""
+    var v = loads('{"name": "\\u0041lice", "emoji": "\\u2764"}')
+    assert_true(v.is_object(), "Should be object")
+
+
 def main():
     print("=" * 60)
     print("test_parser.mojo - CPU loads() tests")

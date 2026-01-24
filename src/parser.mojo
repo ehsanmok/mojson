@@ -82,7 +82,8 @@ fn _parse_gpu(s: String) raises -> Value:
         start += 1
 
     if start >= len(data):
-        raise Error("Empty JSON")
+        from .errors import json_parse_error
+        raise Error(json_parse_error("Empty or whitespace-only input", s, 0))
 
     var first_char = data[start]
 
@@ -120,35 +121,33 @@ fn _parse_gpu(s: String) raises -> Value:
 fn _parse_string_value(s: String, start: Int) raises -> Value:
     """Parse a string value."""
     var data = s.as_bytes()
-    var result = String()
+    var n = len(data)
     var i = start + 1
-    var escaped = False
-
-    while i < len(data):
-        var c = data[i]
-        if escaped:
-            if c == ord("n"):
-                result += "\n"
-            elif c == ord("t"):
-                result += "\t"
-            elif c == ord("r"):
-                result += "\r"
-            elif c == ord('"'):
-                result += '"'
-            elif c == ord("\\"):
-                result += "\\"
-            else:
-                result += chr(Int(c))
-            escaped = False
-        elif c == ord("\\"):
-            escaped = True
-        elif c == 0x22:
+    
+    # Find end of string
+    var end_idx = i
+    var has_escapes = False
+    while end_idx < n:
+        var c = data[end_idx]
+        if c == ord("\\"):
+            has_escapes = True
+            end_idx += 2
+            continue
+        if c == 0x22:  # "
             break
-        else:
-            result += chr(Int(c))
-        i += 1
-
-    return Value(result)
+        end_idx += 1
+    
+    # Fast path: no escapes
+    if not has_escapes:
+        return Value(String(s[i:end_idx]))
+    
+    # Slow path: handle escapes including \uXXXX
+    from .unicode import unescape_json_string
+    var bytes_list = List[UInt8](capacity=n)
+    for j in range(n):
+        bytes_list.append(data[j])
+    var unescaped = unescape_json_string(bytes_list, i, end_idx)
+    return Value(String(unsafe_from_utf8=unescaped^))
 
 
 fn _parse_number_value(s: String, start: Int) raises -> Value:
@@ -204,7 +203,9 @@ fn _build_value(mut iter: JSONIterator, json: String) raises -> Value:
     if c == 0x7B:
         return _build_object(iter, json)
 
-    raise Error("Unknown JSON type")
+    from .errors import json_parse_error
+    var pos = iter.get_position()
+    raise Error(json_parse_error("Unexpected character", json, pos))
 
 
 fn _build_array(mut iter: JSONIterator, json: String) raises -> Value:
@@ -342,3 +343,35 @@ fn load[target: StaticString = "cpu"](mut f: FileHandle) raises -> Value:
     """
     var content = f.read()
     return loads[target](content)
+
+
+fn loads_with_config[target: StaticString = "cpu"](
+    s: String, config: ParserConfig
+) raises -> Value:
+    """Parse JSON with custom configuration.
+    
+    Supports non-standard extensions when configured:
+    - JavaScript-style comments (// and /* */)
+    - Trailing commas in arrays and objects
+    - Maximum nesting depth limits
+    
+    Parameters:
+        target: "cpu" (default) or "gpu"
+    
+    Args:
+        s: JSON string to parse
+        config: Parser configuration
+    
+    Returns:
+        Parsed Value
+    
+    Example:
+        var config = ParserConfig(allow_comments=True)
+        var data = loads_with_config('{"a": 1} // comment', config)
+    """
+    from .config import preprocess_json
+    var preprocessed = preprocess_json(s, config)
+    return loads[target](preprocessed)
+
+
+from .config import ParserConfig

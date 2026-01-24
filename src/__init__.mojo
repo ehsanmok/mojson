@@ -18,15 +18,17 @@
 #       dump(data, f)
 
 from .value import Value, Null, make_array_value, make_object_value
-from .parser import loads, load
+from .parser import loads, load, loads_with_config
 from .serialize import (
     dumps,
     dump,
+    dumps_with_config,
     to_json_value,
     to_json_string,
     Serializable,
     serialize,
 )
+from .config import ParserConfig, SerializerConfig
 from .deserialize import (
     get_string,
     get_int,
@@ -34,4 +36,32 @@ from .deserialize import (
     get_float,
     Deserializable,
     deserialize,
+)
+from .ndjson import (
+    parse_ndjson,
+    parse_ndjson_lazy,
+    dumps_ndjson,
+    NDJSONIterator,
+)
+from .lazy import LazyValue, loads_lazy
+from .streaming import (
+    StreamingParser,
+    ArrayStreamingParser,
+    stream_ndjson,
+    stream_json_array,
+)
+from .patch import (
+    apply_patch,
+    merge_patch,
+    create_merge_patch,
+)
+from .jsonpath import (
+    jsonpath_query,
+    jsonpath_one,
+)
+from .schema import (
+    validate,
+    is_valid,
+    ValidationResult,
+    ValidationError,
 )

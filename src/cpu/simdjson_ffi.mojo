@@ -169,14 +169,16 @@ struct SimdjsonFFI:
         var err = self._parse(self._parser, ptr, length)
 
         if err != SIMDJSON_OK:
+            from ..errors import json_parse_error, find_error_position
+            var pos = find_error_position(json)
             if err == SIMDJSON_ERROR_INVALID_JSON:
-                raise Error("Invalid JSON")
+                raise Error(json_parse_error("Invalid JSON syntax", json, pos))
             elif err == SIMDJSON_ERROR_UTF8:
-                raise Error("Invalid UTF-8 in JSON")
+                raise Error(json_parse_error("Invalid UTF-8 encoding", json, pos))
             elif err == SIMDJSON_ERROR_CAPACITY:
-                raise Error("JSON too large")
+                raise Error("JSON document too large (exceeds parser capacity)")
             else:
-                raise Error("Unknown simdjson error")
+                raise Error(json_parse_error("Unknown parse error", json, pos))
 
         return self._get_root(self._parser)
 

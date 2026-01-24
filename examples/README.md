@@ -66,13 +66,8 @@ Type-safe struct serialization and deserialization.
 - Full round-trip examples
 
 
-## API Quick Reference
+## More Information
 
-| Function | Description | Example |
-|----------|-------------|---------|
-| `loads(s)` | Parse JSON string (CPU) | `var v = loads('{"a":1}')` |
-| `loads[target="gpu"](s)` | Parse JSON string (GPU) | `var v = loads[target="gpu"]('{"a":1}')` |
-| `dumps(v)` | Serialize to string | `var s = dumps(v)` |
-| `load(f)` | Parse from file (CPU) | `var v = load(f)` |
-| `load[target="gpu"](f)` | Parse from file (GPU) | `var v = load[target="gpu"](f)` |
-| `dump(v, f)` | Write to file | `dump(v, f)` |
+- [API Reference](../docs/api.md) — Complete function reference
+- [Architecture](../docs/architecture.md) — CPU/GPU backend design
+- [Performance](../docs/performance.md) — Optimization details
