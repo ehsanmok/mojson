@@ -2,21 +2,21 @@
 
 Fast JSON parsing library for Mojo with Python-compatible API and GPU acceleration.
 
-* **Cross-platform GPU support:** Powered by Mojo kernels that work across NVIDIA and Apple Silicon GPUs.
+* **Cross-platform GPU support:** Powered by Mojo kernels that work across NVIDIA, AMD, and Apple Silicon GPUs.
 
-* **2x faster than cuJSON** on NVIDIA B200 (7.0 GB/s vs 3.6 GB/s on 804MB files)
+* **4x** faster than cuJSON on MI355X and **2x** faster than cuJSON on B200 (see [Benchmarks](#benchmarks))
 
 ## Requirements
 
 ### System Requirements
-- **Mojo/MAX SDK**: See [system requirements](https://docs.modular.com/max/packages#system-requirements) for supported platforms (Linux, macOS)
+- **Mojo/MAX SDK**: See [system requirements](https://docs.modular.com/max/packages#system-requirements) for supported platforms (Linux, macOS, Windows WSL)
 - **Package Manager**: [pixi](https://pixi.prefix.dev/latest/installation/) for dependency management and task automation
-- **CPU Backend**: Requires C++17 compiler (for simdjson FFI wrapper)
 
 ### GPU Acceleration (Optional)
 For GPU-accelerated parsing, you need:
+- **AMD GPU**: ROCm 6+ compatible device (MI300X, MI355X, etc.)
 - **NVIDIA GPU**: CUDA-compatible device (compute capability 7.0+)
-- **Apple Silicon**: M1/M2/M3 with Metal support
+- **Apple Silicon**: M-series with Metal support
 - See [GPU compatibility](https://docs.modular.com/max/packages#gpu-compatibility) for full requirements
 
 > **Note**: GPU parsing is optional. The library works fully on CPU-only systems using the simdjson backend.
@@ -145,14 +145,22 @@ pixi run mojo -I . examples/01_basic_parsing.mojo
 
 ## Performance
 
-### GPU: 2x Faster than cuJSON (NVIDIA B200)
+### GPU: AMD MI355X
+
+| Dataset | Size | Pinned Memory Path | Full `loads[target='gpu']` |
+|---------|------|-------------------|---------------------------|
+| **twitter.json** | 632 KB | **2.7 GB/s** (0.24 ms) | 0.35 GB/s (1.9 ms) |
+| **citm_catalog.json** | 1.7 MB | **5.2 GB/s** (0.33 ms) | 0.38 GB/s (4.5 ms) |
+| **twitter_large_record.json** | 804 MB | **15.0 GB/s** (56 ms) | 4.9 GB/s (172 ms) |
+
+*Averages from 3 benchmark runs. Pinned memory path is comparable scope to cuJSON.*
+
+### GPU: NVIDIA B200
 
 | Parser | Time (804MB file) | Throughput | Speedup |
 |--------|-------------------|------------|---------|
 | cuJSON (CUDA C++) | 236 ms | 3.6 GB/s | baseline |
 | **mojson GPU** | **121 ms** | **7.0 GB/s** | **2.0x faster** |
-
-*Benchmark: twitter_large_record.json on NVIDIA B200. Pinned memory path (comparable scope to cuJSON). Averages from warmed-up runs.*
 
 **Key optimization:** GPU stream compaction reduces D2H transfer by extracting only position indices instead of transferring all structural character data (465MB → 4MB).
 
@@ -166,7 +174,7 @@ pixi run mojo -I . examples/01_basic_parsing.mojo
 
 **Pinned memory path** = H2D + GPU kernels + stream compaction + D2H + bracket matching
 
-### GPU: Apple Silicon (macOS M3 Pro)
+### GPU: Apple Silicon (M3 Pro)
 
 | Metric | Time | Throughput |
 |--------|------|------------|
@@ -176,7 +184,7 @@ pixi run mojo -I . examples/01_basic_parsing.mojo
 
 *Benchmark: 804MB twitter_large_record.json on Apple M3 Pro GPU*
 
-### CPU (NVIDIA B200)
+### CPU
 
 | Dataset | Size | Throughput | Time |
 |---------|------|------------|------|
@@ -193,18 +201,24 @@ Uses [simdjson](https://github.com/simdjson/simdjson) via FFI for maximum compat
 ## Benchmarks
 
 ```bash
-# GPU benchmark (mojson vs cuJSON)
-pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
+# GPU benchmark (single file)
+pixi run bench-gpu benchmark/datasets/twitter.json
+
+# GPU benchmark (all datasets, 3 runs each for averaging)
+pixi run bench-gpu-all
 
 # CPU benchmark (mojson vs simdjson)
-pixi run bench-cpu
+pixi run bench-cpu benchmark/datasets/twitter.json
 ```
 
 **Download large benchmark files:**
 
 ```bash
-cd benchmark/datasets
 # twitter_large_record.json (804MB) - primary benchmark file
+pixi run download-twitter-large
+
+# Or manually:
+cd benchmark/datasets
 gdown 1mdF4HT7s0Jp4XZ0nOxY7lQpcwRZzCjE1 -O twitter_large_record.json
 ```
 
