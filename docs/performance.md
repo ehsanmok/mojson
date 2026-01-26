@@ -99,17 +99,17 @@ mojson reports three timing metrics:
 2. **Raw GPU parse (~230ms, 3.7 GB/s):** Includes realistic pageable→pinned copy overhead (~110ms for 804MB)
 3. **Full pipeline (~890ms, 1.0 GB/s):** Includes CPU-bound Value tree construction (~770ms)
 
-## Benchmark Results by Dataset Size
+## Benchmark Results
 
 ### GPU Performance (NVIDIA B200)
 
+**Important:** GPU benchmarks are only meaningful for large files (>100MB). For smaller files, GPU launch overhead dominates and results are not representative of actual performance.
+
 | Dataset | Size | Pinned Path | Speedup vs cuJSON |
 |---------|------|-------------|-------------------|
-| twitter.json | 617 KB | 2.3 GB/s | ~1.5x |
-| citm_catalog.json | 1.7 MB | 3.1 GB/s | ~1.8x |
 | twitter_large_record.json | 804 MB | 7.0 GB/s | **2.0x** |
 
-**Key insight:** Speedup increases with file size as GPU parallelism advantage grows.
+GPU parallelism shines with large files where the overhead is amortized.
 
 ## CPU Performance
 
