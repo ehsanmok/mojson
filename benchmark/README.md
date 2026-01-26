@@ -61,6 +61,21 @@ This builds `benchmark/cuJSON/build/cujson_benchmark` from the pinned submodule 
 | simdjson (native) | 0.14 ms | 4.3 GB/s |
 | mojson CPU (FFI) | 0.18 ms | 3.5 GB/s |
 
+## Important: GPU Benchmarks Require Large Files
+
+**GPU benchmarks are only meaningful for files >100MB.** For smaller files, GPU launch overhead dominates and results are misleading. Always use large datasets (e.g., `twitter_large_record.json`) for GPU performance evaluation.
+
+## Note: Pixi Tasks Build Binaries Automatically
+
+The pixi benchmark tasks automatically build binaries with `mojo build` before running (via `depends-on`). This avoids JIT compilation overhead that would skew results.
+
+```bash
+# Pixi tasks handle the build automatically
+pixi run bench-gpu benchmark/datasets/twitter_large_record.json
+
+# First run may have GPU initialization overhead - subsequent runs are faster
+```
+
 ## Benchmarking Methodology
 
 ### What We Measure

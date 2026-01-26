@@ -48,11 +48,14 @@ var big = load[target="gpu"]("large.json")
 | Apple M3 Pro | 3.3 GB/s | — |
 | CPU (simdjson) | 4.5 GB/s | — |
 
-*Benchmarks on 804MB JSON file. GPU recommended for files >100MB.*
+*Benchmarks on 804MB JSON file. GPU only beneficial for files >100MB.*
 
 ```bash
-pixi run bench-gpu benchmark/datasets/twitter.json
-pixi run bench-gpu-all  # All datasets, 3 runs each
+# Download large dataset first (required for meaningful GPU benchmarks)
+pixi run download-twitter-large
+
+# Run GPU benchmark (only use large files)
+pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 ```
 
 ## API
