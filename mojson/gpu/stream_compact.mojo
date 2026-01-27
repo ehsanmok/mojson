@@ -245,14 +245,14 @@ fn extract_positions_gpu(
     """Extract positions and char types from bitmap using GPU stream compaction.
 
     Args:
-        ctx: GPU device context
-        d_bitmap_ptr: Device pointer to structural bitmap
-        d_input_ptr: Device pointer to input JSON data
-        num_words: Number of 32-bit words in bitmap
-        max_byte_pos: Maximum valid byte position
+        ctx: GPU device context.
+        d_bitmap_ptr: Device pointer to structural bitmap.
+        d_input_ptr: Device pointer to input JSON data.
+        num_words: Number of 32-bit words in bitmap.
+        max_byte_pos: Maximum valid byte position.
 
     Returns:
-        Tuple of (list of positions, list of char types, total count)
+        Tuple of (list of positions, list of char types, total count).
     """
     var num_blocks = ceildiv(num_words, BLOCK_SIZE_OPT)
 

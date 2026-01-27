@@ -51,14 +51,14 @@ fn to_string(v: Value) -> String:
 
 fn _format_json(raw: String, indent: String, current_indent: String) -> String:
     """Format raw JSON with indentation.
-    
+
     Args:
-        raw: Raw JSON string to format
-        indent: Indentation string per level (e.g., "  " or "    ")
-        current_indent: Current indentation level
-    
+        raw: Raw JSON string to format.
+        indent: Indentation string per level (e.g., "  " or "    ").
+        current_indent: Current indentation level.
+
     Returns:
-        Formatted JSON string with newlines and indentation
+        Formatted JSON string with newlines and indentation.
     """
     var result = String()
     var raw_bytes = raw.as_bytes()
@@ -67,33 +67,33 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
     var in_string = False
     var escaped = False
     var next_indent = current_indent + indent
-    
+
     while i < n:
         var c = raw_bytes[i]
-        
+
         if escaped:
             result += chr(Int(c))
             escaped = False
             i += 1
             continue
-        
+
         if c == ord("\\") and in_string:
             result += chr(Int(c))
             escaped = True
             i += 1
             continue
-        
+
         if c == ord('"'):
             in_string = not in_string
             result += chr(Int(c))
             i += 1
             continue
-        
+
         if in_string:
             result += chr(Int(c))
             i += 1
             continue
-        
+
         # Handle structural characters
         if c == ord("{") or c == ord("["):
             var close_char = ord("}") if c == ord("{") else ord("]")
@@ -114,12 +114,12 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
                 i += 1
             continue
-        
+
         if c == ord("}") or c == ord("]"):
             result += "\n" + current_indent + chr(Int(c))
             i += 1
             continue
-        
+
         if c == ord(","):
             result += ",\n" + next_indent
             i += 1
@@ -127,7 +127,7 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
                 i += 1
             continue
-        
+
         if c == ord(":"):
             result += ": "
             i += 1
@@ -135,16 +135,16 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
                 i += 1
             continue
-        
+
         # Skip whitespace (we handle it ourselves)
         if c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r"):
             i += 1
             continue
-        
+
         # Regular character
         result += chr(Int(c))
         i += 1
-    
+
     return result^
 
 
@@ -169,16 +169,16 @@ fn dumps(v: Value, indent: String = "") -> String:
     """Serialize a Value to JSON string (like Python's json.dumps).
 
     Args:
-        v: Value to serialize
-        indent: Indentation string (empty for compact, e.g., "  " for 2 spaces)
+        v: Value to serialize.
+        indent: Indentation string (empty for compact, e.g., "  " for 2 spaces).
 
     Returns:
-        JSON string representation
+        JSON string representation.
 
     Example:
         var data = loads('{"name": "Alice", "age": 30}')
-        print(dumps(data))  # {"name":"Alice","age":30}
-        print(dumps(data, indent="  "))  # Pretty-printed
+        print(dumps(data))  # {"name":"Alice","age":30}.
+        print(dumps(data, indent="  "))  # Pretty-printed.
     """
     if indent == "":
         return to_string(v)
@@ -187,33 +187,33 @@ fn dumps(v: Value, indent: String = "") -> String:
 
 fn dumps(v: Value, config: SerializerConfig) -> String:
     """Serialize a Value with custom configuration.
-    
+
     Args:
-        v: Value to serialize
-        config: Serializer configuration
-    
+        v: Value to serialize.
+        config: Serializer configuration.
+
     Returns:
-        JSON string representation
-    
+        JSON string representation.
+
     Example:
-        var json = dumps(value, SerializerConfig(indent="  ", escape_unicode=True))
+        var json = dumps(value, SerializerConfig(indent="  ", escape_unicode=True)).
     """
     var result: String
-    
+
     if config.indent == "":
         result = to_string(v)
     else:
         result = _to_string_pretty(v, config.indent, "")
-    
+
     if config.escape_unicode:
         result = _escape_unicode_chars(result)
-    
+
     if config.escape_forward_slash:
         result = _escape_forward_slashes(result)
-    
+
     if config.sort_keys and (v.is_object() or v.is_array()):
         result = _sort_object_keys(result)
-    
+
     return result^
 
 
@@ -221,24 +221,24 @@ fn dumps[format: StaticString = "json"](values: List[Value]) -> String:
     """Serialize a list of Values to NDJSON string.
 
     Parameters:
-        format: Must be "ndjson" for this overload
+        format: Must be "ndjson" for this overload.
 
     Args:
-        values: List of Values to serialize
+        values: List of Values to serialize.
 
     Returns:
-        NDJSON string (one JSON value per line)
+        NDJSON string (one JSON value per line).
 
     Example:
         var values = List[Value]()
         values.append(loads('{"a":1}'))
         values.append(loads('{"a":2}'))
-        print(dumps[format="ndjson"](values))
+        print(dumps[format="ndjson"](values)).
     """
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
-    
+
     var result = String()
     for i in range(len(values)):
         if i > 0:
@@ -251,12 +251,12 @@ fn dump(v: Value, mut f: FileHandle) raises:
     """Serialize a Value and write to file (like Python's json.dump).
 
     Args:
-        v: Value to serialize
-        f: FileHandle to write JSON to
+        v: Value to serialize.
+        f: FileHandle to write JSON to.
 
     Example:
         with open("output.json", "w") as f:
-            dump(data, f)
+            dump(data, f).
     """
     f.write(dumps(v))
 
@@ -265,13 +265,13 @@ fn dump(v: Value, mut f: FileHandle, indent: String) raises:
     """Serialize a Value with indentation and write to file.
 
     Args:
-        v: Value to serialize
-        f: FileHandle to write JSON to
-        indent: Indentation string
+        v: Value to serialize.
+        f: FileHandle to write JSON to.
+        indent: Indentation string.
 
     Example:
         with open("output.json", "w") as f:
-            dump(data, f, indent="  ")
+            dump(data, f, indent="  ").
     """
     f.write(dumps(v, indent))
 
@@ -280,55 +280,55 @@ fn dump[format: StaticString = "json"](values: List[Value], mut f: FileHandle) r
     """Serialize a list of Values to NDJSON and write to file.
 
     Parameters:
-        format: Must be "ndjson" for this overload
+        format: Must be "ndjson" for this overload.
 
     Args:
-        values: List of Values to serialize
-        f: FileHandle to write NDJSON to
+        values: List of Values to serialize.
+        f: FileHandle to write NDJSON to.
 
     Example:
         with open("output.ndjson", "w") as f:
-            dump[format="ndjson"](values, f)
+            dump[format="ndjson"](values, f).
     """
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
-    
+
     f.write(dumps[format="ndjson"](values))
 
 
 # Backwards compatibility alias (deprecated, use dumps(v, config) instead)
 fn dumps_with_config(v: Value, config: SerializerConfig) -> String:
     """Serialize a Value with custom configuration.
-    
+
     Args:
-        v: Value to serialize
-        config: Serializer configuration
-    
+        v: Value to serialize.
+        config: Serializer configuration.
+
     Returns:
-        JSON string representation
-    
+        JSON string representation.
+
     Example:
         var config = SerializerConfig(sort_keys=True, indent="  ")
-        var json = dumps_with_config(value, config)
+        var json = dumps_with_config(value, config).
     """
     var result: String
-    
+
     if config.indent == "":
         result = to_string(v)
     else:
         result = _to_string_pretty(v, config.indent, "")
-    
+
     # Apply additional options
     if config.escape_unicode:
         result = _escape_unicode_chars(result)
-    
+
     if config.escape_forward_slash:
         result = _escape_forward_slashes(result)
-    
+
     if config.sort_keys and (v.is_object() or v.is_array()):
         result = _sort_object_keys(result)
-    
+
     return result^
 
 
@@ -338,25 +338,25 @@ fn _escape_unicode_chars(s: String) -> String:
     var s_bytes = s.as_bytes()
     var in_string = False
     var escaped = False
-    
+
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
-        
+
         if escaped:
             escaped = False
             result += chr(Int(c))
             continue
-        
+
         if c == ord("\\"):
             escaped = True
             result += chr(Int(c))
             continue
-        
+
         if c == ord('"'):
             in_string = not in_string
             result += chr(Int(c))
             continue
-        
+
         # Escape non-ASCII inside strings
         if in_string and c > 127:
             result += "\\u00"
@@ -366,7 +366,7 @@ fn _escape_unicode_chars(s: String) -> String:
             result += chr(Int(lo + ord("0"))) if lo < 10 else chr(Int(lo - 10 + ord("a")))
         else:
             result += chr(Int(c))
-    
+
     return result^
 
 
@@ -376,37 +376,37 @@ fn _escape_forward_slashes(s: String) -> String:
     var s_bytes = s.as_bytes()
     var in_string = False
     var escaped = False
-    
+
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
-        
+
         if escaped:
             escaped = False
             result += chr(Int(c))
             continue
-        
+
         if c == ord("\\"):
             escaped = True
             result += chr(Int(c))
             continue
-        
+
         if c == ord('"'):
             in_string = not in_string
             result += chr(Int(c))
             continue
-        
+
         # Escape / inside strings
         if in_string and c == ord("/"):
             result += "\\/"
         else:
             result += chr(Int(c))
-    
+
     return result^
 
 
 fn _sort_object_keys(json: String) -> String:
     """Sort object keys alphabetically (simple implementation).
-    
+
     Note: This is a basic implementation that works for simple objects.
     For complex nested structures, a full re-parse may be needed.
     """
@@ -452,18 +452,18 @@ fn to_json_value(val: Bool) -> String:
 
 trait Serializable:
     """Trait for types that can be serialized to JSON.
-    
+
     Implement this trait to enable automatic serialization with serialize().
-    
+
     Example:
         struct Person(Serializable):
             var name: String
             var age: Int
-            
+
             fn to_json(self) -> String:
-                return '{"name":' + to_json_value(self.name) + 
+                return '{"name":' + to_json_value(self.name) +
                        ',"age":' + to_json_value(self.age) + '}'
-        
+
         var json = serialize(Person("Alice", 30))  # {"name":"Alice","age":30}
     """
     fn to_json(self) -> String:
@@ -473,20 +473,20 @@ trait Serializable:
 
 fn serialize[T: Serializable](obj: T) -> String:
     """Serialize an object to JSON string.
-    
+
     The object must implement the Serializable trait with a to_json() method.
-    
+
     Parameters:
-        T: Type that implements Serializable
-    
+        T: Type that implements Serializable.
+
     Args:
-        obj: Object to serialize
-    
+        obj: Object to serialize.
+
     Returns:
-        JSON string representation
-    
+        JSON string representation.
+
     Example:
         var person = Person("Alice", 30)
-        var json = serialize(person)  # {"name":"Alice","age":30}
+        var json = serialize(person)  # `{"name":"Alice","age":30}`.
     """
     return obj.to_json()

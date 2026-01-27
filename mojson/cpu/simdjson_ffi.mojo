@@ -75,11 +75,11 @@ struct SimdjsonFFI:
 
     fn __init__(out self, lib_path: String = "") raises:
         """Initialize by loading the simdjson wrapper library.
-        
+
         Args:
             lib_path: Path to the library. If empty, searches standard locations:
-                      1. $CONDA_PREFIX/lib/libsimdjson_wrapper.so (installed)
-                      2. build/libsimdjson_wrapper.so (development)
+                      1. $CONDA_PREFIX/lib/libsimdjson_wrapper.so (installed).
+                      2. build/libsimdjson_wrapper.so (development).
         """
         var path = lib_path if lib_path else _find_simdjson_library()
         self._lib = OwnedDLHandle(path)

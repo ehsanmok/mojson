@@ -199,13 +199,12 @@ fn match_brackets_gpu(
     d_char_types: UnsafePointer[UInt8, MutAnyOrigin],
     n: Int,
 ) raises -> Tuple[List[Int32], List[Int32]]:
-    """
-    Match brackets using GPU prefix sum.
+    """Match brackets using GPU prefix sum.
 
     Returns:
         Tuple of (depths, pair_pos) lists.
-        depths[i] = depth at position i
-        pair_pos[i] = index of matching bracket (-1 if not a bracket)
+        depths[i] = depth at position i.
+        pair_pos[i] = index of matching bracket (-1 if not a bracket).
     """
     if n == 0:
         return (List[Int32](), List[Int32]())

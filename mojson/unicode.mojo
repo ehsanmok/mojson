@@ -5,7 +5,7 @@ from collections import List
 
 fn hex_digit_value(c: UInt8) -> Int:
     """Convert a hex digit character to its value.
-    
+
     Returns -1 if not a valid hex digit.
     """
     if c >= ord("0") and c <= ord("9"):
@@ -19,24 +19,24 @@ fn hex_digit_value(c: UInt8) -> Int:
 
 fn parse_unicode_escape(data: List[UInt8], start: Int) -> Int:
     """Parse a 4-digit hex unicode escape sequence.
-    
+
     Args:
-        data: The byte array containing the escape
-        start: Index of first hex digit (after backslash-u)
-    
+        data: The byte array containing the escape.
+        start: Index of first hex digit (after backslash-u).
+
     Returns:
-        The code point value, or -1 if invalid
+        The code point value, or -1 if invalid.
     """
     if start + 4 > len(data):
         return -1
-    
+
     var result = 0
     for i in range(4):
         var digit = hex_digit_value(data[start + i])
         if digit < 0:
             return -1
         result = result * 16 + digit
-    
+
     return result
 
 
@@ -54,11 +54,11 @@ fn decode_surrogate_pair(high: Int, low: Int) -> Int:
     """Decode a surrogate pair to a full code point.
     
     Args:
-        high: High surrogate (U+D800 - U+DBFF)
-        low: Low surrogate (U+DC00 - U+DFFF)
+        high: High surrogate (U+D800 - U+DBFF).
+        low: Low surrogate (U+DC00 - U+DFFF).
     
     Returns:
-        The full Unicode code point (U+10000 - U+10FFFF)
+        The full Unicode code point (U+10000 - U+10FFFF).
     """
     return 0x10000 + ((high - 0xD800) << 10) + (low - 0xDC00)
 
@@ -67,8 +67,8 @@ fn encode_utf8(code_point: Int, mut bytes: List[UInt8]):
     """Encode a Unicode code point as UTF-8 bytes.
     
     Args:
-        code_point: Unicode code point (0 - 0x10FFFF)
-        bytes: List to append UTF-8 bytes to
+        code_point: Unicode code point (0 - 0x10FFFF).
+        bytes: List to append UTF-8 bytes to.
     """
     if code_point < 0x80:
         # 1-byte sequence (ASCII)
@@ -94,22 +94,22 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
     """Unescape a JSON string, handling all escape sequences including unicode.
     
     Args:
-        data: The byte array containing the string content
-        start: Start index (after opening quote)
-        end: End index (before closing quote)
+        data: The byte array containing the string content.
+        start: Start index (after opening quote).
+        end: End index (before closing quote).
     
     Returns:
-        Unescaped bytes
+        Unescaped bytes.
     """
     var result = List[UInt8](capacity=end - start)
     var i = start
-    
+
     while i < end:
         var c = data[i]
-        
+
         if c == ord("\\") and i + 1 < end:
             var next = data[i + 1]
-            
+
             if next == ord("n"):
                 result.append(0x0A)
                 i += 2
@@ -142,7 +142,7 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
                     result.append(c)
                     i += 1
                     continue
-                
+
                 # Check for surrogate pair
                 if is_high_surrogate(code_point):
                     # Look for low surrogate
@@ -175,5 +175,5 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
         else:
             result.append(c)
             i += 1
-    
+
     return result^

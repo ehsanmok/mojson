@@ -26,8 +26,8 @@ struct JSONIterator:
         """Initialize iterator with parsed result.
 
         Args:
-            result: The parsed JSON result
-            input_data: Original JSON data
+            result: The parsed JSON result.
+            input_data: Original JSON data.
         """
         self.result = result^
         self.input_data = input_data^
@@ -45,10 +45,10 @@ struct JSONIterator:
         """Move to the value associated with a key in the current object.
 
         Args:
-            key: The key to search for
+            key: The key to search for.
 
         Returns:
-            The structural index of the value, or -1 if not found
+            The structural index of the value, or -1 if not found.
         """
         if self.current_pos >= self.result.total_result_size():
             return -1
@@ -124,10 +124,10 @@ struct JSONIterator:
         """Move to element at index in the current array.
 
         Args:
-            index: Zero-based index in the array
+            index: Zero-based index in the array.
 
         Returns:
-            The structural index of the element, or -1 if not found
+            The structural index of the element, or -1 if not found.
         """
         if self.current_pos >= self.result.total_result_size():
             return -1
@@ -196,7 +196,7 @@ struct JSONIterator:
         """Move to the next sibling element.
 
         Returns:
-            The structural index of the next sibling, or -1 if not found
+            The structural index of the next sibling, or -1 if not found.
         """
         if self.current_pos >= self.result.total_result_size():
             return -1
@@ -226,7 +226,7 @@ struct JSONIterator:
         """Get the value at the current position.
 
         Returns:
-            The value as a string
+            The value as a string.
         """
         if self.current_pos >= self.result.total_result_size():
             return ""
@@ -411,9 +411,9 @@ struct JSONIterator:
         """Get the current byte position in the input."""
         if self.current_pos >= self.result.total_result_size():
             return self.size()
-        
+
         var pos = Int(self.result.structural[self.current_pos])
         if pos >= self.size():
             return self.size()
-        
+
         return pos

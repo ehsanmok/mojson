@@ -15,36 +15,36 @@ from .serialize import dumps
 
 fn apply_patch(document: Value, patch: Value) raises -> Value:
     """Apply a JSON Patch (RFC 6902) to a document.
-    
+
     The patch is a JSON array of operations. Each operation has:
     - "op": The operation ("add", "remove", "replace", "move", "copy", "test")
     - "path": JSON Pointer to the target location
     - "value": The value (for add, replace, test)
     - "from": Source path (for move, copy)
-    
+
     Args:
-        document: The original JSON document
-        patch: Array of patch operations
-    
+        document: The original JSON document.
+        patch: Array of patch operations.
+
     Returns:
-        New document with patches applied
-    
+        New document with patches applied.
+
     Example:
         var doc = loads('{"name":"Alice"}')
         var patch = loads('[{"op":"add","path":"/age","value":30}]')
         var result = apply_patch(doc, patch)
-        # {"name":"Alice","age":30}
+        Result is `{"name":"Alice","age":30}`.
     """
     if not patch.is_array():
         raise Error("JSON Patch must be an array")
-    
+
     var result = document.copy()
     var ops = patch.array_items()
-    
+
     for i in range(len(ops)):
         var op = ops[i].copy()
         result = _apply_operation(result, op)
-    
+
     return result^
 
 
@@ -52,10 +52,10 @@ fn _apply_operation(document: Value, operation: Value) raises -> Value:
     """Apply a single patch operation."""
     if not operation.is_object():
         raise Error("Patch operation must be an object")
-    
+
     var op_type = operation["op"].string_value()
     var path = operation["path"].string_value()
-    
+
     if op_type == "add":
         var value = operation["value"].copy()
         return _patch_add(document, path, value)
@@ -82,11 +82,11 @@ fn _patch_add(document: Value, path: String, value: Value) raises -> Value:
     """Add a value at the specified path."""
     if path == "":
         return value.copy()
-    
+
     var result = document.copy()
     var parent_path = _get_parent_path(path)
     var key = _get_last_token(path)
-    
+
     if parent_path == "":
         # Adding to root
         if result.is_object():
@@ -113,7 +113,7 @@ fn _patch_add(document: Value, path: String, value: Value) raises -> Value:
             result = _set_at_path(result, parent_path, parent)
         else:
             raise Error("Cannot add to primitive value")
-    
+
     return result^
 
 
@@ -121,11 +121,11 @@ fn _patch_remove(document: Value, path: String) raises -> Value:
     """Remove the value at the specified path."""
     if path == "":
         raise Error("Cannot remove root document")
-    
+
     var result = document.copy()
     var parent_path = _get_parent_path(path)
     var key = _get_last_token(path)
-    
+
     if parent_path == "":
         if result.is_object():
             result = _remove_object_key(result, key)
@@ -145,7 +145,7 @@ fn _patch_remove(document: Value, path: String) raises -> Value:
             result = _set_at_path(result, parent_path, parent)
         else:
             raise Error("Cannot remove from primitive value")
-    
+
     return result^
 
 
@@ -153,10 +153,10 @@ fn _patch_replace(document: Value, path: String, value: Value) raises -> Value:
     """Replace the value at the specified path."""
     if path == "":
         return value.copy()
-    
+
     # Verify path exists
     _ = document.at(path)
-    
+
     return _set_at_path(document.copy(), path, value)
 
 
@@ -186,40 +186,40 @@ fn _patch_test(document: Value, path: String, value: Value) raises:
 
 fn merge_patch(target: Value, patch: Value) raises -> Value:
     """Apply a JSON Merge Patch (RFC 7396) to a document.
-    
+
     Merge patch rules:
     - If patch is not an object, it replaces target entirely
     - null values in patch remove keys from target
     - Other values are recursively merged
-    
+
     Args:
-        target: The original document
-        patch: The merge patch to apply
-    
+        target: The original document.
+        patch: The merge patch to apply.
+
     Returns:
-        New document with merge patch applied
-    
+        New document with merge patch applied.
+
     Example:
         var target = loads('{"a":1,"b":2}')
         var patch = loads('{"b":null,"c":3}')
         var result = merge_patch(target, patch)
-        # {"a":1,"c":3}
+        Result is `{"a":1,"c":3}`.
     """
     if not patch.is_object():
         return patch.copy()
-    
+
     var result: Value
     if target.is_object():
         result = target.copy()
     else:
         result = loads("{}")
-    
+
     var patch_items = patch.object_items()
     for i in range(len(patch_items)):
         var item = patch_items[i]
         var key = item[0]
         var value = item[1].copy()
-        
+
         if value.is_null():
             # Remove the key
             result = _remove_object_key(result, key)
@@ -230,44 +230,44 @@ fn merge_patch(target: Value, patch: Value) raises -> Value:
                 target_value = result[key].copy()
             except:
                 target_value = Value(Null())
-            
+
             var merged = merge_patch(target_value, value)
             result.set(key, merged)
-    
+
     return result^
 
 
 fn create_merge_patch(source: Value, target: Value) raises -> Value:
     """Create a merge patch that transforms source into target.
-    
+
     Args:
-        source: The original document
-        target: The desired result
-    
+        source: The original document.
+        target: The desired result.
+
     Returns:
-        A merge patch that when applied to source produces target
-    
+        A merge patch that when applied to source produces target.
+
     Example:
         var source = loads('{"a":1,"b":2}')
         var target = loads('{"a":1,"c":3}')
         var patch = create_merge_patch(source, target)
-        # {"b":null,"c":3}
+        Result is `{"b":null,"c":3}`.
     """
     if not target.is_object():
         return target.copy()
-    
+
     if not source.is_object():
         return target.copy()
-    
+
     var patch = loads("{}")
-    
+
     # Find removed and changed keys
     var source_items = source.object_items()
     for i in range(len(source_items)):
         var item = source_items[i]
         var key = item[0]
         var source_val = item[1].copy()
-        
+
         var target_has_key = False
         var target_val: Value
         try:
@@ -275,7 +275,7 @@ fn create_merge_patch(source: Value, target: Value) raises -> Value:
             target_has_key = True
         except:
             target_val = Value(Null())
-        
+
         if not target_has_key:
             # Key was removed
             patch.set(key, Value(Null()))
@@ -286,24 +286,24 @@ fn create_merge_patch(source: Value, target: Value) raises -> Value:
                 patch.set(key, sub_patch)
             else:
                 patch.set(key, target_val)
-    
+
     # Find added keys
     var target_items = target.object_items()
     for i in range(len(target_items)):
         var item = target_items[i]
         var key = item[0]
         var target_val = item[1].copy()
-        
+
         var source_has_key = False
         try:
             _ = source[key]
             source_has_key = True
         except:
             pass
-        
+
         if not source_has_key:
             patch.set(key, target_val)
-    
+
     return patch^
 
 
@@ -318,7 +318,7 @@ fn _get_parent_path(path: String) -> String:
     for i in range(len(path_bytes)):
         if path_bytes[i] == ord("/"):
             last_slash = i
-    
+
     if last_slash <= 0:
         return ""
     return String(path[:last_slash])
@@ -331,10 +331,10 @@ fn _get_last_token(path: String) -> String:
     for i in range(len(path_bytes)):
         if path_bytes[i] == ord("/"):
             last_slash = i
-    
+
     if last_slash < 0:
         return path
-    
+
     var token = String(path[last_slash + 1:])
     # Unescape ~1 and ~0
     token = _unescape_pointer_token(token)
@@ -365,16 +365,16 @@ fn _parse_array_index(token: String, max_index: Int) raises -> Int:
     """Parse an array index from a JSON Pointer token."""
     if token == "-":
         return max_index
-    
+
     var idx: Int
     try:
         idx = atol(token)
     except:
         raise Error("Invalid array index: " + token)
-    
+
     if idx < 0 or idx > max_index:
         raise Error("Array index out of bounds: " + token)
-    
+
     return idx
 
 
@@ -382,10 +382,10 @@ fn _set_at_path(document: Value, path: String, value: Value) raises -> Value:
     """Set a value at the given JSON Pointer path."""
     if path == "":
         return value.copy()
-    
+
     var result = document.copy()
     var tokens = _parse_path_tokens(path)
-    
+
     # Navigate to parent and set
     if len(tokens) == 1:
         # Direct child of root
@@ -398,7 +398,7 @@ fn _set_at_path(document: Value, path: String, value: Value) raises -> Value:
     else:
         # Need to rebuild the path
         result = _set_nested(result, tokens, 0, value)
-    
+
     return result^
 
 
@@ -406,10 +406,10 @@ fn _set_nested(document: Value, tokens: List[String], idx: Int, value: Value) ra
     """Recursively set a nested value."""
     if idx >= len(tokens):
         return value.copy()
-    
+
     var token = tokens[idx]
     var result = document.copy()
-    
+
     if idx == len(tokens) - 1:
         # Last token - set the value
         if result.is_object():
@@ -418,7 +418,7 @@ fn _set_nested(document: Value, tokens: List[String], idx: Int, value: Value) ra
             var arr_idx = _parse_array_index(token, result.array_count())
             result.set(arr_idx, value)
         return result^
-    
+
     # Not last token - recurse
     if result.is_object():
         var child = result[token].copy()
@@ -429,7 +429,7 @@ fn _set_nested(document: Value, tokens: List[String], idx: Int, value: Value) ra
         var child = result[arr_idx].copy()
         var new_child = _set_nested(child, tokens, idx + 1, value)
         result.set(arr_idx, new_child)
-    
+
     return result^
 
 
@@ -438,16 +438,16 @@ fn _parse_path_tokens(path: String) -> List[String]:
     var tokens = List[String]()
     if path == "":
         return tokens^
-    
+
     var path_bytes = path.as_bytes()
     var start = 1  # Skip leading /
-    
+
     for i in range(1, len(path_bytes) + 1):
         if i == len(path_bytes) or path_bytes[i] == ord("/"):
             var token = String(path[start:i])
             tokens.append(_unescape_pointer_token(token))
             start = i + 1
-    
+
     return tokens^
 
 
@@ -455,11 +455,11 @@ fn _remove_object_key(obj: Value, key: String) raises -> Value:
     """Remove a key from an object."""
     if not obj.is_object():
         raise Error("Cannot remove key from non-object")
-    
+
     var items = obj.object_items()
     var json = "{"
     var first = True
-    
+
     for i in range(len(items)):
         var item = items[i]
         if item[0] != key:
@@ -468,7 +468,7 @@ fn _remove_object_key(obj: Value, key: String) raises -> Value:
             json += '"' + item[0] + '":'
             json += dumps(item[1])
             first = False
-    
+
     json += "}"
     return loads(json)
 
@@ -477,10 +477,10 @@ fn _array_insert(arr: Value, idx: Int, value: Value) raises -> Value:
     """Insert a value into an array at the given index."""
     if not arr.is_array():
         raise Error("Cannot insert into non-array")
-    
+
     var items = arr.array_items()
     var json = "["
-    
+
     for i in range(len(items) + 1):
         if i > 0:
             json += ","
@@ -495,7 +495,7 @@ fn _array_insert(arr: Value, idx: Int, value: Value) raises -> Value:
                 actual_idx = i
             if actual_idx < len(items):
                 json += dumps(items[actual_idx])
-    
+
     # Fix: simpler implementation
     json = "["
     for i in range(len(items) + 1):
@@ -507,7 +507,7 @@ fn _array_insert(arr: Value, idx: Int, value: Value) raises -> Value:
             json += dumps(items[i])
         else:  # i > idx
             json += dumps(items[i - 1])
-    
+
     json += "]"
     return loads(json)
 
@@ -516,21 +516,21 @@ fn _array_remove(arr: Value, idx: Int) raises -> Value:
     """Remove an element from an array at the given index."""
     if not arr.is_array():
         raise Error("Cannot remove from non-array")
-    
+
     var items = arr.array_items()
     if idx >= len(items):
         raise Error("Array index out of bounds")
-    
+
     var json = "["
     var first = True
-    
+
     for i in range(len(items)):
         if i != idx:
             if not first:
                 json += ","
             json += dumps(items[i])
             first = False
-    
+
     json += "]"
     return loads(json)
 

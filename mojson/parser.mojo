@@ -124,7 +124,7 @@ fn _parse_string_value(s: String, start: Int) raises -> Value:
     var data = s.as_bytes()
     var n = len(data)
     var i = start + 1
-    
+
     # Find end of string
     var end_idx = i
     var has_escapes = False
@@ -137,11 +137,11 @@ fn _parse_string_value(s: String, start: Int) raises -> Value:
         if c == 0x22:  # "
             break
         end_idx += 1
-    
+
     # Fast path: no escapes
     if not has_escapes:
         return Value(String(s[i:end_idx]))
-    
+
     # Slow path: handle escapes including \uXXXX
     from .unicode import unescape_json_string
     var bytes_list = List[UInt8](capacity=n)
@@ -305,17 +305,17 @@ fn loads[target: StaticString = "cpu"](s: String) raises -> Value:
     """Deserialize JSON string to a Value (like Python's json.loads).
 
     Parameters:
-        target: "cpu" (default) or "gpu"
+        target: "cpu" (default) or "gpu".
 
     Args:
-        s: JSON string to parse
+        s: JSON string to parse.
 
     Returns:
-        Parsed Value
+        Parsed Value.
 
     Example:
         var data = loads('{"name": "Alice"}')
-        var data = loads[target="gpu"](large_json)  # GPU for large files
+        var data = loads[target="gpu"](large_json)  # GPU for large files.
     """
     @parameter
     if target == "cpu":
@@ -326,19 +326,19 @@ fn loads[target: StaticString = "cpu"](s: String) raises -> Value:
 
 fn loads[target: StaticString = "cpu"](s: String, config: ParserConfig) raises -> Value:
     """Deserialize JSON with custom configuration.
-    
+
     Parameters:
-        target: "cpu" (default) or "gpu"
-    
+        target: "cpu" (default) or "gpu".
+
     Args:
-        s: JSON string to parse
-        config: Parser configuration (allow_comments, allow_trailing_comma, max_depth)
-    
+        s: JSON string to parse.
+        config: Parser configuration (allow_comments, allow_trailing_comma, max_depth).
+
     Returns:
-        Parsed Value
-    
+        Parsed Value.
+
     Example:
-        var data = loads('{"a": 1} // comment', ParserConfig(allow_comments=True))
+        var data = loads('{"a": 1} // comment', ParserConfig(allow_comments=True)).
     """
     from .config import preprocess_json
     var preprocessed = preprocess_json(s, config)
@@ -352,33 +352,33 @@ fn loads[
     """Deserialize NDJSON string to a list of Values.
 
     Parameters:
-        target: "cpu" (default) or "gpu"
-        format: Must be "ndjson" for this overload
+        target: "cpu" (default) or "gpu".
+        format: Must be "ndjson" for this overload.
 
     Args:
-        s: NDJSON string (one JSON value per line)
+        s: NDJSON string (one JSON value per line).
 
     Returns:
-        List of parsed Values
+        List of parsed Values.
 
     Example:
-        var values = loads[format="ndjson"]('{"a":1}\\n{"a":2}')
+        var values = loads[format="ndjson"]('{"a":1}\\n{"a":2}').
     """
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] return type"]()
-    
+
     from .ndjson import _split_lines, _is_whitespace_only
     var result = List[Value]()
     var lines = _split_lines(s)
-    
+
     for i in range(len(lines)):
         var line = lines[i]
         if _is_whitespace_only(line):
             continue
         var value = loads[target](line)
         result.append(value^)
-    
+
     return result^
 
 
@@ -386,25 +386,25 @@ fn loads[lazy: Bool](s: String) raises -> LazyValue:
     """Create a lazy JSON value for on-demand parsing (CPU only).
 
     Parameters:
-        lazy: Must be True (required, no default)
+        lazy: Must be True (required, no default).
 
     Args:
-        s: JSON string
+        s: JSON string.
 
     Returns:
-        LazyValue that parses on demand
+        LazyValue that parses on demand.
 
     Example:
         var lazy = loads[lazy=True](huge_json)
-        var name = lazy.get("/users/0/name")  # Only parses this path
+        var name = lazy.get("/users/0/name")  # Only parses this path.
     
     Note:
-        Lazy parsing is CPU-only. For GPU, use loads[target="gpu"] directly.
+        Lazy parsing is CPU-only. For GPU, use `loads[target="gpu"]` directly.
     """
     @parameter
     if not lazy:
         constrained[False, "Use lazy=True for LazyValue return type"]()
-    
+
     return LazyValue(s)
 
 
@@ -412,17 +412,17 @@ fn load[target: StaticString = "cpu"](mut f: FileHandle) raises -> Value:
     """Deserialize JSON from file to a Value (like Python's json.load).
 
     Parameters:
-        target: "cpu" (default) or "gpu"
+        target: "cpu" (default) or "gpu".
 
     Args:
-        f: FileHandle to read JSON from
+        f: FileHandle to read JSON from.
 
     Returns:
-        Parsed Value
+        Parsed Value.
 
     Example:
         with open("data.json", "r") as f:
-            var data = load(f)
+            var data = load(f).
     """
     var content = f.read()
     return loads[target](content)
@@ -432,14 +432,14 @@ fn load[target: StaticString = "cpu"](mut f: FileHandle, config: ParserConfig) r
     """Deserialize JSON from file with custom configuration.
 
     Parameters:
-        target: "cpu" (default) or "gpu"
+        target: "cpu" (default) or "gpu".
 
     Args:
-        f: FileHandle to read JSON from
-        config: Parser configuration
+        f: FileHandle to read JSON from.
+        config: Parser configuration.
 
     Returns:
-        Parsed Value
+        Parsed Value.
     """
     var content = f.read()
     return loads[target](content, config)
@@ -449,28 +449,28 @@ fn load[target: StaticString = "cpu"](path: String) raises -> Value:
     """Load JSON/NDJSON from file path. Auto-detects format from extension.
 
     Parameters:
-        target: "cpu" (default) or "gpu"
+        target: "cpu" (default) or "gpu".
 
     Args:
-        path: Path to .json or .ndjson file
+        path: Path to .json or .ndjson file.
 
     Returns:
-        Value (for .json) or Value array (for .ndjson)
+        Value (for .json) or Value array (for .ndjson).
 
     Example:
-        var data = load("config.json")           # Returns object/value
-        var items = load("data.ndjson")          # Returns array of values
-        var big = load[target="gpu"]("large.json")
+        var data = load("config.json")           # Returns object/value.
+        var items = load("data.ndjson")          # Returns array of values.
+        var big = load[target="gpu"]("large.json").
     """
     var f = open(path, "r")
     var content = f.read()
     f.close()
-    
+
     # Auto-detect NDJSON from extension
     if path.endswith(".ndjson"):
         var values = loads[target, format="ndjson"](content)
         return _list_to_array_value(values)
-    
+
     return loads[target](content)
 
 
@@ -479,7 +479,7 @@ fn _list_to_array_value(values: List[Value]) -> Value:
     var count = len(values)
     if count == 0:
         return make_array_value("[]", 0)
-    
+
     var raw = String("[")
     for i in range(count):
         if i > 0:
@@ -493,29 +493,28 @@ fn load[streaming: Bool](path: String) raises -> StreamingParser:
     """Stream large files line by line (CPU only, for memory efficiency).
 
     Parameters:
-        streaming: Must be True
+        streaming: Must be True.
 
     Args:
-        path: Path to NDJSON file
+        path: Path to NDJSON file.
 
     Returns:
-        StreamingParser iterator
+        StreamingParser iterator.
 
     Example:
         var parser = load[streaming=True]("huge.ndjson")
         while parser.has_next():
             var item = parser.next()
-        parser.close()
+        parser.close().
     
     Note:
         Streaming is CPU-only (for memory efficiency, not speed).
-        For GPU speed on files that fit in memory, use:
-        load[target="gpu"]("file.ndjson")
+        For GPU speed on files that fit in memory, use `load[target="gpu"]("file.ndjson")`.
     """
     @parameter
     if not streaming:
         constrained[False, "Use streaming=True for StreamingParser"]()
-    
+
     return StreamingParser(path)
 
 
