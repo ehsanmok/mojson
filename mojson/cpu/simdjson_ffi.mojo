@@ -17,6 +17,7 @@ fn _find_simdjson_library() -> String:
     # Fallback to local build directory (development)
     return "build/libsimdjson_wrapper.so"
 
+
 # Result codes from simdjson_wrapper.h
 comptime SIMDJSON_OK: Int = 0
 comptime SIMDJSON_ERROR_INVALID_JSON: Int = 1
@@ -186,11 +187,14 @@ struct SimdjsonFFI:
 
         if err != SIMDJSON_OK:
             from ..errors import json_parse_error, find_error_position
+
             var pos = find_error_position(json)
             if err == SIMDJSON_ERROR_INVALID_JSON:
                 raise Error(json_parse_error("Invalid JSON syntax", json, pos))
             elif err == SIMDJSON_ERROR_UTF8:
-                raise Error(json_parse_error("Invalid UTF-8 encoding", json, pos))
+                raise Error(
+                    json_parse_error("Invalid UTF-8 encoding", json, pos)
+                )
             elif err == SIMDJSON_ERROR_CAPACITY:
                 raise Error("JSON document too large (exceeds parser capacity)")
             else:

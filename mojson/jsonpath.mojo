@@ -72,6 +72,7 @@ fn jsonpath_one(document: Value, path: String) raises -> Value:
 
 struct JSONPathToken(Copyable, Movable):
     """Represents a parsed JSONPath token."""
+
     var type: Int  # 0=root, 1=child, 2=index, 3=wildcard, 4=recursive, 5=slice, 6=filter
     var value: String
     var start: Int
@@ -128,7 +129,11 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
             elif i < n and path_bytes[i] != ord("["):
                 # Property name
                 var start = i
-                while i < n and path_bytes[i] != ord(".") and path_bytes[i] != ord("["):
+                while (
+                    i < n
+                    and path_bytes[i] != ord(".")
+                    and path_bytes[i] != ord("[")
+                ):
                     i += 1
                 var name = String(path[start:i])
                 tokens.append(JSONPathToken(1, name))  # child
@@ -154,7 +159,7 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                     elif path_bytes[i] == ord("]"):
                         depth -= 1
                     i += 1
-                var expr = String(path[start:i - 1])
+                var expr = String(path[start : i - 1])
                 tokens.append(JSONPathToken(6, expr))  # filter
                 continue
             elif i < n and path_bytes[i] == ord("'"):
@@ -226,7 +231,9 @@ fn _parse_slice(content: String) raises -> JSONPathToken:
     return token^
 
 
-fn _apply_jsonpath_token(var values: List[Value], ref token: JSONPathToken) raises -> List[Value]:
+fn _apply_jsonpath_token(
+    var values: List[Value], ref token: JSONPathToken
+) raises -> List[Value]:
     """Apply a single JSONPath token to a list of values."""
     var results = List[Value]()
 
@@ -473,9 +480,13 @@ fn _trim(s: String) -> String:
     var start = 0
     var end = len(s_bytes)
 
-    while start < end and (s_bytes[start] == ord(" ") or s_bytes[start] == ord("\t")):
+    while start < end and (
+        s_bytes[start] == ord(" ") or s_bytes[start] == ord("\t")
+    ):
         start += 1
-    while end > start and (s_bytes[end - 1] == ord(" ") or s_bytes[end - 1] == ord("\t")):
+    while end > start and (
+        s_bytes[end - 1] == ord(" ") or s_bytes[end - 1] == ord("\t")
+    ):
         end -= 1
 
     return String(s[start:end])

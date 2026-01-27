@@ -31,7 +31,7 @@ def test_jsonpath_nested():
 
 def test_jsonpath_array_index():
     """Test array index $[0]."""
-    var doc = loads('[10,20,30]')
+    var doc = loads("[10,20,30]")
     var results = jsonpath_query(doc, "$[0]")
     assert_equal(len(results), 1)
     assert_equal(Int(results[0].int_value()), 10)
@@ -47,7 +47,7 @@ def test_jsonpath_nested_array():
 
 def test_jsonpath_wildcard_array():
     """Test wildcard on array $[*]."""
-    var doc = loads('[1,2,3]')
+    var doc = loads("[1,2,3]")
     var results = jsonpath_query(doc, "$[*]")
     assert_equal(len(results), 3)
 
@@ -77,14 +77,14 @@ def test_jsonpath_recursive():
 
 def test_jsonpath_slice():
     """Test array slice $[0:2]."""
-    var doc = loads('[0,1,2,3,4]')
+    var doc = loads("[0,1,2,3,4]")
     var results = jsonpath_query(doc, "$[0:2]")
     assert_equal(len(results), 2)
 
 
 def test_jsonpath_negative_index():
     """Test negative index $[-1]."""
-    var doc = loads('[1,2,3]')
+    var doc = loads("[1,2,3]")
     var results = jsonpath_query(doc, "$[-1]")
     assert_equal(len(results), 1)
     assert_equal(Int(results[0].int_value()), 3)

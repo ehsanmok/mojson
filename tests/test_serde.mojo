@@ -1,13 +1,21 @@
 """Tests for Serializable/Deserializable traits and serialize/deserialize functions."""
 
 from testing import assert_equal, assert_true, assert_raises
-from mojson import loads, to_json_value, get_string, get_int, get_bool, get_float, Value
+from mojson import (
+    loads,
+    to_json_value,
+    get_string,
+    get_int,
+    get_bool,
+    get_float,
+    Value,
+)
 from mojson.serialize import Serializable, serialize
 from mojson.deserialize import Deserializable, deserialize
 
 
 @fieldwise_init
-struct Person(Serializable, Deserializable, Copyable, Movable):
+struct Person(Copyable, Deserializable, Movable, Serializable):
     """Test struct with both serialization and deserialization."""
 
     var name: String
@@ -22,7 +30,7 @@ struct Person(Serializable, Deserializable, Copyable, Movable):
             + to_json_value(self.age)
             + ',"active":'
             + to_json_value(self.active)
-            + '}'
+            + "}"
         )
 
     @staticmethod
@@ -35,7 +43,7 @@ struct Person(Serializable, Deserializable, Copyable, Movable):
 
 
 @fieldwise_init
-struct Product(Serializable, Deserializable, Copyable, Movable):
+struct Product(Copyable, Deserializable, Movable, Serializable):
     """Test struct with mixed types."""
 
     var name: String
@@ -50,7 +58,7 @@ struct Product(Serializable, Deserializable, Copyable, Movable):
             + to_json_value(self.price)
             + ',"quantity":'
             + to_json_value(self.quantity)
-            + '}'
+            + "}"
         )
 
     @staticmethod

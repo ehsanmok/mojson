@@ -13,6 +13,7 @@ from .serialize import dumps
 # JSON Patch (RFC 6902)
 # =============================================================================
 
+
 fn apply_patch(document: Value, patch: Value) raises -> Value:
     """Apply a JSON Patch (RFC 6902) to a document.
 
@@ -160,14 +161,18 @@ fn _patch_replace(document: Value, path: String, value: Value) raises -> Value:
     return _set_at_path(document.copy(), path, value)
 
 
-fn _patch_move(document: Value, from_path: String, to_path: String) raises -> Value:
+fn _patch_move(
+    document: Value, from_path: String, to_path: String
+) raises -> Value:
     """Move a value from one path to another."""
     var value = document.at(from_path).copy()
     var temp = _patch_remove(document, from_path)
     return _patch_add(temp, to_path, value)
 
 
-fn _patch_copy(document: Value, from_path: String, to_path: String) raises -> Value:
+fn _patch_copy(
+    document: Value, from_path: String, to_path: String
+) raises -> Value:
     """Copy a value from one path to another."""
     var value = document.at(from_path).copy()
     return _patch_add(document, to_path, value)
@@ -183,6 +188,7 @@ fn _patch_test(document: Value, path: String, value: Value) raises:
 # =============================================================================
 # JSON Merge Patch (RFC 7396)
 # =============================================================================
+
 
 fn merge_patch(target: Value, patch: Value) raises -> Value:
     """Apply a JSON Merge Patch (RFC 7396) to a document.
@@ -311,6 +317,7 @@ fn create_merge_patch(source: Value, target: Value) raises -> Value:
 # Helper Functions
 # =============================================================================
 
+
 fn _get_parent_path(path: String) -> String:
     """Get the parent path (everything before the last /)."""
     var last_slash = -1
@@ -335,7 +342,7 @@ fn _get_last_token(path: String) -> String:
     if last_slash < 0:
         return path
 
-    var token = String(path[last_slash + 1:])
+    var token = String(path[last_slash + 1 :])
     # Unescape ~1 and ~0
     token = _unescape_pointer_token(token)
     return token^
@@ -402,7 +409,9 @@ fn _set_at_path(document: Value, path: String, value: Value) raises -> Value:
     return result^
 
 
-fn _set_nested(document: Value, tokens: List[String], idx: Int, value: Value) raises -> Value:
+fn _set_nested(
+    document: Value, tokens: List[String], idx: Int, value: Value
+) raises -> Value:
     """Recursively set a nested value."""
     if idx >= len(tokens):
         return value.copy()

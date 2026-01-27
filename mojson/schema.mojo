@@ -11,6 +11,7 @@ from .serialize import dumps
 
 struct ValidationError(Copyable, Movable):
     """A validation error with path and message."""
+
     var path: String
     var message: String
 
@@ -34,6 +35,7 @@ struct ValidationError(Copyable, Movable):
 
 struct ValidationResult(Movable):
     """Result of schema validation."""
+
     var valid: Bool
     var errors: List[ValidationError]
 
@@ -225,7 +227,9 @@ fn _validate_type_array(
             var type_val = type_list[i].copy()
             if type_val.is_string():
                 var temp_result = ValidationResult()
-                _validate_type(value, type_val.string_value(), path, temp_result)
+                _validate_type(
+                    value, type_val.string_value(), path, temp_result
+                )
                 if temp_result.valid:
                     return  # Found a matching type
 
@@ -269,11 +273,15 @@ fn _validate_number(
     mut result: ValidationResult,
 ):
     """Validate number constraints."""
-    var num = value.float_value() if value.is_float() else Float64(value.int_value())
+    var num = value.float_value() if value.is_float() else Float64(
+        value.int_value()
+    )
 
     try:
         var min_val = schema["minimum"]
-        var min_num = min_val.float_value() if min_val.is_float() else Float64(min_val.int_value())
+        var min_num = min_val.float_value() if min_val.is_float() else Float64(
+            min_val.int_value()
+        )
         if num < min_num:
             result.add_error(path, "Value below minimum " + String(min_num))
     except:
@@ -281,7 +289,9 @@ fn _validate_number(
 
     try:
         var max_val = schema["maximum"]
-        var max_num = max_val.float_value() if max_val.is_float() else Float64(max_val.int_value())
+        var max_num = max_val.float_value() if max_val.is_float() else Float64(
+            max_val.int_value()
+        )
         if num > max_num:
             result.add_error(path, "Value above maximum " + String(max_num))
     except:
@@ -289,15 +299,21 @@ fn _validate_number(
 
     try:
         var exc_min = schema["exclusiveMinimum"]
-        var min_num = exc_min.float_value() if exc_min.is_float() else Float64(exc_min.int_value())
+        var min_num = exc_min.float_value() if exc_min.is_float() else Float64(
+            exc_min.int_value()
+        )
         if num <= min_num:
-            result.add_error(path, "Value must be greater than " + String(min_num))
+            result.add_error(
+                path, "Value must be greater than " + String(min_num)
+            )
     except:
         pass
 
     try:
         var exc_max = schema["exclusiveMaximum"]
-        var max_num = exc_max.float_value() if exc_max.is_float() else Float64(exc_max.int_value())
+        var max_num = exc_max.float_value() if exc_max.is_float() else Float64(
+            exc_max.int_value()
+        )
         if num >= max_num:
             result.add_error(path, "Value must be less than " + String(max_num))
     except:
@@ -305,11 +321,17 @@ fn _validate_number(
 
     try:
         var multiple = schema["multipleOf"]
-        var mult_num = multiple.float_value() if multiple.is_float() else Float64(multiple.int_value())
+        var mult_num = (
+            multiple.float_value() if multiple.is_float() else Float64(
+                multiple.int_value()
+            )
+        )
         if mult_num != 0:
             var remainder = num - (Int(num / mult_num) * mult_num)
             if remainder != 0:
-                result.add_error(path, "Value must be multiple of " + String(mult_num))
+                result.add_error(
+                    path, "Value must be multiple of " + String(mult_num)
+                )
     except:
         pass
 
@@ -327,14 +349,18 @@ fn _validate_string(
     try:
         var min_len = schema["minLength"]
         if length < Int(min_len.int_value()):
-            result.add_error(path, "String too short, minimum " + String(min_len.int_value()))
+            result.add_error(
+                path, "String too short, minimum " + String(min_len.int_value())
+            )
     except:
         pass
 
     try:
         var max_len = schema["maxLength"]
         if length > Int(max_len.int_value()):
-            result.add_error(path, "String too long, maximum " + String(max_len.int_value()))
+            result.add_error(
+                path, "String too long, maximum " + String(max_len.int_value())
+            )
     except:
         pass
 
@@ -346,7 +372,7 @@ fn _validate_string(
         # Full regex support would require a regex library
         if pat.startswith("^") and pat.endswith("$"):
             # Exact match
-            var inner = String(pat[1:len(pat) - 1])
+            var inner = String(pat[1 : len(pat) - 1])
             if s != inner:
                 result.add_error(path, "String does not match pattern")
         elif not s.find(pat) >= 0:
@@ -370,14 +396,24 @@ fn _validate_array(
         try:
             var min_items = schema["minItems"]
             if count < Int(min_items.int_value()):
-                result.add_error(path, "Array too short, minimum " + String(min_items.int_value()) + " items")
+                result.add_error(
+                    path,
+                    "Array too short, minimum "
+                    + String(min_items.int_value())
+                    + " items",
+                )
         except:
             pass
 
         try:
             var max_items = schema["maxItems"]
             if count > Int(max_items.int_value()):
-                result.add_error(path, "Array too long, maximum " + String(max_items.int_value()) + " items")
+                result.add_error(
+                    path,
+                    "Array too long, maximum "
+                    + String(max_items.int_value())
+                    + " items",
+                )
         except:
             pass
 
@@ -387,7 +423,9 @@ fn _validate_array(
                 for i in range(count):
                     for j in range(i + 1, count):
                         if _values_equal(items[i], items[j]):
-                            result.add_error(path, "Array contains duplicate items")
+                            result.add_error(
+                                path, "Array contains duplicate items"
+                            )
                             break
         except:
             pass
@@ -431,14 +469,22 @@ fn _validate_object(
     try:
         var min_props = schema["minProperties"]
         if count < Int(min_props.int_value()):
-            result.add_error(path, "Object has too few properties, minimum " + String(min_props.int_value()))
+            result.add_error(
+                path,
+                "Object has too few properties, minimum "
+                + String(min_props.int_value()),
+            )
     except:
         pass
 
     try:
         var max_props = schema["maxProperties"]
         if count > Int(max_props.int_value()):
-            result.add_error(path, "Object has too many properties, maximum " + String(max_props.int_value()))
+            result.add_error(
+                path,
+                "Object has too many properties, maximum "
+                + String(max_props.int_value()),
+            )
     except:
         pass
 
@@ -490,7 +536,9 @@ fn _validate_object(
                         is_validated = True
                         break
                 if not is_validated:
-                    result.add_error(path, "Additional property not allowed: " + key)
+                    result.add_error(
+                        path, "Additional property not allowed: " + key
+                    )
         elif additional.is_object():
             # Validate additional properties against schema
             for i in range(len(items)):
@@ -561,7 +609,9 @@ fn _validate_one_of(
         if match_count == 0:
             result.add_error(path, "Value does not match any schema in oneOf")
         elif match_count > 1:
-            result.add_error(path, "Value matches more than one schema in oneOf")
+            result.add_error(
+                path, "Value matches more than one schema in oneOf"
+            )
     except:
         pass
 

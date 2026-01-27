@@ -28,7 +28,9 @@ fn compute_line_column(source: String, position: Int) -> Tuple[Int, Int]:
     return (line, column)
 
 
-fn format_error_context(source: String, position: Int, context_chars: Int = 20) -> String:
+fn format_error_context(
+    source: String, position: Int, context_chars: Int = 20
+) -> String:
     """Format error with surrounding context.
 
     Args:
@@ -76,7 +78,7 @@ fn json_parse_error(message: String, source: String, position: Int) -> String:
         message: The error message.
         source: The source JSON string.
         position: Byte position of the error.
-    
+
     Returns:
         Formatted error message with line/column and context.
 
@@ -90,9 +92,14 @@ fn json_parse_error(message: String, source: String, position: Int) -> String:
     var context = format_error_context(source, position)
 
     return (
-        "JSON parse error at line " + String(line) +
-        ", column " + String(column) + ": " + message +
-        "\n  Near: " + context
+        "JSON parse error at line "
+        + String(line)
+        + ", column "
+        + String(column)
+        + ": "
+        + message
+        + "\n  Near: "
+        + context
     )
 
 
@@ -103,7 +110,7 @@ fn find_error_position(source: String) -> Int:
 
     Args:
         source: The source JSON string.
-    
+
     Returns:
         Estimated error position (byte offset).
     """

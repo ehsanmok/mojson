@@ -24,8 +24,12 @@ fn _escape_string(s: String) -> String:
             result += "\\u00"
             var hi = (c >> 4) & 0x0F
             var lo = c & 0x0F
-            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(Int(hi - 10 + ord("a")))
-            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(Int(lo - 10 + ord("a")))
+            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(
+                Int(hi - 10 + ord("a"))
+            )
+            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(
+                Int(lo - 10 + ord("a"))
+            )
         else:
             result += chr(Int(c))
     result += '"'
@@ -99,7 +103,12 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             var close_char = ord("}") if c == ord("{") else ord("]")
             # Check if empty
             var j = i + 1
-            while j < n and (raw_bytes[j] == ord(" ") or raw_bytes[j] == ord("\t") or raw_bytes[j] == ord("\n") or raw_bytes[j] == ord("\r")):
+            while j < n and (
+                raw_bytes[j] == ord(" ")
+                or raw_bytes[j] == ord("\t")
+                or raw_bytes[j] == ord("\n")
+                or raw_bytes[j] == ord("\r")
+            ):
                 j += 1
             if j < n and raw_bytes[j] == close_char:
                 # Empty object/array - keep compact
@@ -111,7 +120,12 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             result += "\n" + next_indent
             i += 1
             # Skip whitespace after opening brace
-            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+            while i < n and (
+                raw_bytes[i] == ord(" ")
+                or raw_bytes[i] == ord("\t")
+                or raw_bytes[i] == ord("\n")
+                or raw_bytes[i] == ord("\r")
+            ):
                 i += 1
             continue
 
@@ -124,7 +138,12 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             result += ",\n" + next_indent
             i += 1
             # Skip whitespace after comma
-            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+            while i < n and (
+                raw_bytes[i] == ord(" ")
+                or raw_bytes[i] == ord("\t")
+                or raw_bytes[i] == ord("\n")
+                or raw_bytes[i] == ord("\r")
+            ):
                 i += 1
             continue
 
@@ -132,7 +151,12 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             result += ": "
             i += 1
             # Skip whitespace after colon
-            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+            while i < n and (
+                raw_bytes[i] == ord(" ")
+                or raw_bytes[i] == ord("\t")
+                or raw_bytes[i] == ord("\n")
+                or raw_bytes[i] == ord("\r")
+            ):
                 i += 1
             continue
 
@@ -148,7 +172,9 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
     return result^
 
 
-fn _to_string_pretty(v: Value, indent: String, current_indent: String) -> String:
+fn _to_string_pretty(
+    v: Value, indent: String, current_indent: String
+) -> String:
     """Convert a Value to a pretty-printed JSON string."""
     if v.is_null():
         return "null"
@@ -235,6 +261,7 @@ fn dumps[format: StaticString = "json"](values: List[Value]) -> String:
         values.append(loads('{"a":2}'))
         print(dumps[format="ndjson"](values)).
     """
+
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
@@ -276,7 +303,9 @@ fn dump(v: Value, mut f: FileHandle, indent: String) raises:
     f.write(dumps(v, indent))
 
 
-fn dump[format: StaticString = "json"](values: List[Value], mut f: FileHandle) raises:
+fn dump[
+    format: StaticString = "json"
+](values: List[Value], mut f: FileHandle) raises:
     """Serialize a list of Values to NDJSON and write to file.
 
     Parameters:
@@ -290,6 +319,7 @@ fn dump[format: StaticString = "json"](values: List[Value], mut f: FileHandle) r
         with open("output.ndjson", "w") as f:
             dump[format="ndjson"](values, f).
     """
+
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
@@ -362,8 +392,12 @@ fn _escape_unicode_chars(s: String) -> String:
             result += "\\u00"
             var hi = (c >> 4) & 0x0F
             var lo = c & 0x0F
-            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(Int(hi - 10 + ord("a")))
-            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(Int(lo - 10 + ord("a")))
+            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(
+                Int(hi - 10 + ord("a"))
+            )
+            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(
+                Int(lo - 10 + ord("a"))
+            )
         else:
             result += chr(Int(c))
 
@@ -466,6 +500,7 @@ trait Serializable:
 
         var json = serialize(Person("Alice", 30))  # {"name":"Alice","age":30}
     """
+
     fn to_json(self) -> String:
         """Serialize this object to a JSON string."""
         ...

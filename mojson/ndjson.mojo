@@ -46,7 +46,9 @@ fn parse_ndjson[target: StaticString = "cpu"](s: String) raises -> List[Value]:
     return result^
 
 
-fn parse_ndjson_lazy[target: StaticString = "cpu"](s: String) raises -> NDJSONIterator[target]:
+fn parse_ndjson_lazy[
+    target: StaticString = "cpu"
+](s: String) raises -> NDJSONIterator[target]:
     """Create a lazy iterator over NDJSON lines.
 
     More memory-efficient than parse_ndjson() for large files
@@ -75,6 +77,7 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
 
     Parses lines on-demand, reducing memory usage for large files.
     """
+
     var _data: String
     var _pos: Int
     var _len: Int
@@ -93,7 +96,12 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
 
         while pos < self._len:
             var c = data_bytes[pos]
-            if c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+            if (
+                c != ord(" ")
+                and c != ord("\t")
+                and c != ord("\n")
+                and c != ord("\r")
+            ):
                 return True
             pos += 1
 
@@ -110,7 +118,12 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         # Skip leading whitespace/newlines
         while self._pos < self._len:
             var c = data_bytes[self._pos]
-            if c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+            if (
+                c != ord(" ")
+                and c != ord("\t")
+                and c != ord("\n")
+                and c != ord("\r")
+            ):
                 break
             self._pos += 1
 
@@ -189,6 +202,7 @@ fn dumps_ndjson(values: List[Value]) -> String:
 
 # Helper functions
 
+
 fn _split_lines(s: String) -> List[String]:
     """Split string into lines."""
     var result = List[String]()
@@ -220,6 +234,11 @@ fn _is_whitespace_only(s: String) -> Bool:
     var s_bytes = s.as_bytes()
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
-        if c != ord(" ") and c != ord("\t") and c != ord("\r") and c != ord("\n"):
+        if (
+            c != ord(" ")
+            and c != ord("\t")
+            and c != ord("\r")
+            and c != ord("\n")
+        ):
             return False
     return True

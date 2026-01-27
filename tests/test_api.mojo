@@ -3,16 +3,27 @@
 from testing import assert_equal, assert_true, TestSuite
 
 from mojson import (
-    loads, dumps, load, dump,
-    Value, ParserConfig, SerializerConfig,
-    LazyValue, StreamingParser,
-    apply_patch, merge_patch, jsonpath_query, validate, is_valid,
+    loads,
+    dumps,
+    load,
+    dump,
+    Value,
+    ParserConfig,
+    SerializerConfig,
+    LazyValue,
+    StreamingParser,
+    apply_patch,
+    merge_patch,
+    jsonpath_query,
+    validate,
+    is_valid,
 )
 
 
 # =============================================================================
 # loads() tests
 # =============================================================================
+
 
 def test_loads_basic():
     """Test basic JSON parsing."""
@@ -59,6 +70,7 @@ def test_loads_all_types():
 # dumps() tests
 # =============================================================================
 
+
 def test_dumps_basic():
     """Test basic serialization."""
     var data = loads('{"a":1}')
@@ -104,14 +116,15 @@ def test_dumps_roundtrip():
 # load()/dump() file tests
 # =============================================================================
 
+
 def test_load_dump_roundtrip():
     """Test file load/dump roundtrip."""
     var data = loads('{"test":123,"arr":[1,2,3]}')
-    
+
     var f_out = open("test_api.json", "w")
     dump(data, f_out)
     f_out.close()
-    
+
     var loaded = load("test_api.json")
     assert_equal(Int(loaded["test"].int_value()), 123)
 
@@ -121,7 +134,7 @@ def test_load_ndjson():
     var f_out = open("test_api.ndjson", "w")
     f_out.write('{"a":1}\n{"a":2}\n')
     f_out.close()
-    
+
     var data = load("test_api.ndjson")  # Auto-detects from extension
     assert_true(data.is_array())
     assert_equal(data.array_count(), 2)
@@ -132,7 +145,7 @@ def test_load_ndjson_gpu():
     var f_out = open("test_api_gpu.ndjson", "w")
     f_out.write('{"x":1}\n{"x":2}\n{"x":3}\n')
     f_out.close()
-    
+
     var data = load[target="gpu"]("test_api_gpu.ndjson")
     assert_true(data.is_array())
     assert_equal(data.array_count(), 3)
@@ -150,20 +163,21 @@ def test_load_streaming():
     var f_out = open("test_api_stream.ndjson", "w")
     f_out.write('{"a":1}\n{"a":2}\n{"a":3}\n')
     f_out.close()
-    
+
     var parser = load[streaming=True]("test_api_stream.ndjson")
     var count = 0
     while parser.has_next():
         _ = parser.next()
         count += 1
     parser.close()
-    
+
     assert_equal(count, 3)
 
 
 # =============================================================================
 # Value operations
 # =============================================================================
+
 
 def test_value_access():
     """Test value access methods."""
@@ -184,7 +198,7 @@ def test_value_iteration():
     var arr = loads("[1,2,3]")
     var items = arr.array_items()
     assert_equal(len(items), 3)
-    
+
     var obj = loads('{"a":1,"b":2}')
     var pairs = obj.object_items()
     assert_equal(len(pairs), 2)
@@ -193,6 +207,7 @@ def test_value_iteration():
 # =============================================================================
 # Advanced features
 # =============================================================================
+
 
 def test_jsonpath():
     """Test JSONPath queries."""
@@ -222,7 +237,7 @@ def test_schema_validation():
     var schema = loads('{"type":"object","required":["name"]}')
     var valid_doc = loads('{"name":"Alice"}')
     var invalid_doc = loads('{"age":30}')
-    
+
     assert_true(is_valid(valid_doc, schema))
     assert_true(not is_valid(invalid_doc, schema))
 
@@ -230,6 +245,7 @@ def test_schema_validation():
 # =============================================================================
 # NDJSON roundtrip
 # =============================================================================
+
 
 def test_ndjson_roundtrip():
     """Test NDJSON roundtrip."""
@@ -246,9 +262,10 @@ def main():
     print("=" * 60)
     print()
     TestSuite.discover_tests[__functions_in_module()]().run()
-    
+
     # Cleanup
     import os
+
     try:
         os.remove("test_api.json")
         os.remove("test_api.ndjson")

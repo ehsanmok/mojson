@@ -110,15 +110,16 @@ trait Deserializable:
 
         var person = deserialize[Person]('{"name":"Alice","age":30}')
     """
+
     @staticmethod
     fn from_json(json: Value) raises -> Self:
         """Deserialize from a JSON Value."""
         ...
 
 
-fn deserialize[T: Deserializable, target: StaticString = "cpu"](
-    json_str: String
-) raises -> T:
+fn deserialize[
+    T: Deserializable, target: StaticString = "cpu"
+](json_str: String) raises -> T:
     """Deserialize a JSON string into a typed object.
 
     The type must implement the Deserializable trait with a from_json() static method.
@@ -139,5 +140,3 @@ fn deserialize[T: Deserializable, target: StaticString = "cpu"](
     """
     var json = loads[target](json_str)
     return T.from_json(json)
-
-

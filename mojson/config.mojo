@@ -10,6 +10,7 @@ struct ParserConfig:
         var config = ParserConfig(max_depth=10, allow_comments=True)
         var data = loads_with_config(json_str, config).
     """
+
     var max_depth: Int
     """Maximum nesting depth allowed. 0 = unlimited (default)."""
 
@@ -58,6 +59,7 @@ struct SerializerConfig:
         var config = SerializerConfig(sort_keys=True, indent="  ")
         var json = dumps_with_config(value, config).
     """
+
     var indent: String
     """Indentation string. Empty = compact output (default)."""
 
@@ -102,6 +104,7 @@ struct SerializerConfig:
 
 
 # Preprocessing functions for parser config
+
 
 fn preprocess_json(json: String, config: ParserConfig) raises -> String:
     """Preprocess JSON according to config options.
@@ -183,7 +186,9 @@ fn _strip_comments(json: String) -> String:
             if next_c == ord("*"):
                 i += 2
                 while i + 1 < n:
-                    if json_bytes[i] == ord("*") and json_bytes[i + 1] == ord("/"):
+                    if json_bytes[i] == ord("*") and json_bytes[i + 1] == ord(
+                        "/"
+                    ):
                         i += 2
                         break
                     i += 1
@@ -250,7 +255,7 @@ fn _remove_trailing_commas(json: String) -> String:
         if (c == ord("]") or c == ord("}")) and last_comma_pos >= 0:
             # Remove the trailing comma
             var before_comma = result[:last_comma_pos]
-            var after_comma = result[last_comma_pos + 1:]
+            var after_comma = result[last_comma_pos + 1 :]
             result = before_comma + after_comma
 
         result += chr(Int(c))
@@ -289,6 +294,8 @@ fn _check_depth(json: String, max_depth: Int) raises:
         if c == ord("{") or c == ord("["):
             depth += 1
             if depth > max_depth:
-                raise Error("JSON exceeds maximum depth of " + String(max_depth))
+                raise Error(
+                    "JSON exceeds maximum depth of " + String(max_depth)
+                )
         elif c == ord("}") or c == ord("]"):
             depth -= 1

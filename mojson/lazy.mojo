@@ -3,7 +3,13 @@
 # LazyValue defers parsing until values are actually accessed.
 # This is efficient when you only need a few fields from a large document.
 
-from .value import Value, Null, _parse_json_value_to_value, _extract_field_value, _extract_array_element
+from .value import (
+    Value,
+    Null,
+    _parse_json_value_to_value,
+    _extract_field_value,
+    _extract_array_element,
+)
 
 
 struct LazyValue:
@@ -18,6 +24,7 @@ struct LazyValue:
         var name = lazy.get("/users/0/name")
         Only parses the path to "users/0/name", not the whole document.
     """
+
     var _raw: String
     var _type: Int  # -1=unknown, 0=null, 1=bool, 2=int, 3=float, 4=string, 5=array, 6=object
 
@@ -36,7 +43,12 @@ struct LazyValue:
         var i = 0
 
         # Skip whitespace
-        while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+        while i < n and (
+            raw_bytes[i] == ord(" ")
+            or raw_bytes[i] == ord("\t")
+            or raw_bytes[i] == ord("\n")
+            or raw_bytes[i] == ord("\r")
+        ):
             i += 1
 
         if i >= n:
@@ -62,7 +74,13 @@ struct LazyValue:
                 if c == ord(".") or c == ord("e") or c == ord("E"):
                     self._type = 3  # float
                     break
-                if c == ord(",") or c == ord("}") or c == ord("]") or c == ord(" ") or c == ord("\n"):
+                if (
+                    c == ord(",")
+                    or c == ord("}")
+                    or c == ord("]")
+                    or c == ord(" ")
+                    or c == ord("\n")
+                ):
                     break
                 i += 1
         else:
@@ -109,15 +127,15 @@ struct LazyValue:
 
     fn get(self, pointer: String) raises -> Value:
         """Get a value at the given JSON Pointer path.
-        
+
         Only parses the necessary parts of the JSON to reach the target.
-        
+
         Args:
             pointer: JSON Pointer path (e.g., "/users/0/name").
-        
+
         Returns:
             The Value at the specified path.
-        
+
         Example:
             var name = lazy.get("/users/0/name").
         """
@@ -253,7 +271,11 @@ fn _lazy_navigate(raw: String, pointer: String) raises -> Value:
         # Determine if current is array or object
         var current_bytes = current_raw.as_bytes()
         var j = 0
-        while j < len(current_bytes) and (current_bytes[j] == ord(" ") or current_bytes[j] == ord("\t") or current_bytes[j] == ord("\n")):
+        while j < len(current_bytes) and (
+            current_bytes[j] == ord(" ")
+            or current_bytes[j] == ord("\t")
+            or current_bytes[j] == ord("\n")
+        ):
             j += 1
 
         if j >= len(current_bytes):

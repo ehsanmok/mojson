@@ -394,11 +394,11 @@ struct Value(Copyable, Movable, Stringable, Writable):
 
     fn set(mut self, index: Int, value: Value) raises:
         """Set a value at an array index.
-        
+
         Args:
             index: Array index (must be valid).
             value: New value to set.
-        
+
         Example:
             var arr = loads('[1, 2, 3]')
             arr.set(1, Value(20))  # Result is `[1, 20, 3]`.
@@ -413,10 +413,10 @@ struct Value(Copyable, Movable, Stringable, Writable):
 
     fn append(mut self, value: Value) raises:
         """Append a value to a JSON array.
-        
+
         Args:
             value: Value to append.
-        
+
         Example:
             var arr = loads('[1, 2]')
             arr.append(Value(3))  # Result is `[1, 2, 3]`.
@@ -501,13 +501,22 @@ fn _extract_field_value(raw: String, key: String) raises -> String:
     var n = len(raw_bytes)
 
     # Skip opening brace and whitespace
-    while i < n and (raw_bytes[i] == ord("{") or raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+    while i < n and (
+        raw_bytes[i] == ord("{")
+        or raw_bytes[i] == ord(" ")
+        or raw_bytes[i] == ord("\t")
+        or raw_bytes[i] == ord("\n")
+    ):
         i += 1
 
     # Search for the key
     while i < n:
         # Skip whitespace
-        while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+        while i < n and (
+            raw_bytes[i] == ord(" ")
+            or raw_bytes[i] == ord("\t")
+            or raw_bytes[i] == ord("\n")
+        ):
             i += 1
 
         if i >= n:
@@ -529,7 +538,12 @@ fn _extract_field_value(raw: String, key: String) raises -> String:
             i += 1  # Skip closing quote
 
             # Skip whitespace and colon
-            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord(":")):
+            while i < n and (
+                raw_bytes[i] == ord(" ")
+                or raw_bytes[i] == ord("\t")
+                or raw_bytes[i] == ord("\n")
+                or raw_bytes[i] == ord(":")
+            ):
                 i += 1
 
             # If this is our key, extract the value
@@ -539,7 +553,11 @@ fn _extract_field_value(raw: String, key: String) raises -> String:
                 # Skip this value
                 _ = _extract_json_value(raw, i)
                 # Find next comma or end
-                while i < n and raw_bytes[i] != ord(",") and raw_bytes[i] != ord("}"):
+                while (
+                    i < n
+                    and raw_bytes[i] != ord(",")
+                    and raw_bytes[i] != ord("}")
+                ):
                     i += 1
                 if i < n and raw_bytes[i] == ord(","):
                     i += 1
@@ -556,7 +574,11 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
     var n = len(raw_bytes)
 
     # Skip leading whitespace
-    while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+    while i < n and (
+        raw_bytes[i] == ord(" ")
+        or raw_bytes[i] == ord("\t")
+        or raw_bytes[i] == ord("\n")
+    ):
         i += 1
 
     if i >= n:
@@ -572,7 +594,7 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
             if raw_bytes[i] == ord("\\"):
                 i += 2  # Skip escaped character
             elif raw_bytes[i] == ord('"'):
-                return String(raw[value_start:i+1])
+                return String(raw[value_start : i + 1])
             else:
                 i += 1
         raise Error("Unterminated string")
@@ -603,7 +625,15 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
     # null, true, false, or number
     else:
         var value_start = i
-        while i < n and raw_bytes[i] != ord(",") and raw_bytes[i] != ord("}") and raw_bytes[i] != ord("]") and raw_bytes[i] != ord(" ") and raw_bytes[i] != ord("\t") and raw_bytes[i] != ord("\n"):
+        while (
+            i < n
+            and raw_bytes[i] != ord(",")
+            and raw_bytes[i] != ord("}")
+            and raw_bytes[i] != ord("]")
+            and raw_bytes[i] != ord(" ")
+            and raw_bytes[i] != ord("\t")
+            and raw_bytes[i] != ord("\n")
+        ):
             i += 1
         return String(raw[value_start:i])
 
@@ -688,7 +718,9 @@ fn _navigate_pointer(v: Value, tokens: List[String]) raises -> Value:
         return _navigate_pointer(child, remaining^)
 
     else:
-        raise Error("Cannot navigate into primitive value with pointer: /" + token)
+        raise Error(
+            "Cannot navigate into primitive value with pointer: /" + token
+        )
 
 
 fn _extract_array_element(raw: String, index: Int) raises -> String:
@@ -700,7 +732,13 @@ fn _extract_array_element(raw: String, index: Int) raises -> String:
     var depth = 0
 
     # Skip opening bracket and whitespace
-    while i < n and (raw_bytes[i] == ord("[") or raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+    while i < n and (
+        raw_bytes[i] == ord("[")
+        or raw_bytes[i] == ord(" ")
+        or raw_bytes[i] == ord("\t")
+        or raw_bytes[i] == ord("\n")
+        or raw_bytes[i] == ord("\r")
+    ):
         if raw_bytes[i] == ord("["):
             depth = 1
         i += 1
@@ -711,7 +749,12 @@ fn _extract_array_element(raw: String, index: Int) raises -> String:
     # Find the element at index
     while i < n:
         # Skip whitespace
-        while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+        while i < n and (
+            raw_bytes[i] == ord(" ")
+            or raw_bytes[i] == ord("\t")
+            or raw_bytes[i] == ord("\n")
+            or raw_bytes[i] == ord("\r")
+        ):
             i += 1
 
         if i >= n:
@@ -781,7 +824,12 @@ fn _parse_json_value_to_value(json_str: String) raises -> Value:
 
     # Skip leading whitespace
     var i = 0
-    while i < n and (s_bytes[i] == ord(" ") or s_bytes[i] == ord("\t") or s_bytes[i] == ord("\n") or s_bytes[i] == ord("\r")):
+    while i < n and (
+        s_bytes[i] == ord(" ")
+        or s_bytes[i] == ord("\t")
+        or s_bytes[i] == ord("\n")
+        or s_bytes[i] == ord("\r")
+    ):
         i += 1
 
     if i >= n:
@@ -823,6 +871,7 @@ fn _parse_json_value_to_value(json_str: String) raises -> Value:
 
         # Slow path: handle escapes including \uXXXX
         from .unicode import unescape_json_string
+
         var bytes_list = List[UInt8](capacity=n)
         for j in range(n):
             bytes_list.append(s_bytes[j])
@@ -830,12 +879,18 @@ fn _parse_json_value_to_value(json_str: String) raises -> Value:
         return Value(String(unsafe_from_utf8=unescaped^))
 
     # number
-    if first_char == ord("-") or (first_char >= ord("0") and first_char <= ord("9")):
+    if first_char == ord("-") or (
+        first_char >= ord("0") and first_char <= ord("9")
+    ):
         var num_str = String()
         var is_float = False
         while i < n:
             var c = s_bytes[i]
-            if c == ord("-") or c == ord("+") or (c >= ord("0") and c <= ord("9")):
+            if (
+                c == ord("-")
+                or c == ord("+")
+                or (c >= ord("0") and c <= ord("9"))
+            ):
                 num_str += chr(Int(c))
             elif c == ord(".") or c == ord("e") or c == ord("E"):
                 num_str += chr(Int(c))
@@ -906,7 +961,14 @@ fn _count_array_elements(raw: String) -> Int:
                 # Starting a string at depth 1 means content exists
                 has_content = True
             in_string = not in_string
-        elif depth == 1 and not in_string and c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+        elif (
+            depth == 1
+            and not in_string
+            and c != ord(" ")
+            and c != ord("\t")
+            and c != ord("\n")
+            and c != ord("\r")
+        ):
             has_content = True
 
     if has_content:
@@ -1009,7 +1071,11 @@ fn _update_object_value(raw: String, key: String, new_value: String) -> String:
     var depth = 1
 
     while i < n:
-        while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+        while i < n and (
+            raw_bytes[i] == ord(" ")
+            or raw_bytes[i] == ord("\t")
+            or raw_bytes[i] == ord("\n")
+        ):
             i += 1
 
         if i >= n:
@@ -1034,7 +1100,11 @@ fn _update_object_value(raw: String, key: String, new_value: String) -> String:
             i += 1  # Skip colon
 
             # Skip whitespace
-            while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n")):
+            while i < n and (
+                raw_bytes[i] == ord(" ")
+                or raw_bytes[i] == ord("\t")
+                or raw_bytes[i] == ord("\n")
+            ):
                 i += 1
 
             if found_key == key:
@@ -1113,7 +1183,12 @@ fn _add_object_key(raw: String, key: String, value: String) -> String:
     var is_empty = True
     for i in range(1, close_pos):
         var c = raw_bytes[i]
-        if c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+        if (
+            c != ord(" ")
+            and c != ord("\t")
+            and c != ord("\n")
+            and c != ord("\r")
+        ):
             is_empty = False
             break
 
@@ -1136,7 +1211,12 @@ fn _update_array_element(raw: String, index: Int, new_value: String) -> String:
     i += 1
 
     # Skip whitespace
-    while i < n and (raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+    while i < n and (
+        raw_bytes[i] == ord(" ")
+        or raw_bytes[i] == ord("\t")
+        or raw_bytes[i] == ord("\n")
+        or raw_bytes[i] == ord("\r")
+    ):
         i += 1
 
     while i < n:
@@ -1151,7 +1231,13 @@ fn _update_array_element(raw: String, index: Int, new_value: String) -> String:
         i = elem_end
 
         # Skip comma and whitespace
-        while i < n and (raw_bytes[i] == ord(",") or raw_bytes[i] == ord(" ") or raw_bytes[i] == ord("\t") or raw_bytes[i] == ord("\n") or raw_bytes[i] == ord("\r")):
+        while i < n and (
+            raw_bytes[i] == ord(",")
+            or raw_bytes[i] == ord(" ")
+            or raw_bytes[i] == ord("\t")
+            or raw_bytes[i] == ord("\n")
+            or raw_bytes[i] == ord("\r")
+        ):
             if raw_bytes[i] == ord(","):
                 current_index += 1
             i += 1
@@ -1179,7 +1265,12 @@ fn _append_to_array(raw: String, value: String) -> String:
     var is_empty = True
     for i in range(1, close_pos):
         var c = raw_bytes[i]
-        if c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+        if (
+            c != ord(" ")
+            and c != ord("\t")
+            and c != ord("\n")
+            and c != ord("\r")
+        ):
             is_empty = False
             break
 

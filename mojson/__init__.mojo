@@ -37,8 +37,12 @@ from .value import make_array_value, make_object_value
 # Struct serialization
 from .serialize import to_json_value, to_json_string, Serializable, serialize
 from .deserialize import (
-    get_string, get_int, get_bool, get_float,
-    Deserializable, deserialize,
+    get_string,
+    get_int,
+    get_bool,
+    get_float,
+    Deserializable,
+    deserialize,
 )
 
 # Advanced features

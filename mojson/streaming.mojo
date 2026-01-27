@@ -22,6 +22,7 @@ struct StreamingParser:
             process(value)
         parser.close().
     """
+
     var _file: FileHandle
     var _buffer: String
     var _chunk_size: Int
@@ -89,7 +90,9 @@ struct StreamingParser:
         var line = self._extract_line()
 
         # Skip empty lines
-        while _is_empty_line(line) and (self._has_complete_line() or not self._eof):
+        while _is_empty_line(line) and (
+            self._has_complete_line() or not self._eof
+        ):
             if not self._has_complete_line() and not self._eof:
                 self._read_chunk()
             if self._has_complete_line():
@@ -139,7 +142,7 @@ struct StreamingParser:
             if end > 0 and buffer_bytes[end - 1] == ord("\r"):
                 end -= 1
             line = String(self._buffer[:end])
-            self._buffer = String(self._buffer[line_end + 1:])
+            self._buffer = String(self._buffer[line_end + 1 :])
         else:
             # No newline found, return entire buffer (EOF case)
             line = self._buffer
@@ -204,6 +207,7 @@ struct ArrayStreamingParser:
     Parses a file containing a single JSON array and yields
     elements one at a time without loading the entire array.
     """
+
     var _file: FileHandle
     var _buffer: String
     var _chunk_size: Int
@@ -277,11 +281,16 @@ struct ArrayStreamingParser:
             for i in range(len(buffer_bytes)):
                 var c = buffer_bytes[i]
                 if c == ord("["):
-                    self._buffer = String(self._buffer[i + 1:])
+                    self._buffer = String(self._buffer[i + 1 :])
                     self._started = True
                     self._depth = 1
                     return
-                elif c != ord(" ") and c != ord("\t") and c != ord("\n") and c != ord("\r"):
+                elif (
+                    c != ord(" ")
+                    and c != ord("\t")
+                    and c != ord("\n")
+                    and c != ord("\r")
+                ):
                     raise Error("Expected JSON array")
 
             if self._eof:
@@ -320,7 +329,13 @@ struct ArrayStreamingParser:
 
             # Skip leading whitespace
             if not found_start:
-                if c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r") or c == ord(","):
+                if (
+                    c == ord(" ")
+                    or c == ord("\t")
+                    or c == ord("\n")
+                    or c == ord("\r")
+                    or c == ord(",")
+                ):
                     continue
                 if c == ord("]"):
                     return False  # End of array
@@ -337,7 +352,15 @@ struct ArrayStreamingParser:
                 return True
 
         # For primitives without brackets
-        if found_start and depth == 0 and (self._eof or self._buffer.find(",") >= 0 or self._buffer.find("]") >= 0):
+        if (
+            found_start
+            and depth == 0
+            and (
+                self._eof
+                or self._buffer.find(",") >= 0
+                or self._buffer.find("]") >= 0
+            )
+        ):
             return True
 
         return False
@@ -374,7 +397,13 @@ struct ArrayStreamingParser:
 
             # Skip leading whitespace/commas
             if start < 0:
-                if c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r") or c == ord(","):
+                if (
+                    c == ord(" ")
+                    or c == ord("\t")
+                    or c == ord("\n")
+                    or c == ord("\r")
+                    or c == ord(",")
+                ):
                     continue
                 if c == ord("]"):
                     raise Error("No more array elements")
@@ -419,6 +448,11 @@ fn _is_empty_line(s: String) -> Bool:
     var s_bytes = s.as_bytes()
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
-        if c != ord(" ") and c != ord("\t") and c != ord("\r") and c != ord("\n"):
+        if (
+            c != ord(" ")
+            and c != ord("\t")
+            and c != ord("\r")
+            and c != ord("\n")
+        ):
             return False
     return True

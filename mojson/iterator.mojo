@@ -377,6 +377,7 @@ struct JSONIterator:
 
         # Slow path: handle escapes (including \uXXXX unicode)
         from .unicode import unescape_json_string
+
         var bytes = unescape_json_string(self.input_data, i, end_pos)
         return String(unsafe_from_utf8=bytes^)
 

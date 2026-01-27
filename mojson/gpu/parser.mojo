@@ -548,5 +548,3 @@ fn _match_brackets_fast(mut result: JSONResult, char_types: List[UInt8]):
                 var open_idx = stack.pop()
                 result.pair_pos[open_idx] = Int32(i)
                 result.pair_pos[i] = Int32(open_idx)
-
-

@@ -30,6 +30,7 @@ python = ">=3.10"         # Required for pypi dependencies
 make = ">=4.4.1,<5"
 gxx = ">=13"              # g++ for Linux (macOS uses system clang++ from Xcode CLT)
 git = ">=2"               # For cloning cuJSON (optional, NVIDIA benchmarks only)
+pre-commit = ">=4.2.0,<5"
 
 [feature.dev.pypi-dependencies]
 gdown = ">=5.0"           # Google Drive CLI for downloading benchmark datasets
@@ -39,7 +40,8 @@ default = { features = ["dev"], solve-group = "default" }
 
 [tasks]
 # Format
-format = { cmd = "mojo format mojson tests benchmark/mojo" }
+install-pre-commit = "pre-commit install"
+format = { cmd = "mojo format mojson tests benchmark/mojo", depends-on = ["install-pre-commit"] }
 format-check = { cmd = "bash -c 'mojo format mojson tests benchmark/mojo && git diff --exit-code mojson tests benchmark/mojo || (echo \"Error: Code is not formatted. Run \\\"pixi run format\\\" to fix.\" && exit 1)'" }
 
 # Build simdjson FFI (CPU backend)
@@ -92,4 +94,3 @@ examples = "mojo -I . examples/01_basic_parsing.mojo && mojo -I . examples/02_fi
 # Usage: pixi run bench-gpu-cujson -- path/to/file.json
 # First: cd benchmark && git clone https://github.com/AutomataLab/cuJSON.git
 bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; if [ ! -f benchmark/cuJSON/build/cujson_benchmark ]; then echo \"Error: cuJSON not built. Run: pixi run build-cujson\" && exit 1; fi; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- mojson GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu"] }
-

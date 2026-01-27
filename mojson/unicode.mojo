@@ -52,11 +52,11 @@ fn is_low_surrogate(code_point: Int) -> Bool:
 
 fn decode_surrogate_pair(high: Int, low: Int) -> Int:
     """Decode a surrogate pair to a full code point.
-    
+
     Args:
         high: High surrogate (U+D800 - U+DBFF).
         low: Low surrogate (U+DC00 - U+DFFF).
-    
+
     Returns:
         The full Unicode code point (U+10000 - U+10FFFF).
     """
@@ -65,7 +65,7 @@ fn decode_surrogate_pair(high: Int, low: Int) -> Int:
 
 fn encode_utf8(code_point: Int, mut bytes: List[UInt8]):
     """Encode a Unicode code point as UTF-8 bytes.
-    
+
     Args:
         code_point: Unicode code point (0 - 0x10FFFF).
         bytes: List to append UTF-8 bytes to.
@@ -92,12 +92,12 @@ fn encode_utf8(code_point: Int, mut bytes: List[UInt8]):
 
 fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
     """Unescape a JSON string, handling all escape sequences including unicode.
-    
+
     Args:
         data: The byte array containing the string content.
         start: Start index (after opening quote).
         end: End index (before closing quote).
-    
+
     Returns:
         Unescaped bytes.
     """
@@ -146,7 +146,11 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
                 # Check for surrogate pair
                 if is_high_surrogate(code_point):
                     # Look for low surrogate
-                    if i + 10 < end and data[i + 6] == ord("\\") and data[i + 7] == ord("u"):
+                    if (
+                        i + 10 < end
+                        and data[i + 6] == ord("\\")
+                        and data[i + 7] == ord("u")
+                    ):
                         var low = parse_unicode_escape(data, i + 8)
                         if is_low_surrogate(low):
                             # Decode surrogate pair
