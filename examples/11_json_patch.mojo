@@ -3,7 +3,7 @@
 # JSON Patch: Apply a sequence of operations to modify JSON documents.
 # Merge Patch: Simpler patching by merging objects (null removes keys).
 
-from src import loads, dumps, apply_patch, merge_patch, create_merge_patch
+from mojson import loads, dumps, apply_patch, merge_patch, create_merge_patch
 
 
 fn main() raises:

@@ -12,7 +12,7 @@
 from os import getenv
 from testing import assert_equal, assert_true, assert_raises, TestSuite
 
-from src import loads, dumps, Value
+from mojson import loads, dumps, Value
 
 
 fn _is_gpu_mode() -> Bool:

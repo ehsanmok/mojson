@@ -3,7 +3,7 @@
 # JSONPath is a query language for JSON, similar to XPath for XML.
 # Use it to extract data from complex JSON structures.
 
-from src import loads, jsonpath_query, jsonpath_one
+from mojson import loads, jsonpath_query, jsonpath_one
 
 
 fn main() raises:

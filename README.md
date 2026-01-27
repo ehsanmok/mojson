@@ -7,13 +7,28 @@
 - **JSONPath & Schema** — Query and validate JSON documents
 - **RFC compliant** — JSON Patch, Merge Patch, JSON Pointer
 
-## Quick Start
+## Installation
+
+Add mojson to your project's `pixi.toml`:
+
+```toml
+[workspace]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://prefix.dev/modular-community"]
+preview = ["pixi-build"]  # Required until pixi-build is stabilized
+
+[dependencies]
+mojson = { git = "https://github.com/ehsanmok/mojson.git" }
+```
+
+Then run:
 
 ```bash
-git clone --recursive https://github.com/user/mojson.git && cd mojson
 pixi install
-pixi run tests-cpu
 ```
+
+> **Note:** `mojo-compiler` and `simdjson` are automatically installed as dependencies.
+
+## Quick Start
 
 ```mojo
 from mojson import loads, dumps, load, dump
@@ -32,9 +47,18 @@ var logs = load("events.ndjson")  # Returns array of values
 var big = load[target="gpu"]("large.json")
 ```
 
+## Development Setup
+
+To contribute or run tests:
+
+```bash
+git clone https://github.com/ehsanmok/mojson.git && cd mojson
+pixi install
+pixi run tests-cpu
+```
+
 ## Requirements
 
-- [Mojo/MAX SDK](https://docs.modular.com/max/packages)
 - [pixi](https://pixi.sh) package manager
 
 **GPU (optional):** NVIDIA CUDA 7.0+, AMD ROCm 6+, or Apple Silicon. See [GPU requirements](https://docs.modular.com/max/packages#gpu-compatibility).
@@ -45,8 +69,8 @@ var big = load[target="gpu"]("large.json")
 |----------|------------|-----------|
 | AMD MI355X | 13 GB/s | **3.6x faster** |
 | NVIDIA B200 | 7 GB/s | **2x faster** |
-| Apple M3 Pro | 3.3 GB/s | — |
-| CPU (simdjson) | 4.5 GB/s | — |
+| Apple M3 Pro | 3.9 GB/s | — |
+| CPU (simdjson, M3 Pro) | 1.5 GB/s | — |
 
 *Benchmarks on 804MB JSON file. GPU only beneficial for files >100MB.*
 

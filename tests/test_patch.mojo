@@ -2,7 +2,7 @@
 
 from testing import assert_equal, assert_true, TestSuite
 
-from src import loads, dumps, apply_patch, merge_patch, create_merge_patch
+from mojson import loads, dumps, apply_patch, merge_patch, create_merge_patch
 
 
 # JSON Patch tests

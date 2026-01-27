@@ -2,7 +2,8 @@
 #
 # Demonstrates: load() and dump() for file-based JSON operations
 
-from src import load, dump, loads, dumps, Value
+from mojson import load, dump, loads, dumps, Value
+from os import remove
 
 
 fn main() raises:
@@ -52,3 +53,8 @@ fn main() raises:
     with open("counter.json", "r") as f:
         var read_data = load(f)
         print("  Read back:", dumps(read_data))
+
+    # Cleanup temporary files
+    remove("output.json")
+    remove("config.json")
+    remove("counter.json")

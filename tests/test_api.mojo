@@ -2,7 +2,7 @@
 
 from testing import assert_equal, assert_true, TestSuite
 
-from src import (
+from mojson import (
     loads, dumps, load, dump,
     Value, ParserConfig, SerializerConfig,
     LazyValue, StreamingParser,

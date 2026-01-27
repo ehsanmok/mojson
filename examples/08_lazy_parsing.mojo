@@ -3,7 +3,7 @@
 # Lazy parsing defers actual parsing until you access specific fields.
 # Useful when you only need a few fields from a large JSON document.
 
-from src import loads, LazyValue
+from mojson import loads, LazyValue
 
 
 fn main() raises:

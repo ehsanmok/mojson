@@ -3,7 +3,7 @@
 # Validate JSON documents against schemas to ensure data quality.
 # Supports a subset of JSON Schema draft-07.
 
-from src import loads, validate, is_valid
+from mojson import loads, validate, is_valid
 
 
 fn main() raises:

@@ -1,19 +1,32 @@
 [workspace]
 authors = ["ehsanmok <ehsanmok@users.noreply.github.com>"]
-channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://prefix.dev/modular-community"]
 name = "mojson"
 platforms = ["linux-64", "osx-arm64"]
 version = "0.1.0"
+preview = ["pixi-build"]
+
+[package]
+name = "mojson"
+version = "0.1.0"
+
+[package.build]
+backend = { name = "pixi-build-rattler-build", version = "*" }
+
+# Binary dependencies are specified in recipe.yaml for rattler-build backend
 
 [activation]
 # Auto-build FFI wrapper on environment activation (idempotent - skips if up-to-date)
-scripts = ["src/cpu/simdjson_ffi/build.sh"]
+scripts = ["mojson/cpu/simdjson_ffi/build.sh"]
 
 [dependencies]
+# Local package for development - pixi will build and install it
+mojson = { path = "." }
 mojo = "<1.0"
 simdjson = ">=4.2.4,<5"
 
 [feature.dev.dependencies]
+python = ">=3.10"         # Required for pypi dependencies
 make = ">=4.4.1,<5"
 gxx = ">=13"              # g++ for Linux (macOS uses system clang++ from Xcode CLT)
 git = ">=2"               # For cloning cuJSON (optional, NVIDIA benchmarks only)
@@ -26,11 +39,11 @@ default = { features = ["dev"], solve-group = "default" }
 
 [tasks]
 # Format
-format = { cmd = "mojo format src tests benchmark/mojo" }
-format-check = { cmd = "bash -c 'mojo format src tests benchmark/mojo && git diff --exit-code src tests benchmark/mojo || (echo \"Error: Code is not formatted. Run \\\"pixi run format\\\" to fix.\" && exit 1)'" }
+format = { cmd = "mojo format mojson tests benchmark/mojo" }
+format-check = { cmd = "bash -c 'mojo format mojson tests benchmark/mojo && git diff --exit-code mojson tests benchmark/mojo || (echo \"Error: Code is not formatted. Run \\\"pixi run format\\\" to fix.\" && exit 1)'" }
 
 # Build simdjson FFI (CPU backend)
-build = "bash src/cpu/simdjson_ffi/build.sh"
+build = "bash mojson/cpu/simdjson_ffi/build.sh"
 
 # Download benchmark datasets from Google Drive (cuJSON datasets)
 # Full folder: https://drive.google.com/drive/folders/1PkDEy0zWOkVREfL7VuINI-m9wJe45P2Q

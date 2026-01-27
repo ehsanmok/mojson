@@ -2,7 +2,7 @@
 
 from testing import assert_equal, assert_true, TestSuite
 
-from src import Value, Null, dumps
+from mojson import Value, Null, dumps
 
 
 def test_serialize_null():
@@ -62,7 +62,7 @@ def test_serialize_string_with_escapes():
 
 def test_dumps_pretty_simple_object():
     """Test pretty printing a simple object."""
-    from src import loads
+    from mojson import loads
     var data = loads('{"name":"Alice","age":30}')
     var result = dumps(data, indent="  ")
     # Check it contains newlines and indentation
@@ -74,7 +74,7 @@ def test_dumps_pretty_simple_object():
 
 def test_dumps_pretty_nested_object():
     """Test pretty printing a nested object."""
-    from src import loads
+    from mojson import loads
     var data = loads('{"user":{"name":"Bob","scores":[1,2,3]}}')
     var result = dumps(data, indent="  ")
     # Check structure
@@ -85,7 +85,7 @@ def test_dumps_pretty_nested_object():
 
 def test_dumps_pretty_array():
     """Test pretty printing an array."""
-    from src import loads
+    from mojson import loads
     var data = loads('[1,2,3,"hello",true,null]')
     var result = dumps(data, indent="  ")
     assert_true(result.find("\n") >= 0, "Should contain newlines")
@@ -95,7 +95,7 @@ def test_dumps_pretty_array():
 
 def test_dumps_pretty_empty_object():
     """Test pretty printing an empty object."""
-    from src import loads
+    from mojson import loads
     var data = loads('{}')
     var result = dumps(data, indent="  ")
     assert_equal(result, "{}")
@@ -103,7 +103,7 @@ def test_dumps_pretty_empty_object():
 
 def test_dumps_pretty_empty_array():
     """Test pretty printing an empty array."""
-    from src import loads
+    from mojson import loads
     var data = loads('[]')
     var result = dumps(data, indent="  ")
     assert_equal(result, "[]")
@@ -111,7 +111,7 @@ def test_dumps_pretty_empty_array():
 
 def test_dumps_compact_default():
     """Test that dumps without indent is compact."""
-    from src import loads
+    from mojson import loads
     var data = loads('{"a":1,"b":2}')
     var result = dumps(data)
     # Should not contain newlines

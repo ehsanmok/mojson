@@ -5,7 +5,7 @@ from gpu.host import DeviceContext
 from collections import List
 from memory import memcpy
 
-from src.gpu.bracket_match import match_brackets_gpu
+from mojson.gpu.bracket_match import match_brackets_gpu
 
 
 fn make_char_list(chars: String) -> List[UInt8]:

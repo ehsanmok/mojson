@@ -16,7 +16,7 @@ from benchmark import (
 )
 from pathlib import Path
 from sys import argv
-from src import loads
+from mojson import loads
 
 
 fn main() raises:

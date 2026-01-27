@@ -3,7 +3,7 @@
 # Demonstrates: Handling JSON parse errors using try/except and assert_raises
 
 from testing import assert_raises
-from src import loads, dumps, Value
+from mojson import loads, dumps, Value
 
 
 fn parse_safely(json_str: String) -> String:

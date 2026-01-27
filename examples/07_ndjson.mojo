@@ -3,7 +3,7 @@
 # NDJSON is a format where each line is a separate JSON value.
 # Common for log files, data streams, and large datasets.
 
-from src import loads, dumps, load, Value
+from mojson import loads, dumps, load, Value
 
 
 fn main() raises:

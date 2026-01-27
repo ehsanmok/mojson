@@ -2,7 +2,7 @@
 
 from testing import assert_equal, assert_true, TestSuite
 
-from src import loads, validate, is_valid
+from mojson import loads, validate, is_valid
 
 
 # Type validation tests

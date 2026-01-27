@@ -19,9 +19,9 @@ from time import perf_counter_ns
 from memory import memcpy
 from collections import List
 
-from src import loads
-from src.gpu import parse_json_gpu, parse_json_gpu_from_pinned
-from src.types import JSONInput
+from mojson import loads
+from mojson.gpu import parse_json_gpu, parse_json_gpu_from_pinned
+from mojson.types import JSONInput
 from gpu.host import DeviceContext
 
 
@@ -86,9 +86,11 @@ fn main() raises:
     # ===== Pinned Memory Path (manual for precision) =====
     print("=== Pinned Memory Path (Skip memcpy) ===")
     var ctx = DeviceContext()
+    # Allocate pinned buffer ONCE outside the loop (pinned alloc is slow)
+    var h_input = ctx.enqueue_create_host_buffer[DType.uint8](n)
     var pinned_min_time: UInt = 0xFFFFFFFFFFFFFFFF
     for _ in range(3):
-        var h_input = ctx.enqueue_create_host_buffer[DType.uint8](n)
+        # Only memcpy each iteration, reuse the pinned buffer
         memcpy(dest=h_input.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
 
         var start = perf_counter_ns()

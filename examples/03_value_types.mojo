@@ -2,7 +2,7 @@
 #
 # Demonstrates: Value type checking and value extraction
 
-from src import loads, dumps, Value, Null, make_array_value, make_object_value
+from mojson import loads, dumps, Value, Null, make_array_value, make_object_value
 from collections import List
 
 

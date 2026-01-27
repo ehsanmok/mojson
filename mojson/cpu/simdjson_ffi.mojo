@@ -3,8 +3,19 @@
 # Uses OwnedDLHandle for runtime library loading
 
 from sys.ffi import OwnedDLHandle, external_call
+from os import getenv
 from memory import UnsafePointer, Span
 from collections import List
+
+
+fn _find_simdjson_library() -> String:
+    """Find the simdjson wrapper library in standard locations."""
+    # Check CONDA_PREFIX first (installed via conda/pixi)
+    var conda_prefix = getenv("CONDA_PREFIX", "")
+    if conda_prefix:
+        return conda_prefix + "/lib/libsimdjson_wrapper.so"
+    # Fallback to local build directory (development)
+    return "build/libsimdjson_wrapper.so"
 
 # Result codes from simdjson_wrapper.h
 comptime SIMDJSON_OK: Int = 0
@@ -62,11 +73,16 @@ struct SimdjsonFFI:
     var _object_iter_free: fn (Int) -> None
     var _object_count: fn (Int) -> Int
 
-    fn __init__(
-        out self, lib_path: String = "build/libsimdjson_wrapper.so"
-    ) raises:
-        """Initialize by loading the simdjson wrapper library."""
-        self._lib = OwnedDLHandle(lib_path)
+    fn __init__(out self, lib_path: String = "") raises:
+        """Initialize by loading the simdjson wrapper library.
+        
+        Args:
+            lib_path: Path to the library. If empty, searches standard locations:
+                      1. $CONDA_PREFIX/lib/libsimdjson_wrapper.so (installed)
+                      2. build/libsimdjson_wrapper.so (development)
+        """
+        var path = lib_path if lib_path else _find_simdjson_library()
+        self._lib = OwnedDLHandle(path)
 
         # Parser functions
         self._create_parser = self._lib.get_function[fn () -> Int](

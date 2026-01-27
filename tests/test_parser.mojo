@@ -2,7 +2,7 @@
 
 from testing import assert_equal, assert_true, assert_false, TestSuite
 
-from src import loads
+from mojson import loads
 
 
 # =============================================================================

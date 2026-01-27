@@ -8,7 +8,7 @@ from memory import memcpy
 
 fn test_stream_compact_simple() raises:
     """Test stream compaction with simple bitmap."""
-    from src.gpu.stream_compact import extract_positions_gpu
+    from mojson.gpu.stream_compact import extract_positions_gpu
 
     var ctx = DeviceContext()
 
@@ -44,7 +44,7 @@ fn test_stream_compact_simple() raises:
 
 fn test_stream_compact_multiple_words() raises:
     """Test stream compaction with multiple bitmap words."""
-    from src.gpu.stream_compact import extract_positions_gpu
+    from mojson.gpu.stream_compact import extract_positions_gpu
 
     var ctx = DeviceContext()
 
@@ -83,7 +83,7 @@ fn test_stream_compact_multiple_words() raises:
 
 fn test_stream_compact_empty() raises:
     """Test stream compaction with empty bitmap."""
-    from src.gpu.stream_compact import extract_positions_gpu
+    from mojson.gpu.stream_compact import extract_positions_gpu
 
     var ctx = DeviceContext()
 
@@ -114,7 +114,7 @@ fn test_stream_compact_empty() raises:
 
 fn test_stream_compact_all_set() raises:
     """Test stream compaction with all bits set in one word."""
-    from src.gpu.stream_compact import extract_positions_gpu
+    from mojson.gpu.stream_compact import extract_positions_gpu
 
     var ctx = DeviceContext()
 
@@ -149,7 +149,7 @@ fn test_stream_compact_all_set() raises:
 
 fn test_stream_compact_large() raises:
     """Test stream compaction with larger bitmap (multiple blocks)."""
-    from src.gpu.stream_compact import extract_positions_gpu
+    from mojson.gpu.stream_compact import extract_positions_gpu
 
     var ctx = DeviceContext()
 
