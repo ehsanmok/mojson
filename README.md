@@ -65,14 +65,15 @@ pixi run tests-cpu
 
 ## Performance
 
+### GPU (804MB `twitter_large_record.json`)
+
 | Platform | Throughput | vs cuJSON |
 |----------|------------|-----------|
 | AMD MI355X | 13 GB/s | **3.6x faster** |
-| NVIDIA B200 | 7 GB/s | **2x faster** |
+| NVIDIA B200 | 8 GB/s | **1.8x faster** |
 | Apple M3 Pro | 3.9 GB/s | — |
-| CPU (simdjson, M3 Pro) | 1.5 GB/s | — |
 
-*Benchmarks on 804MB JSON file. GPU only beneficial for files >100MB.*
+*GPU only beneficial for files >100MB.*
 
 ```bash
 # Download large dataset first (required for meaningful GPU benchmarks)
