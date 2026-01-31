@@ -1,5 +1,5 @@
 # mojson - JSON Parser
-# Unified CPU/GPU parser with compile-time target selection
+# Unified CPU/GPU parser with compile-time target and backend selection
 
 from collections import List
 from memory import memcpy
@@ -10,6 +10,7 @@ from .cpu import SimdjsonFFI, SIMDJSON_TYPE_NULL, SIMDJSON_TYPE_BOOL
 from .cpu import SIMDJSON_TYPE_INT64, SIMDJSON_TYPE_UINT64
 from .cpu import SIMDJSON_TYPE_DOUBLE, SIMDJSON_TYPE_STRING
 from .cpu import SIMDJSON_TYPE_ARRAY, SIMDJSON_TYPE_OBJECT
+from .cpu import parse_mojo
 from .types import JSONInput, JSONResult
 from .gpu import parse_json_gpu
 from .iterator import JSONIterator
@@ -53,14 +54,42 @@ fn _build_value_from_simdjson(
         raise Error("Unknown JSON value type")
 
 
-fn _parse_cpu(s: String) raises -> Value:
-    """Parse JSON using simdjson FFI."""
+fn _parse_cpu_simdjson(s: String) raises -> Value:
+    """Parse JSON using simdjson FFI backend."""
     var ffi = SimdjsonFFI()
     var root = ffi.parse(s)
     var result = _build_value_from_simdjson(ffi, root, s)
     ffi.free_value(root)
     ffi.destroy()
     return result^
+
+
+fn _parse_cpu_mojo(s: String) raises -> Value:
+    """Parse JSON using pure Mojo backend."""
+    return parse_mojo(s)
+
+
+fn _parse_cpu[backend: StaticString = "simdjson"](s: String) raises -> Value:
+    """Parse JSON using specified CPU backend.
+
+    Parameters:
+        backend: "simdjson" (default, FFI) or "mojo" (pure native).
+
+    Args:
+        s: JSON string to parse.
+
+    Returns:
+        Parsed Value.
+    """
+
+    @parameter
+    if backend == "simdjson":
+        return _parse_cpu_simdjson(s)
+    elif backend == "mojo":
+        return _parse_cpu_mojo(s)
+    else:
+        constrained[False, "Unknown backend: use 'simdjson' or 'mojo'"]()
+        return Value(Null())  # Unreachable
 
 
 # =============================================================================
@@ -308,7 +337,8 @@ fn loads[target: StaticString = "cpu"](s: String) raises -> Value:
     """Deserialize JSON string to a Value (like Python's json.loads).
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: Parsing target/backend. Options: "cpu" (default, pure Mojo),
+            "cpu-simdjson" (FFI), or "gpu" (for large files).
 
     Args:
         s: JSON string to parse.
@@ -319,11 +349,14 @@ fn loads[target: StaticString = "cpu"](s: String) raises -> Value:
     Example:
         var data = loads('{"name": "Alice"}')
         var data = loads[target="gpu"](large_json)  # GPU for large files.
+        var data = loads[target="cpu-simdjson"](s)  # Use simdjson FFI.
     """
 
     @parameter
     if target == "cpu":
-        return _parse_cpu(s)
+        return _parse_cpu["mojo"](s)
+    elif target == "cpu-simdjson":
+        return _parse_cpu["simdjson"](s)
     else:
         return _parse_gpu(s)
 
@@ -334,7 +367,7 @@ fn loads[
     """Deserialize JSON with custom configuration.
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: "cpu" (default), "cpu-simdjson", or "gpu".
 
     Args:
         s: JSON string to parse.
@@ -359,7 +392,7 @@ fn loads[
     """Deserialize NDJSON string to a list of Values.
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: "cpu" (default), "cpu-simdjson", or "gpu".
         format: Must be "ndjson" for this overload.
 
     Args:
@@ -422,7 +455,7 @@ fn load[target: StaticString = "cpu"](mut f: FileHandle) raises -> Value:
     """Deserialize JSON from file to a Value (like Python's json.load).
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: "cpu" (default), "cpu-simdjson", or "gpu".
 
     Args:
         f: FileHandle to read JSON from.
@@ -444,7 +477,7 @@ fn load[
     """Deserialize JSON from file with custom configuration.
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: "cpu" (default), "cpu-simdjson", or "gpu".
 
     Args:
         f: FileHandle to read JSON from.
@@ -461,7 +494,7 @@ fn load[target: StaticString = "cpu"](path: String) raises -> Value:
     """Load JSON/NDJSON from file path. Auto-detects format from extension.
 
     Parameters:
-        target: "cpu" (default) or "gpu".
+        target: "cpu" (default), "cpu-simdjson", or "gpu".
 
     Args:
         path: Path to .json or .ndjson file.

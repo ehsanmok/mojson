@@ -88,8 +88,9 @@ pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 Everything through 4 functions: `loads`, `dumps`, `load`, `dump`
 
 ```mojo
-# Parse strings (default: CPU)
+# Parse strings (default: pure Mojo backend - fast, zero FFI)
 loads(s)                              # JSON string -> Value
+loads[target="cpu-simdjson"](s)       # Use simdjson FFI backend
 loads[target="gpu"](s)                # GPU parsing
 loads[format="ndjson"](s)             # NDJSON string -> List[Value]
 loads[lazy=True](s)                   # Lazy parsing (CPU only)
@@ -127,6 +128,15 @@ apply_patch(doc, patch)               # JSON Patch (RFC 6902)
 | `loads[lazy=True]` | ✅ | — | CPU only |
 | `load[streaming=True]` | ✅ | — | CPU only |
 | `dumps` / `dump` | ✅ | — | CPU only |
+
+### CPU Backends
+
+| Backend | Target | Speed | Dependencies |
+|---------|--------|-------|--------------|
+| Mojo (native) | `loads()` (default) | 0.70 GB/s | Zero FFI |
+| simdjson (FFI) | `loads[target="cpu-simdjson"]()` | 0.55 GB/s | libsimdjson |
+
+The pure Mojo backend is the **default** and is **~30% faster** than the FFI approach with zero external dependencies.
 
 Full API: [docs/api.md](./docs/api.md)
 

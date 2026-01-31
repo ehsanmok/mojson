@@ -14,6 +14,7 @@ __pycache__/
 *.mojopkg
 
 .cursor/
+.agents/
 
 # Large benchmark datasets (download from cuJSON Google Drive)
 benchmark/datasets/twitter_large_record.json

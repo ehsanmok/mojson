@@ -163,7 +163,7 @@ fn test_error_handling() raises:
     try:
         var person = deserialize[Person](json_str)
         raise Error("Should have failed on invalid data")
-    except e:
+    except:
         # Expected to fail
         pass
 

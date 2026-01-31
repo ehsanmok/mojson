@@ -1,6 +1,31 @@
 # mojson CPU backends
-# Currently supports simdjson as the default backend
-# Future backends can be added here (e.g., yyjson, rapidjson)
+# Supports multiple backends:
+#   - simdjson (FFI): High-performance C++ backend (default)
+#   - mojo (native): Pure Mojo implementation (zero FFI)
+
+# =============================================================================
+# Common Types (backend-agnostic)
+# =============================================================================
+
+from .types import (
+    JSON_TYPE_NULL,
+    JSON_TYPE_BOOL,
+    JSON_TYPE_INT64,
+    JSON_TYPE_UINT64,
+    JSON_TYPE_DOUBLE,
+    JSON_TYPE_STRING,
+    JSON_TYPE_ARRAY,
+    JSON_TYPE_OBJECT,
+    JSON_OK,
+    JSON_ERROR_INVALID,
+    JSON_ERROR_CAPACITY,
+    JSON_ERROR_UTF8,
+    JSON_ERROR_OTHER,
+)
+
+# =============================================================================
+# simdjson Backend (FFI)
+# =============================================================================
 
 from .simdjson_ffi import (
     SimdjsonFFI,
@@ -18,3 +43,9 @@ from .simdjson_ffi import (
     SIMDJSON_TYPE_ARRAY,
     SIMDJSON_TYPE_OBJECT,
 )
+
+# =============================================================================
+# Mojo Backend (Pure Native)
+# =============================================================================
+
+from .mojo_backend import parse_mojo, MojoJSONParser
