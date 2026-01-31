@@ -50,16 +50,16 @@ This builds `benchmark/cuJSON/build/cujson_benchmark` from the pinned submodule 
 | Parser | Time | Throughput | Speedup |
 |--------|------|------------|---------|
 | cuJSON (CUDA C++) | 182 ms | 4.6 GB/s | baseline |
-| **mojson GPU** | **99 ms** | **8.5 GB/s** | **1.85x** |
+| **mojson GPU** | **103 ms** | **8.2 GB/s** | **1.8x** |
 
-### CPU: mojson vs simdjson
+### CPU: mojson (simdjson FFI)
 
-**Dataset:** 632KB `twitter.json`
+**Dataset:** 804MB `twitter_large_record.json`
 
-| Parser | Time | Throughput |
-|--------|------|------------|
-| simdjson (native) | 0.14 ms | 4.3 GB/s |
-| mojson CPU (FFI) | 0.18 ms | 3.5 GB/s |
+| Platform | Time | Throughput |
+|----------|------|------------|
+| Apple M3 Pro | 530 ms | 1.5 GB/s |
+| Intel Xeon 6972P | 2747 ms | 0.3 GB/s |
 
 ## Important: GPU Benchmarks Require Large Files
 
@@ -108,22 +108,22 @@ Both parsers produce the same output: an array of structural character positions
 #### Detailed Timing Breakdown (804MB file)
 
 ```
-cuJSON (182ms total):                mojson pinned (99ms total):
+cuJSON (182ms total):                mojson pinned (103ms total):
 ├─ H2D transfer:     15.2 ms         ├─ H2D transfer:      ~15 ms
 ├─ Validation:        1.5 ms         ├─ GPU kernels:       ~25 ms
 ├─ Tokenization:      5.5 ms         │  ├─ Quote detection
 ├─ Parser (GPU):      1.4 ms         │  ├─ Prefix sums
 └─ D2H transfer:    158.6 ms         │  └─ Structural bitmap
-                                      ├─ Stream compaction: ~40 ms (GPU)
+                                      ├─ Stream compaction: ~45 ms (GPU)
                                       ├─ D2H transfer:      ~10 ms (4MB)
                                       └─ Bracket matching:  ~10 ms (CPU)
 ────────────────────────────         ────────────────────────────────
-Throughput: 4.6 GB/s                 Throughput: 8.5 GB/s
+Throughput: 4.6 GB/s                 Throughput: 8.2 GB/s
 ```
 
 ### Why mojson is Faster
 
-The **1.85x speedup** comes primarily from **GPU stream compaction**:
+The **1.8x speedup** comes primarily from **GPU stream compaction**:
 
 - **cuJSON approach:** Transfer all structural character data back to CPU
   - Structural chars = ~58% of input = 465MB for 804MB file
@@ -133,7 +133,7 @@ The **1.85x speedup** comes primarily from **GPU stream compaction**:
   - Position array = ~1M positions × 4 bytes = 4MB
   - D2H transfer time: ~10ms
 
-**Speedup:** 16x reduction in D2H transfer size → 3.2x faster D2H → 1.85x overall speedup
+**Speedup:** 16x reduction in D2H transfer size → 3.2x faster D2H → 1.8x overall speedup
 
 ### What About the "Raw GPU Parse" Metric?
 
@@ -142,10 +142,10 @@ The "Raw GPU parse" metric (215ms, 3.9 GB/s) includes the overhead of copying fr
 | Metric | Time | Throughput | Notes |
 |--------|------|------------|-------|
 | cuJSON (from pinned) | 182 ms | 4.6 GB/s | Assumes input is already pinned |
-| mojson pinned | 99 ms | 8.5 GB/s | Same assumption (fair comparison) |
-| mojson raw (from pageable) | 215 ms | 3.9 GB/s | Realistic scenario with memcpy overhead |
+| mojson pinned | 103 ms | 8.2 GB/s | Same assumption (fair comparison) |
+| mojson raw (from pageable) | 223 ms | 3.8 GB/s | Realistic scenario with memcpy overhead |
 
-The pageable→pinned copy takes ~115ms for 804MB. In practice, you can avoid this by:
+The pageable→pinned copy takes ~120ms for 804MB. In practice, you can avoid this by:
 1. Using `HostBuffer` for initial file reads
 2. Memory-mapping files directly into pinned memory
 3. Receiving data from network buffers already in pinned memory
@@ -156,10 +156,10 @@ For real applications using the full `loads[target='gpu']()` API:
 
 | Pipeline Stage | Time (804MB) |
 |----------------|--------------|
-| Raw GPU parse | 215 ms |
-| Value tree construction (CPU) | ~325 ms |
-| **Total** | **~540 ms** |
-| **Throughput** | **~1.6 GB/s** |
+| Raw GPU parse | 223 ms |
+| Value tree construction (CPU) | ~430 ms |
+| **Total** | **~650 ms** |
+| **Throughput** | **~1.3 GB/s** |
 
 The Value tree construction is currently CPU-bound. This is the full application-level performance including the complete `Value` object tree in memory.
 
