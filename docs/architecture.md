@@ -1,6 +1,6 @@
 # Architecture
 
-mojson provides a unified API with two high-performance backends: CPU (simdjson FFI) and GPU (native Mojo kernels).
+mojson provides a unified API with multiple high-performance backends: CPU (simdjson FFI or pure Mojo) and GPU (native Mojo kernels).
 
 ## System Overview
 
@@ -11,7 +11,12 @@ graph TB
         dumps["dumps(value)"]
     end
 
-    subgraph "CPU Backend"
+    subgraph "CPU Backend - Pure Mojo (Default)"
+        mojo_parser["MojoJSONParser"]
+        mojo_parse["Zero-FFI Parsing"]
+    end
+
+    subgraph "CPU Backend - simdjson FFI"
         simdjson["simdjson FFI"]
         cpu_parse["Parse & Build Value Tree"]
     end
@@ -23,31 +28,70 @@ graph TB
         tree_build["Value Tree Builder"]
     end
 
-    loads -->|"target='cpu'"| simdjson
+    loads -->|"default"| mojo_parser
+    loads -->|"target='cpu-simdjson'"| simdjson
     loads -->|"target='gpu'"| gpu_kernels
     simdjson --> cpu_parse
+    mojo_parser --> mojo_parse
     gpu_kernels --> stream_compact
     stream_compact --> bracket_match
     bracket_match --> tree_build
     cpu_parse --> dumps
+    mojo_parse --> dumps
     tree_build --> dumps
 ```
 
-## CPU Backend
+## CPU Backends
+
+### Pure Mojo Backend (Default)
+
+**Implementation:** Native Mojo JSON parser with optimized parsing
+
+**Location:**
+- `mojson/cpu/mojo_backend.mojo` - MojoJSONParser struct
+- `mojson/cpu/types.mojo` - Common JSON type constants
+
+**Performance:** ~0.70 GB/s (on twitter.json)
+
+**Usage:**
+```mojo
+from mojson import loads
+var data = loads('{"key": "value"}')  # Default is Mojo backend
+```
+
+**Benefits:**
+- Zero external dependencies (no libsimdjson required)
+- 30% faster than FFI due to no marshalling overhead
+- Easier deployment (single Mojo binary)
+
+### simdjson FFI Backend
 
 **Implementation:** FFI wrapper around [simdjson](https://github.com/simdjson/simdjson)
 
 **Location:**
-- `src/cpu/simdjson_ffi/` - C++ wrapper
-- `src/cpu/simdjson_ffi.mojo` - Mojo FFI bindings
+- `mojson/cpu/simdjson_ffi/` - C++ wrapper
+- `mojson/cpu/simdjson_ffi.mojo` - Mojo FFI bindings
 
-**Performance:** ~3.5 GB/s (within 20% of native simdjson)
+**Performance:** ~0.55 GB/s (on twitter.json)
 
-### CPU Parsing Flow
+**Usage:**
+```mojo
+from mojson import loads
+var data = loads[target="cpu-simdjson"]('{"key": "value"}')
+```
+
+### CPU Parsing Flow (simdjson)
 
 1. Load JSON string into memory
-2. Call simdjson via FFI (`src/cpu/simdjson_ffi.mojo`)
+2. Call simdjson via FFI (`mojson/cpu/simdjson_ffi.mojo`)
 3. Recursively build `Value` tree from simdjson result
+4. Return parsed `Value`
+
+### CPU Parsing Flow (Pure Mojo)
+
+1. Copy JSON bytes to internal buffer
+2. Recursive descent parsing with `MojoJSONParser`
+3. Build `Value` tree directly
 4. Return parsed `Value`
 
 ## GPU Backend
@@ -140,6 +184,9 @@ src/
 ├── jsonpath.mojo              # JSONPath query language
 ├── schema.mojo                # JSON Schema validation
 ├── cpu/
+│   ├── __init__.mojo         # CPU backend exports
+│   ├── types.mojo            # Common JSON type constants
+│   ├── mojo_backend.mojo     # Pure Mojo JSON parser
 │   ├── simdjson_ffi.mojo     # simdjson FFI bindings
 │   └── simdjson_ffi/         # C++ simdjson wrapper
 └── gpu/
@@ -151,7 +198,8 @@ src/
 tests/
 ├── test_api.mojo              # Unified API tests (loads/dumps/load/dump)
 ├── test_value.mojo            # Value type tests
-├── test_parser.mojo           # Parser tests
+├── test_parser.mojo           # Parser tests (simdjson backend)
+├── test_mojo_backend.mojo     # Pure Mojo backend tests
 ├── test_serialize.mojo        # Serialization tests
 ├── test_serde.mojo            # Struct serialization tests
 ├── test_patch.mojo            # JSON Patch tests
@@ -163,8 +211,11 @@ tests/
 benchmark/
 ├── datasets/                  # Benchmark files
 ├── mojo/
-│   ├── bench_cpu.mojo        # CPU benchmark (mojson vs simdjson)
-│   └── bench_gpu.mojo        # GPU benchmark (mojson vs cuJSON)
+│   ├── bench_cpu.mojo        # CPU benchmark (simdjson FFI)
+│   ├── bench_backend.mojo    # Backend comparison (simdjson vs Mojo)
+│   └── bench_gpu.mojo        # GPU benchmark
+├── cpp/
+│   └── bench_simdjson.cpp    # Native simdjson C++ benchmark
 └── cuJSON/                    # cuJSON submodule for comparison
 ```
 

@@ -9,8 +9,11 @@ The entire API is built around 4 functions: `loads`, `dumps`, `load`, `dump`.
 ```mojo
 from mojson import loads, ParserConfig
 
-# Basic parsing
+# Basic parsing (uses fast pure Mojo backend by default)
 var data = loads('{"name": "Alice", "age": 30}')
+
+# Use simdjson FFI backend (for compatibility)
+var data = loads[target="cpu-simdjson"]('{"name": "Alice"}')
 
 # GPU acceleration (for large files >100MB)
 var data = loads[target="gpu"](large_json_string)
@@ -136,7 +139,7 @@ var name = obj["name"]              # -> Value
 var items = obj.object_items()      # -> List[Tuple[String, Value]]
 var keys = obj.object_keys()        # -> List[String]
 
-# Array access  
+# Array access
 var first = arr[0]                  # -> Value
 var items = arr.array_items()       # -> List[Value]
 var count = arr.array_count()       # -> Int
@@ -181,9 +184,9 @@ from mojson import Serializable, serialize, to_json_value
 struct Person(Serializable):
     var name: String
     var age: Int
-    
+
     fn to_json(self) -> String:
-        return '{"name":' + to_json_value(self.name) + 
+        return '{"name":' + to_json_value(self.name) +
                ',"age":' + to_json_value(self.age) + '}'
 
 var json = serialize(Person("Alice", 30))  # {"name":"Alice","age":30}
@@ -197,7 +200,7 @@ from mojson import Deserializable, deserialize, get_string, get_int
 struct Person(Deserializable):
     var name: String
     var age: Int
-    
+
     @staticmethod
     fn from_json(json: Value) raises -> Self:
         return Self(
@@ -419,8 +422,8 @@ if not result.valid:
         print(result.errors[i].path, ":", result.errors[i].message)
 ```
 
-Supported keywords: `type`, `enum`, `const`, `minimum/maximum`, `minLength/maxLength`, 
-`minItems/maxItems`, `items`, `required`, `properties`, `additionalProperties`, 
+Supported keywords: `type`, `enum`, `const`, `minimum/maximum`, `minLength/maxLength`,
+`minItems/maxItems`, `items`, `required`, `properties`, `additionalProperties`,
 `allOf`, `anyOf`, `oneOf`, `not`
 
 See [Performance](./performance.md) for detailed benchmarks and optimization tips.
