@@ -51,7 +51,7 @@ graph TB
 - `mojson/cpu/mojo_backend.mojo` - MojoJSONParser struct
 - `mojson/cpu/types.mojo` - Common JSON type constants
 
-**Performance:** ~0.70 GB/s (on twitter.json)
+**Performance:** ~1.31 GB/s (on twitter.json)
 
 **Usage:**
 ```mojo
@@ -72,7 +72,7 @@ var data = loads('{"key": "value"}')  # Default is Mojo backend
 - `mojson/cpu/simdjson_ffi/` - C++ wrapper
 - `mojson/cpu/simdjson_ffi.mojo` - Mojo FFI bindings
 
-**Performance:** ~0.55 GB/s (on twitter.json)
+**Performance:** ~0.48 GB/s (on twitter.json)
 
 **Usage:**
 ```mojo
@@ -104,7 +104,7 @@ var data = loads[target="cpu-simdjson"]('{"key": "value"}')
 - `src/gpu/stream_compact.mojo` - GPU stream compaction for position extraction
 - `src/gpu/bracket_match.mojo` - CPU bracket matching
 
-**Performance:** ~8.5 GB/s on NVIDIA B200 (1.85x faster than cuJSON)
+**Performance:** ~8 GB/s on NVIDIA B200 (1.8x faster than cuJSON)
 
 **Techniques:**
 - Bitmap-based parsing
@@ -162,7 +162,7 @@ flowchart LR
 
 The `Value` struct represents any JSON value (null, bool, int, float, string, array, object).
 
-See [API Reference](./api.md) for complete `Value` methods.
+See [API Reference](https://ehsanmok.github.io/mojson/) for complete `Value` methods.
 
 ## Directory Structure
 
