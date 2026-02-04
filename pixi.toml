@@ -31,6 +31,7 @@ make = ">=4.4.1,<5"
 gxx = ">=13"              # g++ for Linux (macOS uses system clang++ from Xcode CLT)
 git = ">=2"               # For cloning cuJSON (optional, NVIDIA benchmarks only)
 pre-commit = ">=4.2.0,<5"
+mojodoc = { git = "https://github.com/ehsanmok/mojodoc.git", branch = "main" }
 
 [feature.dev.pypi-dependencies]
 gdown = ">=5.0"           # Google Drive CLI for downloading benchmark datasets
@@ -94,3 +95,7 @@ examples = "mojo -I . examples/01_basic_parsing.mojo && mojo -I . examples/02_fi
 # Usage: pixi run bench-gpu-cujson -- path/to/file.json
 # First: cd benchmark && git clone https://github.com/AutomataLab/cuJSON.git
 bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; if [ ! -f benchmark/cuJSON/build/cujson_benchmark ]; then echo \"Error: cuJSON not built. Run: pixi run build-cujson\" && exit 1; fi; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- mojson GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu"] }
+
+# Docs
+docs = "mojodoc ./mojson --open"
+docs-build = "mojodoc ./mojson --out-dir target/doc --base-url /mojson/"

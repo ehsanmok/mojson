@@ -5,6 +5,7 @@
 
 # Build outputs
 build/
+target/
 
 # Cloned simdjson (built via `pixi run build`)
 src/simdjson_ffi/simdjson/
