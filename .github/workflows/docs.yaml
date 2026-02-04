@@ -32,9 +32,6 @@ jobs:
           cache: false
           post-cleanup: false
 
-      - name: Run tests (CPU only)
-        run: pixi run tests-cpu
-
       - name: Generate docs with mojodoc
         run: pixi run mojodoc ./mojson --out-dir target/doc --base-url /mojson/
 
