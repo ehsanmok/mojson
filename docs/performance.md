@@ -113,14 +113,14 @@ GPU parallelism shines with large files where the overhead is amortized.
 
 ## CPU Performance
 
-mojson CPU backend uses simdjson via FFI:
+mojson has two CPU backends:
 
-| Dataset | Size | Throughput | Time |
-|---------|------|------------|------|
-| twitter.json | 617 KB | 1.6 GB/s | 0.39 ms |
-| citm_catalog.json | 1.7 MB | 1.7 GB/s | 1.0 ms |
+| Backend | Throughput | Notes |
+|---------|------------|-------|
+| **Mojo (native)** | **1.31 GB/s** | Default, zero FFI, fastest |
+| simdjson (FFI) | 0.48 GB/s | Requires libsimdjson |
 
-**Performance:** ~20% overhead from FFI + tree construction compared to native simdjson.
+The pure Mojo backend is **~2.7x faster** than FFI due to eliminating marshalling overhead.
 
 ## When to Use GPU vs CPU
 

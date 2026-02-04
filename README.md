@@ -138,7 +138,7 @@ apply_patch(doc, patch)               # JSON Patch (RFC 6902)
 
 The pure Mojo backend is the **default** and is **~2.7x faster** than the FFI approach with zero external dependencies.
 
-Full API: [docs/api.md](./docs/api.md)
+Full API: [ehsanmok.github.io/mojson](https://ehsanmok.github.io/mojson/)
 
 ## Examples
 
@@ -162,7 +162,6 @@ pixi run mojo -I . examples/01_basic_parsing.mojo
 
 ## Documentation
 
-- [API Reference](./docs/api.md) — Complete function reference
 - [Architecture](./docs/architecture.md) — CPU/GPU backend design
 - [Performance](./docs/performance.md) — Optimization deep dive
 - [Benchmarks](./benchmark/README.md) — Reproducible benchmarks
