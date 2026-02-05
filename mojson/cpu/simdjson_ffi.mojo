@@ -2,7 +2,7 @@
 # Provides high-performance JSON parsing via simdjson C++ library
 # Uses OwnedDLHandle for runtime library loading
 
-from sys.ffi import OwnedDLHandle, external_call
+from ffi import OwnedDLHandle, external_call
 from os import getenv
 from memory import UnsafePointer, Span
 from collections import List
@@ -43,36 +43,36 @@ struct SimdjsonFFI:
     var _parser: Int  # Opaque pointer as Int
 
     # Parser functions
-    var _create_parser: fn () -> Int
-    var _destroy_parser: fn (Int) -> None
-    var _parse: fn (Int, Int, Int) -> Int
-    var _get_root: fn (Int) -> Int
+    var _create_parser: fn() -> Int
+    var _destroy_parser: fn(Int) -> None
+    var _parse: fn(Int, Int, Int) -> Int
+    var _get_root: fn(Int) -> Int
 
     # Value functions
-    var _value_get_type: fn (Int) -> Int
-    var _value_get_bool: fn (Int, Int) -> Int
-    var _value_get_int64: fn (Int, Int) -> Int
-    var _value_get_uint64: fn (Int, Int) -> Int
-    var _value_get_double: fn (Int, Int) -> Int
-    var _value_get_string: fn (Int, Int, Int) -> Int
-    var _value_free: fn (Int) -> None
+    var _value_get_type: fn(Int) -> Int
+    var _value_get_bool: fn(Int, Int) -> Int
+    var _value_get_int64: fn(Int, Int) -> Int
+    var _value_get_uint64: fn(Int, Int) -> Int
+    var _value_get_double: fn(Int, Int) -> Int
+    var _value_get_string: fn(Int, Int, Int) -> Int
+    var _value_free: fn(Int) -> None
 
     # Array functions
-    var _array_begin: fn (Int) -> Int
-    var _array_iter_done: fn (Int) -> Int
-    var _array_iter_get: fn (Int) -> Int
-    var _array_iter_next: fn (Int) -> None
-    var _array_iter_free: fn (Int) -> None
-    var _array_count: fn (Int) -> Int
+    var _array_begin: fn(Int) -> Int
+    var _array_iter_done: fn(Int) -> Int
+    var _array_iter_get: fn(Int) -> Int
+    var _array_iter_next: fn(Int) -> None
+    var _array_iter_free: fn(Int) -> None
+    var _array_count: fn(Int) -> Int
 
     # Object functions
-    var _object_begin: fn (Int) -> Int
-    var _object_iter_done: fn (Int) -> Int
-    var _object_iter_get_key: fn (Int, Int, Int) -> None
-    var _object_iter_get_value: fn (Int) -> Int
-    var _object_iter_next: fn (Int) -> None
-    var _object_iter_free: fn (Int) -> None
-    var _object_count: fn (Int) -> Int
+    var _object_begin: fn(Int) -> Int
+    var _object_iter_done: fn(Int) -> Int
+    var _object_iter_get_key: fn(Int, Int, Int) -> None
+    var _object_iter_get_value: fn(Int) -> Int
+    var _object_iter_next: fn(Int) -> None
+    var _object_iter_free: fn(Int) -> None
+    var _object_count: fn(Int) -> Int
 
     fn __init__(out self, lib_path: String = "") raises:
         """Initialize by loading the simdjson wrapper library.
@@ -86,82 +86,82 @@ struct SimdjsonFFI:
         self._lib = OwnedDLHandle(path)
 
         # Parser functions
-        self._create_parser = self._lib.get_function[fn () -> Int](
+        self._create_parser = self._lib.get_function[fn() -> Int](
             "simdjson_create_parser"
         )
-        self._destroy_parser = self._lib.get_function[fn (Int) -> None](
+        self._destroy_parser = self._lib.get_function[fn(Int) -> None](
             "simdjson_destroy_parser"
         )
-        self._parse = self._lib.get_function[fn (Int, Int, Int) -> Int](
+        self._parse = self._lib.get_function[fn(Int, Int, Int) -> Int](
             "simdjson_parse"
         )
-        self._get_root = self._lib.get_function[fn (Int) -> Int](
+        self._get_root = self._lib.get_function[fn(Int) -> Int](
             "simdjson_get_root"
         )
 
         # Value functions
-        self._value_get_type = self._lib.get_function[fn (Int) -> Int](
+        self._value_get_type = self._lib.get_function[fn(Int) -> Int](
             "simdjson_value_get_type"
         )
-        self._value_get_bool = self._lib.get_function[fn (Int, Int) -> Int](
+        self._value_get_bool = self._lib.get_function[fn(Int, Int) -> Int](
             "simdjson_value_get_bool"
         )
-        self._value_get_int64 = self._lib.get_function[fn (Int, Int) -> Int](
+        self._value_get_int64 = self._lib.get_function[fn(Int, Int) -> Int](
             "simdjson_value_get_int64"
         )
-        self._value_get_uint64 = self._lib.get_function[fn (Int, Int) -> Int](
+        self._value_get_uint64 = self._lib.get_function[fn(Int, Int) -> Int](
             "simdjson_value_get_uint64"
         )
-        self._value_get_double = self._lib.get_function[fn (Int, Int) -> Int](
+        self._value_get_double = self._lib.get_function[fn(Int, Int) -> Int](
             "simdjson_value_get_double"
         )
         self._value_get_string = self._lib.get_function[
-            fn (Int, Int, Int) -> Int
+            fn(Int, Int, Int) -> Int
         ]("simdjson_value_get_string")
-        self._value_free = self._lib.get_function[fn (Int) -> None](
+        self._value_free = self._lib.get_function[fn(Int) -> None](
             "simdjson_value_free"
         )
 
         # Array functions
-        self._array_begin = self._lib.get_function[fn (Int) -> Int](
+        self._array_begin = self._lib.get_function[fn(Int) -> Int](
             "simdjson_array_begin"
         )
-        self._array_iter_done = self._lib.get_function[fn (Int) -> Int](
+        self._array_iter_done = self._lib.get_function[fn(Int) -> Int](
             "simdjson_array_iter_done"
         )
-        self._array_iter_get = self._lib.get_function[fn (Int) -> Int](
+        self._array_iter_get = self._lib.get_function[fn(Int) -> Int](
             "simdjson_array_iter_get"
         )
-        self._array_iter_next = self._lib.get_function[fn (Int) -> None](
+        self._array_iter_next = self._lib.get_function[fn(Int) -> None](
             "simdjson_array_iter_next"
         )
-        self._array_iter_free = self._lib.get_function[fn (Int) -> None](
+        self._array_iter_free = self._lib.get_function[fn(Int) -> None](
             "simdjson_array_iter_free"
         )
-        self._array_count = self._lib.get_function[fn (Int) -> Int](
+        self._array_count = self._lib.get_function[fn(Int) -> Int](
             "simdjson_array_count"
         )
 
         # Object functions
-        self._object_begin = self._lib.get_function[fn (Int) -> Int](
+        self._object_begin = self._lib.get_function[fn(Int) -> Int](
             "simdjson_object_begin"
         )
-        self._object_iter_done = self._lib.get_function[fn (Int) -> Int](
+        self._object_iter_done = self._lib.get_function[fn(Int) -> Int](
             "simdjson_object_iter_done"
         )
         self._object_iter_get_key = self._lib.get_function[
-            fn (Int, Int, Int) -> None
+            fn(Int, Int, Int) -> None
         ]("simdjson_object_iter_get_key")
-        self._object_iter_get_value = self._lib.get_function[fn (Int) -> Int](
+        self._object_iter_get_value = self._lib.get_function[fn(Int) -> Int](
             "simdjson_object_iter_get_value"
         )
-        self._object_iter_next = self._lib.get_function[fn (Int) -> None](
+        self._object_iter_next = self._lib.get_function[fn(Int) -> None](
             "simdjson_object_iter_next"
         )
-        self._object_iter_free = self._lib.get_function[fn (Int) -> None](
+        self._object_iter_free = self._lib.get_function[fn(Int) -> None](
             "simdjson_object_iter_free"
         )
-        self._object_count = self._lib.get_function[fn (Int) -> Int](
+        self._object_count = self._lib.get_function[fn(Int) -> Int](
             "simdjson_object_count"
         )
 
