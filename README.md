@@ -13,7 +13,7 @@ Add mojson to your project's `pixi.toml`:
 
 ```toml
 [workspace]
-channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://prefix.dev/modular-community"]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 preview = ["pixi-build"]
 
 [dependencies]
