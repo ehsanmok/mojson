@@ -1,8 +1,94 @@
 """High-performance JSON library for Mojo.
 
+- **Python-like API** — `loads`, `dumps`, `load`, `dump`
+- **GPU accelerated** — 2-4x faster than cuJSON on large files
+- **Cross-platform** — NVIDIA, AMD, and Apple Silicon GPUs
+- **Streaming & lazy parsing** — Handle files larger than memory
+- **JSONPath & Schema** — Query and validate JSON documents
+- **RFC compliant** — JSON Patch, Merge Patch, JSON Pointer
+
+## Requirements
+
+- [pixi](https://pixi.sh) package manager
+
+GPU (optional): NVIDIA CUDA 7.0+, AMD ROCm 6+, or Apple Silicon.
+See [GPU requirements](https://docs.modular.com/max/packages#gpu-compatibility).
+
+## Installation
+
+Add mojson to your project's `pixi.toml`:
+
+```toml
+[workspace]
+channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
+preview = ["pixi-build"]
+
+[dependencies]
+mojson = { git = "https://github.com/ehsanmok/mojson.git" }
+```
+
+Then run:
+
+```
+pixi install
+```
+
+`mojo-compiler` and `simdjson` are automatically installed as dependencies.
+
+## Quick Start
+
+```mojo
+from mojson import loads, dumps, load, dump
+
+# Parse & serialize strings
+var data = loads('{"name": "Alice", "scores": [95, 87, 92]}')
+print(data["name"].string_value())  # Alice
+print(data["scores"][0].int_value())  # 95
+print(dumps(data, indent="  "))  # Pretty print
+
+# File I/O (auto-detects .ndjson)
+var config = load("config.json")
+var logs = load("events.ndjson")  # Returns array of values
+
+# Explicit GPU parsing
+var big = load[target="gpu"]("large.json")
+```
+
+## Performance
+
+### GPU (804MB twitter_large_record.json)
+
+| Platform | Throughput | vs cuJSON |
+|----------|------------|-----------|
+| AMD MI355X | 13 GB/s | 3.6x faster |
+| NVIDIA B200 | 8 GB/s | 1.8x faster |
+| Apple M3 Pro | 3.9 GB/s | — |
+
+GPU only beneficial for files >100MB.
+
+### CPU Backends
+
+| Backend | Target | Speed | Dependencies |
+|---------|--------|-------|--------------|
+| Mojo (native) | `loads()` (default) | 1.31 GB/s | Zero FFI |
+| simdjson (FFI) | `loads[target="cpu-simdjson"]()` | 0.48 GB/s | libsimdjson |
+
+The pure Mojo backend is the default and is ~2.7x faster than the FFI approach
+with zero external dependencies.
+
+## Documentation
+
+- [Architecture](https://github.com/ehsanmok/mojson/blob/main/docs/architecture.md) — CPU/GPU backend design
+- [Performance](https://github.com/ehsanmok/mojson/blob/main/docs/performance.md) — Optimization deep dive
+- [Benchmarks](https://github.com/ehsanmok/mojson/blob/main/benchmark/README.md) — Reproducible benchmarks
+- [Examples](https://github.com/ehsanmok/mojson/tree/main/examples) — 11 runnable examples covering all features
+- [Source](https://github.com/ehsanmok/mojson) — GitHub repository
+
+## API Reference
+
 The entire API is built around 4 functions: `loads`, `dumps`, `load`, `dump`.
 
-## loads() - Parse Strings
+### loads() - Parse Strings
 
 ```mojo
 from mojson import loads, ParserConfig
@@ -28,7 +114,7 @@ var lazy = loads[lazy=True](huge_json_string)
 var name = lazy.get("/users/0/name")  # Only parses this path
 ```
 
-## dumps() - Serialize Strings
+### dumps() - Serialize Strings
 
 ```mojo
 from mojson import dumps, SerializerConfig
@@ -47,7 +133,7 @@ var json = dumps(data, config)
 var ndjson = dumps[format="ndjson"](list_of_values)
 ```
 
-## load() - Parse Files
+### load() - Parse Files
 
 ```mojo
 from mojson import load
@@ -69,7 +155,7 @@ while parser.has_next():
 parser.close()
 ```
 
-## dump() - Write Files
+### dump() - Write Files
 
 ```mojo
 from mojson import dump
@@ -85,7 +171,7 @@ dump(data, f, indent="  ")
 f.close()
 ```
 
-## Feature Matrix
+### Feature Matrix
 
 | Feature | CPU | GPU | Notes |
 |---------|-----|-----|-------|
