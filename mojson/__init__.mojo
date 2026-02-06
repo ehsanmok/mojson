@@ -443,10 +443,12 @@ Supported keywords: `type`, `enum`, `const`, `minimum/maximum`, `minLength/maxLe
 """
 
 # Core API
-from .value import Value, Null
 from .parser import loads, load
 from .serialize import dumps, dump
 from .config import ParserConfig, SerializerConfig
+
+# Value type
+from .value import Value, Null
 
 # Value construction helpers
 from .value import make_array_value, make_object_value
