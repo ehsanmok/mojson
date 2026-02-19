@@ -159,36 +159,36 @@ fn _strip_comments(json: String) -> String:
             i += 1
             continue
 
-        if c == ord("\\") and in_string:
+        if c == UInt8(ord("\\")) and in_string:
             escaped = True
             result += chr(Int(c))
             i += 1
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             result += chr(Int(c))
             i += 1
             continue
 
         # Skip comments outside strings
-        if not in_string and c == ord("/") and i + 1 < n:
+        if not in_string and c == UInt8(ord("/")) and i + 1 < n:
             var next_c = json_bytes[i + 1]
 
             # Single-line comment
-            if next_c == ord("/"):
+            if next_c == UInt8(ord("/")):
                 i += 2
-                while i < n and json_bytes[i] != ord("\n"):
+                while i < n and json_bytes[i] != UInt8(ord("\n")):
                     i += 1
                 continue
 
             # Multi-line comment
-            if next_c == ord("*"):
+            if next_c == UInt8(ord("*")):
                 i += 2
                 while i + 1 < n:
-                    if json_bytes[i] == ord("*") and json_bytes[i + 1] == ord(
-                        "/"
-                    ):
+                    if json_bytes[i] == UInt8(ord("*")) and json_bytes[
+                        i + 1
+                    ] == UInt8(ord("/")):
                         i += 2
                         break
                     i += 1
@@ -220,13 +220,13 @@ fn _remove_trailing_commas(json: String) -> String:
             i += 1
             continue
 
-        if c == ord("\\") and in_string:
+        if c == UInt8(ord("\\")) and in_string:
             escaped = True
             result += chr(Int(c))
             i += 1
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             result += chr(Int(c))
             last_comma_pos = -1
@@ -239,20 +239,27 @@ fn _remove_trailing_commas(json: String) -> String:
             continue
 
         # Track comma position
-        if c == ord(","):
+        if c == UInt8(ord(",")):
             last_comma_pos = len(result)
             result += chr(Int(c))
             i += 1
             continue
 
         # Skip whitespace when checking for trailing comma
-        if c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r"):
+        if (
+            c == UInt8(ord(" "))
+            or c == UInt8(ord("\t"))
+            or c == UInt8(ord("\n"))
+            or c == UInt8(ord("\r"))
+        ):
             result += chr(Int(c))
             i += 1
             continue
 
         # Check if this closes an array/object after a comma
-        if (c == ord("]") or c == ord("}")) and last_comma_pos >= 0:
+        if (
+            c == UInt8(ord("]")) or c == UInt8(ord("}"))
+        ) and last_comma_pos >= 0:
             # Remove the trailing comma
             var before_comma = result[:last_comma_pos]
             var after_comma = result[last_comma_pos + 1 :]
@@ -280,22 +287,22 @@ fn _check_depth(json: String, max_depth: Int) raises:
             escaped = False
             continue
 
-        if c == ord("\\") and in_string:
+        if c == UInt8(ord("\\")) and in_string:
             escaped = True
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             continue
 
         if in_string:
             continue
 
-        if c == ord("{") or c == ord("["):
+        if c == UInt8(ord("{")) or c == UInt8(ord("[")):
             depth += 1
             if depth > max_depth:
                 raise Error(
                     "JSON exceeds maximum depth of " + String(max_depth)
                 )
-        elif c == ord("}") or c == ord("]"):
+        elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
             depth -= 1

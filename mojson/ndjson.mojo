@@ -97,10 +97,10 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         while pos < self._len:
             var c = data_bytes[pos]
             if (
-                c != ord(" ")
-                and c != ord("\t")
-                and c != ord("\n")
-                and c != ord("\r")
+                c != UInt8(ord(" "))
+                and c != UInt8(ord("\t"))
+                and c != UInt8(ord("\n"))
+                and c != UInt8(ord("\r"))
             ):
                 return True
             pos += 1
@@ -119,10 +119,10 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         while self._pos < self._len:
             var c = data_bytes[self._pos]
             if (
-                c != ord(" ")
-                and c != ord("\t")
-                and c != ord("\n")
-                and c != ord("\r")
+                c != UInt8(ord(" "))
+                and c != UInt8(ord("\t"))
+                and c != UInt8(ord("\n"))
+                and c != UInt8(ord("\r"))
             ):
                 break
             self._pos += 1
@@ -134,12 +134,12 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         var line_start = self._pos
         var line_end = line_start
 
-        while line_end < self._len and data_bytes[line_end] != ord("\n"):
+        while line_end < self._len and data_bytes[line_end] != UInt8(ord("\n")):
             line_end += 1
 
         # Extract line (trim trailing \r if present)
         var end = line_end
-        if end > line_start and data_bytes[end - 1] == ord("\r"):
+        if end > line_start and data_bytes[end - 1] == UInt8(ord("\r")):
             end -= 1
 
         var line = String(self._data[line_start:end])
@@ -159,11 +159,15 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
 
         while pos < self._len:
             var c = data_bytes[pos]
-            if c == ord("\n"):
+            if c == UInt8(ord("\n")):
                 if in_line:
                     count += 1
                     in_line = False
-            elif c != ord(" ") and c != ord("\t") and c != ord("\r"):
+            elif (
+                c != UInt8(ord(" "))
+                and c != UInt8(ord("\t"))
+                and c != UInt8(ord("\r"))
+            ):
                 in_line = True
             pos += 1
 
@@ -211,10 +215,10 @@ fn _split_lines(s: String) -> List[String]:
     var line_start = 0
 
     for i in range(n):
-        if s_bytes[i] == ord("\n"):
+        if s_bytes[i] == UInt8(ord("\n")):
             # Handle \r\n
             var end = i
-            if end > line_start and s_bytes[end - 1] == ord("\r"):
+            if end > line_start and s_bytes[end - 1] == UInt8(ord("\r")):
                 end -= 1
             result.append(String(s[line_start:end]))
             line_start = i + 1
@@ -222,7 +226,7 @@ fn _split_lines(s: String) -> List[String]:
     # Add last line if not empty
     if line_start < n:
         var end = n
-        if end > line_start and s_bytes[end - 1] == ord("\r"):
+        if end > line_start and s_bytes[end - 1] == UInt8(ord("\r")):
             end -= 1
         result.append(String(s[line_start:end]))
 
@@ -235,10 +239,10 @@ fn _is_whitespace_only(s: String) -> Bool:
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
         if (
-            c != ord(" ")
-            and c != ord("\t")
-            and c != ord("\r")
-            and c != ord("\n")
+            c != UInt8(ord(" "))
+            and c != UInt8(ord("\t"))
+            and c != UInt8(ord("\r"))
+            and c != UInt8(ord("\n"))
         ):
             return False
     return True

@@ -19,7 +19,7 @@ fn compute_line_column(source: String, position: Int) -> Tuple[Int, Int]:
     var column = 1
 
     for i in range(pos):
-        if source_bytes[i] == ord("\n"):
+        if source_bytes[i] == UInt8(ord("\n")):
             line += 1
             column = 1
         else:
@@ -56,11 +56,11 @@ fn format_error_context(
 
     for i in range(start, end):
         var c = source_bytes[i]
-        if c == ord("\n"):
+        if c == UInt8(ord("\n")):
             result += "\\n"
-        elif c == ord("\r"):
+        elif c == UInt8(ord("\r")):
             result += "\\r"
-        elif c == ord("\t"):
+        elif c == UInt8(ord("\t")):
             result += "\\t"
         else:
             result += chr(Int(c))
@@ -128,11 +128,11 @@ fn find_error_position(source: String) -> Int:
             escaped = False
             continue
 
-        if c == ord("\\") and in_string:
+        if c == UInt8(ord("\\")) and in_string:
             escaped = True
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             last_structural = i
             continue
@@ -141,15 +141,15 @@ fn find_error_position(source: String) -> Int:
             continue
 
         # Structural characters
-        if c == ord("{") or c == ord("["):
+        if c == UInt8(ord("{")) or c == UInt8(ord("[")):
             depth += 1
             last_structural = i
-        elif c == ord("}") or c == ord("]"):
+        elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
             depth -= 1
             if depth < 0:
                 return i  # Unmatched closing bracket
             last_structural = i
-        elif c == ord(":") or c == ord(","):
+        elif c == UInt8(ord(":")) or c == UInt8(ord(",")):
             last_structural = i
 
     # If we end with unclosed brackets, return the last structural position

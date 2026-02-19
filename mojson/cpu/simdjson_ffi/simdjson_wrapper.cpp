@@ -284,4 +284,8 @@ size_t simdjson_required_padding(void) {
     return simdjson::SIMDJSON_PADDING;
 }
 
+void simdjson_memcpy_from_addr(void* dst, intptr_t src_addr, size_t n) {
+    memcpy(dst, reinterpret_cast<const void*>(src_addr), n);
+}
+
 } // extern "C"

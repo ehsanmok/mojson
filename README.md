@@ -23,7 +23,7 @@ channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 preview = ["pixi-build"]
 
 [dependencies]
-mojson = { git = "https://github.com/ehsanmok/mojson.git" }
+mojson = { git = "https://github.com/ehsanmok/mojson.git", branch = "main" }
 ```
 
 Then run:

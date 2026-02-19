@@ -327,7 +327,7 @@ fn _validate_number(
             )
         )
         if mult_num != 0:
-            var remainder = num - (Int(num / mult_num) * mult_num)
+            var remainder = num - (Float64(Int(num / mult_num)) * mult_num)
             if remainder != 0:
                 result.add_error(
                     path, "Value must be multiple of " + String(mult_num)

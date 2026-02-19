@@ -8,12 +8,12 @@ fn hex_digit_value(c: UInt8) -> Int:
 
     Returns -1 if not a valid hex digit.
     """
-    if c >= ord("0") and c <= ord("9"):
-        return Int(c - ord("0"))
-    if c >= ord("a") and c <= ord("f"):
-        return Int(c - ord("a") + 10)
-    if c >= ord("A") and c <= ord("F"):
-        return Int(c - ord("A") + 10)
+    if c >= UInt8(ord("0")) and c <= UInt8(ord("9")):
+        return Int(c - UInt8(ord("0")))
+    if c >= UInt8(ord("a")) and c <= UInt8(ord("f")):
+        return Int(c - UInt8(ord("a")) + 10)
+    if c >= UInt8(ord("A")) and c <= UInt8(ord("F")):
+        return Int(c - UInt8(ord("A")) + 10)
     return -1
 
 
@@ -107,34 +107,34 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
     while i < end:
         var c = data[i]
 
-        if c == ord("\\") and i + 1 < end:
+        if c == UInt8(ord("\\")) and i + 1 < end:
             var next = data[i + 1]
 
-            if next == ord("n"):
+            if next == UInt8(ord("n")):
                 result.append(0x0A)
                 i += 2
-            elif next == ord("t"):
+            elif next == UInt8(ord("t")):
                 result.append(0x09)
                 i += 2
-            elif next == ord("r"):
+            elif next == UInt8(ord("r")):
                 result.append(0x0D)
                 i += 2
-            elif next == ord("\\"):
+            elif next == UInt8(ord("\\")):
                 result.append(0x5C)
                 i += 2
-            elif next == ord('"'):
+            elif next == UInt8(ord('"')):
                 result.append(0x22)
                 i += 2
-            elif next == ord("/"):
+            elif next == UInt8(ord("/")):
                 result.append(0x2F)
                 i += 2
-            elif next == ord("b"):
+            elif next == UInt8(ord("b")):
                 result.append(0x08)
                 i += 2
-            elif next == ord("f"):
+            elif next == UInt8(ord("f")):
                 result.append(0x0C)
                 i += 2
-            elif next == ord("u"):
+            elif next == UInt8(ord("u")):
                 # Unicode escape \uXXXX
                 var code_point = parse_unicode_escape(data, i + 2)
                 if code_point < 0:
@@ -148,8 +148,8 @@ fn unescape_json_string(data: List[UInt8], start: Int, end: Int) -> List[UInt8]:
                     # Look for low surrogate
                     if (
                         i + 10 < end
-                        and data[i + 6] == ord("\\")
-                        and data[i + 7] == ord("u")
+                        and data[i + 6] == UInt8(ord("\\"))
+                        and data[i + 7] == UInt8(ord("u"))
                     ):
                         var low = parse_unicode_escape(data, i + 8)
                         if is_low_surrogate(low):

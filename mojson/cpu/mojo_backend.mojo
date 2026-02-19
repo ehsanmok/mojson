@@ -78,7 +78,7 @@ fn is_whitespace(c: UInt8) -> Bool:
 @always_inline
 fn is_digit(c: UInt8) -> Bool:
     """Check if character is a digit 0-9."""
-    return c >= ord("0") and c <= ord("9")
+    return c >= UInt8(ord("0")) and c <= UInt8(ord("9"))
 
 
 @always_inline
@@ -94,16 +94,16 @@ fn parse_int_direct(
 
     # Unrolled loop - process 4 digits at a time
     while pos + 4 <= end:
-        var d0 = Int64(data[pos] - ord("0"))
-        var d1 = Int64(data[pos + 1] - ord("0"))
-        var d2 = Int64(data[pos + 2] - ord("0"))
-        var d3 = Int64(data[pos + 3] - ord("0"))
+        var d0 = Int64(data[pos] - UInt8(ord("0")))
+        var d1 = Int64(data[pos + 1] - UInt8(ord("0")))
+        var d2 = Int64(data[pos + 2] - UInt8(ord("0")))
+        var d3 = Int64(data[pos + 3] - UInt8(ord("0")))
         result = result * 10000 + d0 * 1000 + d1 * 100 + d2 * 10 + d3
         pos += 4
 
     # Handle remaining digits
     while pos < end:
-        result = result * 10 + Int64(data[pos] - ord("0"))
+        result = result * 10 + Int64(data[pos] - UInt8(ord("0")))
         pos += 1
 
     if negative:
@@ -229,19 +229,19 @@ struct MojoJSONParser:
 
         var c = self.peek()
 
-        if c == ord("n"):
+        if c == UInt8(ord("n")):
             return self.parse_null(raw_json)
-        elif c == ord("t"):
+        elif c == UInt8(ord("t")):
             return self.parse_true(raw_json)
-        elif c == ord("f"):
+        elif c == UInt8(ord("f")):
             return self.parse_false(raw_json)
-        elif c == ord('"'):
+        elif c == UInt8(ord('"')):
             return self.parse_string(raw_json)
-        elif c == ord("-") or is_digit(c):
+        elif c == UInt8(ord("-")) or is_digit(c):
             return self.parse_number(raw_json)
-        elif c == ord("["):
+        elif c == UInt8(ord("[")):
             return self.parse_array(raw_json)
-        elif c == ord("{"):
+        elif c == UInt8(ord("{")):
             return self.parse_object(raw_json)
         else:
             from ..errors import json_parse_error
@@ -256,10 +256,10 @@ struct MojoJSONParser:
         """Parse 'null' literal."""
         if (
             self.pos + 4 <= self.length
-            and self.data[self.pos] == ord("n")
-            and self.data[self.pos + 1] == ord("u")
-            and self.data[self.pos + 2] == ord("l")
-            and self.data[self.pos + 3] == ord("l")
+            and self.data[self.pos] == UInt8(ord("n"))
+            and self.data[self.pos + 1] == UInt8(ord("u"))
+            and self.data[self.pos + 2] == UInt8(ord("l"))
+            and self.data[self.pos + 3] == UInt8(ord("l"))
         ):
             self.advance_n(4)
             return Value(Null())
@@ -272,10 +272,10 @@ struct MojoJSONParser:
         """Parse 'true' literal."""
         if (
             self.pos + 4 <= self.length
-            and self.data[self.pos] == ord("t")
-            and self.data[self.pos + 1] == ord("r")
-            and self.data[self.pos + 2] == ord("u")
-            and self.data[self.pos + 3] == ord("e")
+            and self.data[self.pos] == UInt8(ord("t"))
+            and self.data[self.pos + 1] == UInt8(ord("r"))
+            and self.data[self.pos + 2] == UInt8(ord("u"))
+            and self.data[self.pos + 3] == UInt8(ord("e"))
         ):
             self.advance_n(4)
             return Value(True)
@@ -288,11 +288,11 @@ struct MojoJSONParser:
         """Parse 'false' literal."""
         if (
             self.pos + 5 <= self.length
-            and self.data[self.pos] == ord("f")
-            and self.data[self.pos + 1] == ord("a")
-            and self.data[self.pos + 2] == ord("l")
-            and self.data[self.pos + 3] == ord("s")
-            and self.data[self.pos + 4] == ord("e")
+            and self.data[self.pos] == UInt8(ord("f"))
+            and self.data[self.pos + 1] == UInt8(ord("a"))
+            and self.data[self.pos + 2] == UInt8(ord("l"))
+            and self.data[self.pos + 3] == UInt8(ord("s"))
+            and self.data[self.pos + 4] == UInt8(ord("e"))
         ):
             self.advance_n(5)
             return Value(False)
@@ -303,7 +303,7 @@ struct MojoJSONParser:
 
     fn parse_string(mut self, raw_json: String) raises -> Value:
         """Parse a JSON string value."""
-        if self.peek() != ord('"'):
+        if self.peek() != UInt8(ord('"')):
             from ..errors import json_parse_error
 
             raise Error(json_parse_error("Expected '\"'", raw_json, self.pos))
@@ -315,7 +315,7 @@ struct MojoJSONParser:
         # Scan for end of string
         while not self.at_end():
             var c = self.data[self.pos]
-            if c == ord("\\"):
+            if c == UInt8(ord("\\")):
                 has_escapes = True
                 self.advance()
                 if self.at_end():
@@ -331,15 +331,15 @@ struct MojoJSONParser:
                 # Validate escape character
                 var esc = self.data[self.pos]
                 if not (
-                    esc == ord('"')
-                    or esc == ord("\\")
-                    or esc == ord("/")
-                    or esc == ord("b")
-                    or esc == ord("f")
-                    or esc == ord("n")
-                    or esc == ord("r")
-                    or esc == ord("t")
-                    or esc == ord("u")
+                    esc == UInt8(ord('"'))
+                    or esc == UInt8(ord("\\"))
+                    or esc == UInt8(ord("/"))
+                    or esc == UInt8(ord("b"))
+                    or esc == UInt8(ord("f"))
+                    or esc == UInt8(ord("n"))
+                    or esc == UInt8(ord("r"))
+                    or esc == UInt8(ord("t"))
+                    or esc == UInt8(ord("u"))
                 ):
                     from ..errors import json_parse_error
 
@@ -352,7 +352,7 @@ struct MojoJSONParser:
                     )
                 self.advance()
                 continue
-            if c == ord('"'):
+            if c == UInt8(ord('"')):
                 break
             # Check for invalid control characters
             if c < 0x20:
@@ -410,7 +410,7 @@ struct MojoJSONParser:
         var is_float = False
 
         # Optional minus
-        if self.peek() == ord("-"):
+        if self.peek() == UInt8(ord("-")):
             self.advance()
 
         # Integer part
@@ -420,7 +420,7 @@ struct MojoJSONParser:
             raise Error(json_parse_error("Invalid number", raw_json, start))
 
         var c = self.peek()
-        if c == ord("0"):
+        if c == UInt8(ord("0")):
             self.advance()
             # Check for leading zeros (e.g., 007 is invalid)
             if not self.at_end() and is_digit(self.peek()):
@@ -440,7 +440,7 @@ struct MojoJSONParser:
             raise Error(json_parse_error("Invalid number", raw_json, start))
 
         # Fractional part
-        if not self.at_end() and self.peek() == ord("."):
+        if not self.at_end() and self.peek() == UInt8(ord(".")):
             is_float = True
             self.advance()
             if self.at_end() or not is_digit(self.peek()):
@@ -456,12 +456,12 @@ struct MojoJSONParser:
 
         # Exponent part
         if not self.at_end() and (
-            self.peek() == ord("e") or self.peek() == ord("E")
+            self.peek() == UInt8(ord("e")) or self.peek() == UInt8(ord("E"))
         ):
             is_float = True
             self.advance()
             if not self.at_end() and (
-                self.peek() == ord("+") or self.peek() == ord("-")
+                self.peek() == UInt8(ord("+")) or self.peek() == UInt8(ord("-"))
             ):
                 self.advance()
             if self.at_end() or not is_digit(self.peek()):
@@ -485,7 +485,7 @@ struct MojoJSONParser:
             return Value(atof(num_str))
         else:
             # For integers, use fast direct parsing
-            var negative = self.data[start] == ord("-")
+            var negative = self.data[start] == UInt8(ord("-"))
             var digit_start = start + 1 if negative else start
             return Value(
                 parse_int_direct(self.data, digit_start, self.pos, negative)
@@ -493,7 +493,7 @@ struct MojoJSONParser:
 
     fn parse_array(mut self, raw_json: String) raises -> Value:
         """Parse a JSON array."""
-        if self.peek() != ord("["):
+        if self.peek() != UInt8(ord("[")):
             from ..errors import json_parse_error
 
             raise Error(json_parse_error("Expected '['", raw_json, self.pos))
@@ -503,7 +503,7 @@ struct MojoJSONParser:
         self.skip_whitespace()
 
         # Check for empty array
-        if not self.at_end() and self.peek() == ord("]"):
+        if not self.at_end() and self.peek() == UInt8(ord("]")):
             self.advance()
             return make_array_value("[]", 0)
 
@@ -521,25 +521,25 @@ struct MojoJSONParser:
                 scan_pos += 1
                 continue
 
-            if c == ord('"'):
+            if c == UInt8(ord('"')):
                 # Skip string
                 last_was_comma = False
                 scan_pos += 1
                 while scan_pos < self.length:
-                    if self.data[scan_pos] == ord("\\"):
+                    if self.data[scan_pos] == UInt8(ord("\\")):
                         scan_pos += 2
                         continue
-                    if self.data[scan_pos] == ord('"'):
+                    if self.data[scan_pos] == UInt8(ord('"')):
                         scan_pos += 1
                         break
                     scan_pos += 1
                 continue
-            elif c == ord("[") or c == ord("{"):
+            elif c == UInt8(ord("[")) or c == UInt8(ord("{")):
                 last_was_comma = False
                 depth += 1
-            elif c == ord("]") or c == ord("}"):
+            elif c == UInt8(ord("]")) or c == UInt8(ord("}")):
                 # Check for trailing comma before closing bracket
-                if depth == 1 and c == ord("]") and last_was_comma:
+                if depth == 1 and c == UInt8(ord("]")) and last_was_comma:
                     from ..errors import json_parse_error
 
                     raise Error(
@@ -548,7 +548,7 @@ struct MojoJSONParser:
                         )
                     )
                 depth -= 1
-            elif c == ord(",") and depth == 1:
+            elif c == UInt8(ord(",")) and depth == 1:
                 # Check for double comma
                 if last_was_comma:
                     from ..errors import json_parse_error
@@ -605,7 +605,7 @@ struct MojoJSONParser:
 
     fn parse_object(mut self, raw_json: String) raises -> Value:
         """Parse a JSON object."""
-        if self.peek() != ord("{"):
+        if self.peek() != UInt8(ord("{")):
             from ..errors import json_parse_error
 
             raise Error(json_parse_error("Expected '{'", raw_json, self.pos))
@@ -615,7 +615,7 @@ struct MojoJSONParser:
         self.skip_whitespace()
 
         # Check for empty object
-        if not self.at_end() and self.peek() == ord("}"):
+        if not self.at_end() and self.peek() == UInt8(ord("}")):
             self.advance()
             var empty_keys = List[String]()
             return make_object_value("{}", empty_keys^)
@@ -638,7 +638,12 @@ struct MojoJSONParser:
                 continue
 
             # Check for unquoted key - must be before other character handling
-            if depth == 1 and expect_key and c != ord('"') and c != ord("}"):
+            if (
+                depth == 1
+                and expect_key
+                and c != UInt8(ord('"'))
+                and c != UInt8(ord("}"))
+            ):
                 from ..errors import json_parse_error
 
                 raise Error(
@@ -647,15 +652,15 @@ struct MojoJSONParser:
                     )
                 )
 
-            if c == ord('"'):
+            if c == UInt8(ord('"')):
                 var str_start = scan_pos + 1
                 scan_pos += 1
                 # Find end of string
                 while scan_pos < self.length:
-                    if self.data[scan_pos] == ord("\\"):
+                    if self.data[scan_pos] == UInt8(ord("\\")):
                         scan_pos += 2
                         continue
-                    if self.data[scan_pos] == ord('"'):
+                    if self.data[scan_pos] == UInt8(ord('"')):
                         break
                     scan_pos += 1
 
@@ -674,9 +679,9 @@ struct MojoJSONParser:
                         self.data[check_pos]
                     ):
                         check_pos += 1
-                    if check_pos >= self.length or self.data[check_pos] != ord(
-                        ":"
-                    ):
+                    if check_pos >= self.length or self.data[
+                        check_pos
+                    ] != UInt8(ord(":")):
                         from ..errors import json_parse_error
 
                         raise Error(
@@ -694,7 +699,7 @@ struct MojoJSONParser:
                 last_was_comma = False
                 continue
 
-            if c == ord(":") and depth == 1:
+            if c == UInt8(ord(":")) and depth == 1:
                 expect_key = False
                 expect_value = True
                 has_value_after_colon = False
@@ -702,7 +707,7 @@ struct MojoJSONParser:
                 last_was_comma = False
                 continue
 
-            if c == ord(",") and depth == 1:
+            if c == UInt8(ord(",")) and depth == 1:
                 # Check for missing value after colon
                 if expect_value and not has_value_after_colon:
                     from ..errors import json_parse_error
@@ -718,14 +723,14 @@ struct MojoJSONParser:
                 scan_pos += 1
                 continue
 
-            if c == ord("{") or c == ord("["):
+            if c == UInt8(ord("{")) or c == UInt8(ord("[")):
                 if depth == 1 and expect_value:
                     has_value_after_colon = True
                 depth += 1
                 last_was_comma = False
-            elif c == ord("}") or c == ord("]"):
+            elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
                 # Check for trailing comma or missing value
-                if depth == 1 and c == ord("}"):
+                if depth == 1 and c == UInt8(ord("}")):
                     if last_was_comma:
                         from ..errors import json_parse_error
 

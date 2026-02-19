@@ -117,7 +117,7 @@ struct StreamingParser:
         """Check if buffer contains a complete line."""
         var buffer_bytes = self._buffer.as_bytes()
         for i in range(len(buffer_bytes)):
-            if buffer_bytes[i] == ord("\n"):
+            if buffer_bytes[i] == UInt8(ord("\n")):
                 return True
         # If EOF and buffer has content, treat it as complete
         if self._eof and len(self._buffer) > 0:
@@ -131,7 +131,7 @@ struct StreamingParser:
         var line_end = -1
 
         for i in range(n):
-            if buffer_bytes[i] == ord("\n"):
+            if buffer_bytes[i] == UInt8(ord("\n")):
                 line_end = i
                 break
 
@@ -139,7 +139,7 @@ struct StreamingParser:
         if line_end >= 0:
             # Extract line (handle \r\n)
             var end = line_end
-            if end > 0 and buffer_bytes[end - 1] == ord("\r"):
+            if end > 0 and buffer_bytes[end - 1] == UInt8(ord("\r")):
                 end -= 1
             line = String(self._buffer[:end])
             self._buffer = String(self._buffer[line_end + 1 :])
@@ -280,16 +280,16 @@ struct ArrayStreamingParser:
             var buffer_bytes = self._buffer.as_bytes()
             for i in range(len(buffer_bytes)):
                 var c = buffer_bytes[i]
-                if c == ord("["):
+                if c == UInt8(ord("[")):
                     self._buffer = String(self._buffer[i + 1 :])
                     self._started = True
                     self._depth = 1
                     return
                 elif (
-                    c != ord(" ")
-                    and c != ord("\t")
-                    and c != ord("\n")
-                    and c != ord("\r")
+                    c != UInt8(ord(" "))
+                    and c != UInt8(ord("\t"))
+                    and c != UInt8(ord("\n"))
+                    and c != UInt8(ord("\r"))
                 ):
                     raise Error("Expected JSON array")
 
@@ -314,11 +314,11 @@ struct ArrayStreamingParser:
                 escaped = False
                 continue
 
-            if c == ord("\\") and in_string:
+            if c == UInt8(ord("\\")) and in_string:
                 escaped = True
                 continue
 
-            if c == ord('"'):
+            if c == UInt8(ord('"')):
                 in_string = not in_string
                 if not found_start:
                     found_start = True
@@ -330,25 +330,25 @@ struct ArrayStreamingParser:
             # Skip leading whitespace
             if not found_start:
                 if (
-                    c == ord(" ")
-                    or c == ord("\t")
-                    or c == ord("\n")
-                    or c == ord("\r")
-                    or c == ord(",")
+                    c == UInt8(ord(" "))
+                    or c == UInt8(ord("\t"))
+                    or c == UInt8(ord("\n"))
+                    or c == UInt8(ord("\r"))
+                    or c == UInt8(ord(","))
                 ):
                     continue
-                if c == ord("]"):
+                if c == UInt8(ord("]")):
                     return False  # End of array
                 found_start = True
 
-            if c == ord("{") or c == ord("["):
+            if c == UInt8(ord("{")) or c == UInt8(ord("[")):
                 depth += 1
-            elif c == ord("}") or c == ord("]"):
+            elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
                 if depth > 0:
                     depth -= 1
                 if depth == 0 and found_start:
                     return True
-            elif c == ord(",") and depth == 0:
+            elif c == UInt8(ord(",")) and depth == 0:
                 return True
 
         # For primitives without brackets
@@ -382,11 +382,11 @@ struct ArrayStreamingParser:
                 escaped = False
                 continue
 
-            if c == ord("\\") and in_string:
+            if c == UInt8(ord("\\")) and in_string:
                 escaped = True
                 continue
 
-            if c == ord('"'):
+            if c == UInt8(ord('"')):
                 in_string = not in_string
                 if start < 0:
                     start = i
@@ -398,26 +398,26 @@ struct ArrayStreamingParser:
             # Skip leading whitespace/commas
             if start < 0:
                 if (
-                    c == ord(" ")
-                    or c == ord("\t")
-                    or c == ord("\n")
-                    or c == ord("\r")
-                    or c == ord(",")
+                    c == UInt8(ord(" "))
+                    or c == UInt8(ord("\t"))
+                    or c == UInt8(ord("\n"))
+                    or c == UInt8(ord("\r"))
+                    or c == UInt8(ord(","))
                 ):
                     continue
-                if c == ord("]"):
+                if c == UInt8(ord("]")):
                     raise Error("No more array elements")
                 start = i
 
-            if c == ord("{") or c == ord("["):
+            if c == UInt8(ord("{")) or c == UInt8(ord("[")):
                 depth += 1
-            elif c == ord("}"):
+            elif c == UInt8(ord("}")):
                 if depth > 0:
                     depth -= 1
                     if depth == 0:
                         end = i + 1
                         break
-            elif c == ord("]"):
+            elif c == UInt8(ord("]")):
                 if depth > 0:
                     depth -= 1
                     if depth == 0:
@@ -427,7 +427,7 @@ struct ArrayStreamingParser:
                     # End of outer array, element ends before ]
                     end = i
                     break
-            elif c == ord(",") and depth == 0:
+            elif c == UInt8(ord(",")) and depth == 0:
                 end = i
                 break
 
@@ -449,10 +449,10 @@ fn _is_empty_line(s: String) -> Bool:
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
         if (
-            c != ord(" ")
-            and c != ord("\t")
-            and c != ord("\r")
-            and c != ord("\n")
+            c != UInt8(ord(" "))
+            and c != UInt8(ord("\t"))
+            and c != UInt8(ord("\r"))
+            and c != UInt8(ord("\n"))
         ):
             return False
     return True

@@ -323,7 +323,7 @@ fn _get_parent_path(path: String) -> String:
     var last_slash = -1
     var path_bytes = path.as_bytes()
     for i in range(len(path_bytes)):
-        if path_bytes[i] == ord("/"):
+        if path_bytes[i] == UInt8(ord("/")):
             last_slash = i
 
     if last_slash <= 0:
@@ -336,7 +336,7 @@ fn _get_last_token(path: String) -> String:
     var last_slash = -1
     var path_bytes = path.as_bytes()
     for i in range(len(path_bytes)):
-        if path_bytes[i] == ord("/"):
+        if path_bytes[i] == UInt8(ord("/")):
             last_slash = i
 
     if last_slash < 0:
@@ -354,12 +354,12 @@ fn _unescape_pointer_token(token: String) -> String:
     var token_bytes = token.as_bytes()
     var i = 0
     while i < len(token_bytes):
-        if token_bytes[i] == ord("~") and i + 1 < len(token_bytes):
-            if token_bytes[i + 1] == ord("1"):
+        if token_bytes[i] == UInt8(ord("~")) and i + 1 < len(token_bytes):
+            if token_bytes[i + 1] == UInt8(ord("1")):
                 result += "/"
                 i += 2
                 continue
-            elif token_bytes[i + 1] == ord("0"):
+            elif token_bytes[i + 1] == UInt8(ord("0")):
                 result += "~"
                 i += 2
                 continue
@@ -452,7 +452,7 @@ fn _parse_path_tokens(path: String) -> List[String]:
     var start = 1  # Skip leading /
 
     for i in range(1, len(path_bytes) + 1):
-        if i == len(path_bytes) or path_bytes[i] == ord("/"):
+        if i == len(path_bytes) or path_bytes[i] == UInt8(ord("/")):
             var token = String(path[start:i])
             tokens.append(_unescape_pointer_token(token))
             start = i + 1

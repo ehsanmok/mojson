@@ -119,16 +119,16 @@ fn _parse_gpu(s: String) raises -> Value:
     var first_char = data[start]
 
     # Simple primitives - parse directly
-    if first_char == ord("n"):
+    if first_char == UInt8(ord("n")):
         return Value(Null())
-    if first_char == ord("t"):
+    if first_char == UInt8(ord("t")):
         return Value(True)
-    if first_char == ord("f"):
+    if first_char == UInt8(ord("f")):
         return Value(False)
     if first_char == 0x22:  # '"'
         return _parse_string_value(s, start)
-    if first_char == ord("-") or (
-        first_char >= ord("0") and first_char <= ord("9")
+    if first_char == UInt8(ord("-")) or (
+        first_char >= UInt8(ord("0")) and first_char <= UInt8(ord("9"))
     ):
         return _parse_number_value(s, start)
 
@@ -160,7 +160,7 @@ fn _parse_string_value(s: String, start: Int) raises -> Value:
     var has_escapes = False
     while end_idx < n:
         var c = data[end_idx]
-        if c == ord("\\"):
+        if c == UInt8(ord("\\")):
             has_escapes = True
             end_idx += 2
             continue
@@ -191,9 +191,15 @@ fn _parse_number_value(s: String, start: Int) raises -> Value:
 
     while i < len(data):
         var c = data[i]
-        if c == ord("-") or c == ord("+") or (c >= ord("0") and c <= ord("9")):
+        if (
+            c == UInt8(ord("-"))
+            or c == UInt8(ord("+"))
+            or (c >= UInt8(ord("0")) and c <= UInt8(ord("9")))
+        ):
             num_str += chr(Int(c))
-        elif c == ord(".") or c == ord("e") or c == ord("E"):
+        elif (
+            c == UInt8(ord(".")) or c == UInt8(ord("e")) or c == UInt8(ord("E"))
+        ):
             num_str += chr(Int(c))
             is_float = True
         else:
@@ -210,21 +216,25 @@ fn _build_value(mut iter: JSONIterator, json: String) raises -> Value:
     """Build a Value tree from JSONIterator."""
     var c = iter.get_current_char()
 
-    if c == ord("n"):
+    if c == UInt8(ord("n")):
         return Value(Null())
-    if c == ord("t"):
+    if c == UInt8(ord("t")):
         return Value(True)
-    if c == ord("f"):
+    if c == UInt8(ord("f")):
         return Value(False)
     if c == 0x22:
         return Value(iter.get_value())
-    if c == ord("-") or (c >= ord("0") and c <= ord("9")):
+    if c == UInt8(ord("-")) or (c >= UInt8(ord("0")) and c <= UInt8(ord("9"))):
         var s = iter.get_value()
         var is_float = False
         var s_bytes = s.as_bytes()
         for i in range(len(s_bytes)):
             var ch = s_bytes[i]
-            if ch == ord(".") or ch == ord("e") or ch == ord("E"):
+            if (
+                ch == UInt8(ord("."))
+                or ch == UInt8(ord("e"))
+                or ch == UInt8(ord("E"))
+            ):
                 is_float = True
                 break
         if is_float:
@@ -255,19 +265,19 @@ fn _build_array(mut iter: JSONIterator, json: String) raises -> Value:
         if escaped:
             escaped = False
             continue
-        if c == ord("\\"):
+        if c == UInt8(ord("\\")):
             escaped = True
             continue
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             continue
         if in_string:
             continue
-        if c == ord("[") or c == ord("{"):
+        if c == UInt8(ord("[")) or c == UInt8(ord("{")):
             depth += 1
-        elif c == ord("]") or c == ord("}"):
+        elif c == UInt8(ord("]")) or c == UInt8(ord("}")):
             depth -= 1
-        elif c == ord(",") and depth == 1:
+        elif c == UInt8(ord(",")) and depth == 1:
             count += 1
 
     if len(raw) > 2:
@@ -292,10 +302,10 @@ fn _build_object(mut iter: JSONIterator, json: String) raises -> Value:
         if escaped:
             escaped = False
             continue
-        if c == ord("\\"):
+        if c == UInt8(ord("\\")):
             escaped = True
             continue
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             if not in_string:
                 in_string = True
                 if depth == 1 and expect_key:
@@ -316,13 +326,13 @@ fn _build_object(mut iter: JSONIterator, json: String) raises -> Value:
             continue
         if in_string:
             continue
-        if c == ord("{") or c == ord("["):
+        if c == UInt8(ord("{")) or c == UInt8(ord("[")):
             depth += 1
-        elif c == ord("}") or c == ord("]"):
+        elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
             depth -= 1
-        elif c == ord(":") and depth == 1:
+        elif c == UInt8(ord(":")) and depth == 1:
             expect_key = False
-        elif c == ord(",") and depth == 1:
+        elif c == UInt8(ord(",")) and depth == 1:
             expect_key = True
 
     return make_object_value(raw, keys^)

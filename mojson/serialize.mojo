@@ -9,26 +9,26 @@ fn _escape_string(s: String) -> String:
     var s_bytes = s.as_bytes()
     for i in range(len(s_bytes)):
         var c = s_bytes[i]
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             result += '\\"'
-        elif c == ord("\\"):
+        elif c == UInt8(ord("\\")):
             result += "\\\\"
-        elif c == ord("\n"):
+        elif c == UInt8(ord("\n")):
             result += "\\n"
-        elif c == ord("\r"):
+        elif c == UInt8(ord("\r")):
             result += "\\r"
-        elif c == ord("\t"):
+        elif c == UInt8(ord("\t")):
             result += "\\t"
         elif c < 0x20:
             # Control characters - escape as \u00XX
             result += "\\u00"
             var hi = (c >> 4) & 0x0F
             var lo = c & 0x0F
-            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(
-                Int(hi - 10 + ord("a"))
+            result += chr(Int(hi) + ord("0")) if hi < 10 else chr(
+                Int(hi) - 10 + ord("a")
             )
-            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(
-                Int(lo - 10 + ord("a"))
+            result += chr(Int(lo) + ord("0")) if lo < 10 else chr(
+                Int(lo) - 10 + ord("a")
             )
         else:
             result += chr(Int(c))
@@ -81,13 +81,13 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             i += 1
             continue
 
-        if c == ord("\\") and in_string:
+        if c == UInt8(ord("\\")) and in_string:
             result += chr(Int(c))
             escaped = True
             i += 1
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             result += chr(Int(c))
             i += 1
@@ -99,15 +99,17 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             continue
 
         # Handle structural characters
-        if c == ord("{") or c == ord("["):
-            var close_char = ord("}") if c == ord("{") else ord("]")
+        if c == UInt8(ord("{")) or c == UInt8(ord("[")):
+            var close_char = UInt8(ord("}")) if c == UInt8(ord("{")) else UInt8(
+                ord("]")
+            )
             # Check if empty
             var j = i + 1
             while j < n and (
-                raw_bytes[j] == ord(" ")
-                or raw_bytes[j] == ord("\t")
-                or raw_bytes[j] == ord("\n")
-                or raw_bytes[j] == ord("\r")
+                raw_bytes[j] == UInt8(ord(" "))
+                or raw_bytes[j] == UInt8(ord("\t"))
+                or raw_bytes[j] == UInt8(ord("\n"))
+                or raw_bytes[j] == UInt8(ord("\r"))
             ):
                 j += 1
             if j < n and raw_bytes[j] == close_char:
@@ -121,47 +123,52 @@ fn _format_json(raw: String, indent: String, current_indent: String) -> String:
             i += 1
             # Skip whitespace after opening brace
             while i < n and (
-                raw_bytes[i] == ord(" ")
-                or raw_bytes[i] == ord("\t")
-                or raw_bytes[i] == ord("\n")
-                or raw_bytes[i] == ord("\r")
+                raw_bytes[i] == UInt8(ord(" "))
+                or raw_bytes[i] == UInt8(ord("\t"))
+                or raw_bytes[i] == UInt8(ord("\n"))
+                or raw_bytes[i] == UInt8(ord("\r"))
             ):
                 i += 1
             continue
 
-        if c == ord("}") or c == ord("]"):
+        if c == UInt8(ord("}")) or c == UInt8(ord("]")):
             result += "\n" + current_indent + chr(Int(c))
             i += 1
             continue
 
-        if c == ord(","):
+        if c == UInt8(ord(",")):
             result += ",\n" + next_indent
             i += 1
             # Skip whitespace after comma
             while i < n and (
-                raw_bytes[i] == ord(" ")
-                or raw_bytes[i] == ord("\t")
-                or raw_bytes[i] == ord("\n")
-                or raw_bytes[i] == ord("\r")
+                raw_bytes[i] == UInt8(ord(" "))
+                or raw_bytes[i] == UInt8(ord("\t"))
+                or raw_bytes[i] == UInt8(ord("\n"))
+                or raw_bytes[i] == UInt8(ord("\r"))
             ):
                 i += 1
             continue
 
-        if c == ord(":"):
+        if c == UInt8(ord(":")):
             result += ": "
             i += 1
             # Skip whitespace after colon
             while i < n and (
-                raw_bytes[i] == ord(" ")
-                or raw_bytes[i] == ord("\t")
-                or raw_bytes[i] == ord("\n")
-                or raw_bytes[i] == ord("\r")
+                raw_bytes[i] == UInt8(ord(" "))
+                or raw_bytes[i] == UInt8(ord("\t"))
+                or raw_bytes[i] == UInt8(ord("\n"))
+                or raw_bytes[i] == UInt8(ord("\r"))
             ):
                 i += 1
             continue
 
         # Skip whitespace (we handle it ourselves)
-        if c == ord(" ") or c == ord("\t") or c == ord("\n") or c == ord("\r"):
+        if (
+            c == UInt8(ord(" "))
+            or c == UInt8(ord("\t"))
+            or c == UInt8(ord("\n"))
+            or c == UInt8(ord("\r"))
+        ):
             i += 1
             continue
 
@@ -377,12 +384,12 @@ fn _escape_unicode_chars(s: String) -> String:
             result += chr(Int(c))
             continue
 
-        if c == ord("\\"):
+        if c == UInt8(ord("\\")):
             escaped = True
             result += chr(Int(c))
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             result += chr(Int(c))
             continue
@@ -392,11 +399,11 @@ fn _escape_unicode_chars(s: String) -> String:
             result += "\\u00"
             var hi = (c >> 4) & 0x0F
             var lo = c & 0x0F
-            result += chr(Int(hi + ord("0"))) if hi < 10 else chr(
-                Int(hi - 10 + ord("a"))
+            result += chr(Int(hi) + ord("0")) if hi < 10 else chr(
+                Int(hi) - 10 + ord("a")
             )
-            result += chr(Int(lo + ord("0"))) if lo < 10 else chr(
-                Int(lo - 10 + ord("a"))
+            result += chr(Int(lo) + ord("0")) if lo < 10 else chr(
+                Int(lo) - 10 + ord("a")
             )
         else:
             result += chr(Int(c))
@@ -419,18 +426,18 @@ fn _escape_forward_slashes(s: String) -> String:
             result += chr(Int(c))
             continue
 
-        if c == ord("\\"):
+        if c == UInt8(ord("\\")):
             escaped = True
             result += chr(Int(c))
             continue
 
-        if c == ord('"'):
+        if c == UInt8(ord('"')):
             in_string = not in_string
             result += chr(Int(c))
             continue
 
         # Escape / inside strings
-        if in_string and c == ord("/"):
+        if in_string and c == UInt8(ord("/")):
             result += "\\/"
         else:
             result += chr(Int(c))

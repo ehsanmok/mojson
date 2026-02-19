@@ -124,19 +124,21 @@ struct FastParser:
 
         var c = self.peek()
 
-        if c == ord("n"):
+        if c == UInt8(ord("n")):
             return self.parse_null()
-        elif c == ord("t"):
+        elif c == UInt8(ord("t")):
             return self.parse_true()
-        elif c == ord("f"):
+        elif c == UInt8(ord("f")):
             return self.parse_false()
-        elif c == ord('"'):
+        elif c == UInt8(ord('"')):
             return self.parse_string()
-        elif c == ord("-") or (c >= ord("0") and c <= ord("9")):
+        elif c == UInt8(ord("-")) or (
+            c >= UInt8(ord("0")) and c <= UInt8(ord("9"))
+        ):
             return self.parse_number()
-        elif c == ord("["):
+        elif c == UInt8(ord("[")):
             return self.parse_array()
-        elif c == ord("{"):
+        elif c == UInt8(ord("{")):
             return self.parse_object()
         else:
             from ..errors import json_parse_error
@@ -154,10 +156,10 @@ struct FastParser:
         """Parse 'null' literal."""
         if self.pos + 4 <= self.length:
             if (
-                self.data[self.pos] == ord("n")
-                and self.data[self.pos + 1] == ord("u")
-                and self.data[self.pos + 2] == ord("l")
-                and self.data[self.pos + 3] == ord("l")
+                self.data[self.pos] == UInt8(ord("n"))
+                and self.data[self.pos + 1] == UInt8(ord("u"))
+                and self.data[self.pos + 2] == UInt8(ord("l"))
+                and self.data[self.pos + 3] == UInt8(ord("l"))
             ):
                 self.pos += 4
                 return Value(Null())
@@ -170,10 +172,10 @@ struct FastParser:
         """Parse 'true' literal."""
         if self.pos + 4 <= self.length:
             if (
-                self.data[self.pos] == ord("t")
-                and self.data[self.pos + 1] == ord("r")
-                and self.data[self.pos + 2] == ord("u")
-                and self.data[self.pos + 3] == ord("e")
+                self.data[self.pos] == UInt8(ord("t"))
+                and self.data[self.pos + 1] == UInt8(ord("r"))
+                and self.data[self.pos + 2] == UInt8(ord("u"))
+                and self.data[self.pos + 3] == UInt8(ord("e"))
             ):
                 self.pos += 4
                 return Value(True)
@@ -186,11 +188,11 @@ struct FastParser:
         """Parse 'false' literal."""
         if self.pos + 5 <= self.length:
             if (
-                self.data[self.pos] == ord("f")
-                and self.data[self.pos + 1] == ord("a")
-                and self.data[self.pos + 2] == ord("l")
-                and self.data[self.pos + 3] == ord("s")
-                and self.data[self.pos + 4] == ord("e")
+                self.data[self.pos] == UInt8(ord("f"))
+                and self.data[self.pos + 1] == UInt8(ord("a"))
+                and self.data[self.pos + 2] == UInt8(ord("l"))
+                and self.data[self.pos + 3] == UInt8(ord("s"))
+                and self.data[self.pos + 4] == UInt8(ord("e"))
             ):
                 self.pos += 5
                 return Value(False)
@@ -221,15 +223,15 @@ struct FastParser:
                 if self.pos < length:
                     var esc = data[self.pos]
                     if not (
-                        esc == ord('"')
-                        or esc == ord("\\")
-                        or esc == ord("/")
-                        or esc == ord("b")
-                        or esc == ord("f")
-                        or esc == ord("n")
-                        or esc == ord("r")
-                        or esc == ord("t")
-                        or esc == ord("u")
+                        esc == UInt8(ord('"'))
+                        or esc == UInt8(ord("\\"))
+                        or esc == UInt8(ord("/"))
+                        or esc == UInt8(ord("b"))
+                        or esc == UInt8(ord("f"))
+                        or esc == UInt8(ord("n"))
+                        or esc == UInt8(ord("r"))
+                        or esc == UInt8(ord("t"))
+                        or esc == UInt8(ord("u"))
                     ):
                         from ..errors import json_parse_error
 
@@ -290,7 +292,7 @@ struct FastParser:
         var negative = False
 
         # Optional minus
-        if data[self.pos] == ord("-"):
+        if data[self.pos] == UInt8(ord("-")):
             negative = True
             self.pos += 1
 
@@ -304,12 +306,12 @@ struct FastParser:
         var c = data[self.pos]
 
         # Integer part
-        if c == ord("0"):
+        if c == UInt8(ord("0")):
             self.pos += 1
             if (
                 self.pos < length
-                and data[self.pos] >= ord("0")
-                and data[self.pos] <= ord("9")
+                and data[self.pos] >= UInt8(ord("0"))
+                and data[self.pos] <= UInt8(ord("9"))
             ):
                 from ..errors import json_parse_error
 
@@ -318,10 +320,10 @@ struct FastParser:
                         "Leading zeros not allowed", self.raw_json, start
                     )
                 )
-        elif c >= ord("0") and c <= ord("9"):
+        elif c >= UInt8(ord("0")) and c <= UInt8(ord("9")):
             while self.pos < length:
                 c = data[self.pos]
-                if c < ord("0") or c > ord("9"):
+                if c < UInt8(ord("0")) or c > UInt8(ord("9")):
                     break
                 self.pos += 1
         else:
@@ -332,13 +334,13 @@ struct FastParser:
             )
 
         # Fractional part
-        if self.pos < length and data[self.pos] == ord("."):
+        if self.pos < length and data[self.pos] == UInt8(ord(".")):
             is_float = True
             self.pos += 1
             if (
                 self.pos >= length
-                or data[self.pos] < ord("0")
-                or data[self.pos] > ord("9")
+                or data[self.pos] < UInt8(ord("0"))
+                or data[self.pos] > UInt8(ord("9"))
             ):
                 from ..errors import json_parse_error
 
@@ -351,24 +353,26 @@ struct FastParser:
                 )
             while self.pos < length:
                 c = data[self.pos]
-                if c < ord("0") or c > ord("9"):
+                if c < UInt8(ord("0")) or c > UInt8(ord("9")):
                     break
                 self.pos += 1
 
         # Exponent part
         if self.pos < length and (
-            data[self.pos] == ord("e") or data[self.pos] == ord("E")
+            data[self.pos] == UInt8(ord("e"))
+            or data[self.pos] == UInt8(ord("E"))
         ):
             is_float = True
             self.pos += 1
             if self.pos < length and (
-                data[self.pos] == ord("+") or data[self.pos] == ord("-")
+                data[self.pos] == UInt8(ord("+"))
+                or data[self.pos] == UInt8(ord("-"))
             ):
                 self.pos += 1
             if (
                 self.pos >= length
-                or data[self.pos] < ord("0")
-                or data[self.pos] > ord("9")
+                or data[self.pos] < UInt8(ord("0"))
+                or data[self.pos] > UInt8(ord("9"))
             ):
                 from ..errors import json_parse_error
 
@@ -379,7 +383,7 @@ struct FastParser:
                 )
             while self.pos < length:
                 c = data[self.pos]
-                if c < ord("0") or c > ord("9"):
+                if c < UInt8(ord("0")) or c > UInt8(ord("9")):
                     break
                 self.pos += 1
 
@@ -408,14 +412,14 @@ struct FastParser:
 
         # Unrolled 8-digit processing
         while pos + 8 <= end:
-            var d0 = Int64(self.data[pos] - ord("0"))
-            var d1 = Int64(self.data[pos + 1] - ord("0"))
-            var d2 = Int64(self.data[pos + 2] - ord("0"))
-            var d3 = Int64(self.data[pos + 3] - ord("0"))
-            var d4 = Int64(self.data[pos + 4] - ord("0"))
-            var d5 = Int64(self.data[pos + 5] - ord("0"))
-            var d6 = Int64(self.data[pos + 6] - ord("0"))
-            var d7 = Int64(self.data[pos + 7] - ord("0"))
+            var d0 = Int64(self.data[pos] - UInt8(ord("0")))
+            var d1 = Int64(self.data[pos + 1] - UInt8(ord("0")))
+            var d2 = Int64(self.data[pos + 2] - UInt8(ord("0")))
+            var d3 = Int64(self.data[pos + 3] - UInt8(ord("0")))
+            var d4 = Int64(self.data[pos + 4] - UInt8(ord("0")))
+            var d5 = Int64(self.data[pos + 5] - UInt8(ord("0")))
+            var d6 = Int64(self.data[pos + 6] - UInt8(ord("0")))
+            var d7 = Int64(self.data[pos + 7] - UInt8(ord("0")))
             result = (
                 result * 100000000
                 + d0 * 10000000
@@ -431,16 +435,16 @@ struct FastParser:
 
         # Handle remaining 4 digits
         if pos + 4 <= end:
-            var d0 = Int64(self.data[pos] - ord("0"))
-            var d1 = Int64(self.data[pos + 1] - ord("0"))
-            var d2 = Int64(self.data[pos + 2] - ord("0"))
-            var d3 = Int64(self.data[pos + 3] - ord("0"))
+            var d0 = Int64(self.data[pos] - UInt8(ord("0")))
+            var d1 = Int64(self.data[pos + 1] - UInt8(ord("0")))
+            var d2 = Int64(self.data[pos + 2] - UInt8(ord("0")))
+            var d3 = Int64(self.data[pos + 3] - UInt8(ord("0")))
             result = result * 10000 + d0 * 1000 + d1 * 100 + d2 * 10 + d3
             pos += 4
 
         # Handle remaining digits
         while pos < end:
-            result = result * 10 + Int64(self.data[pos] - ord("0"))
+            result = result * 10 + Int64(self.data[pos] - UInt8(ord("0")))
             pos += 1
 
         return -result if negative else result
@@ -454,7 +458,7 @@ struct FastParser:
         self.skip_whitespace()
 
         # Empty array
-        if self.pos < length and data[self.pos] == ord("]"):
+        if self.pos < length and data[self.pos] == UInt8(ord("]")):
             self.advance()
             return make_array_value("[]", 0)
 
@@ -551,7 +555,7 @@ struct FastParser:
         self.skip_whitespace()
 
         # Empty object
-        if self.pos < self.length and self.data[self.pos] == ord("}"):
+        if self.pos < self.length and self.data[self.pos] == UInt8(ord("}")):
             self.advance()
             var empty_keys = List[String]()
             return make_object_value("{}", empty_keys^)

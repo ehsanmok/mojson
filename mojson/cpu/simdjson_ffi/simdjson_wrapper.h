@@ -77,6 +77,10 @@ void simdjson_value_free(simdjson_value_t value);
 // Required padding constant
 size_t simdjson_required_padding(void);
 
+// Memory copy helper: copies `n` bytes from the address `src_addr` (integer)
+// to `dst`. Used by Mojo FFI to avoid int-to-pointer casts in Mojo code.
+void simdjson_memcpy_from_addr(void* dst, intptr_t src_addr, size_t n);
+
 #ifdef __cplusplus
 }
 #endif

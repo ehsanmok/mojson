@@ -74,6 +74,10 @@ struct SimdjsonFFI:
     var _object_iter_free: fn(Int) -> None
     var _object_count: fn(Int) -> Int
 
+    # Memory helper: copies n bytes from src_addr (integer) to dst (pointer as Int).
+    # Avoids int-to-UnsafePointer construction in Mojo, which varies across versions.
+    var _memcpy_from_addr: fn(Int, Int, Int) -> None
+
     fn __init__(out self, lib_path: String = "") raises:
         """Initialize by loading the simdjson wrapper library.
 
@@ -164,6 +168,9 @@ struct SimdjsonFFI:
         self._object_count = self._lib.get_function[fn(Int) -> Int](
             "simdjson_object_count"
         )
+        self._memcpy_from_addr = self._lib.get_function[
+            fn(Int, Int, Int) -> None
+        ]("simdjson_memcpy_from_addr")
 
         # Create the parser
         self._parser = self._create_parser()
@@ -262,11 +269,11 @@ struct SimdjsonFFI:
         if length == 0:
             return String("")
 
-        # Use external_call memcpy then unsafe_from_utf8 - simdjson guarantees valid UTF-8
-        # Don't include null terminator - unsafe_from_utf8 takes raw bytes as the string content
+        # Copy via C shim: avoids UnsafePointer-from-Int construction in Mojo.
+        # simdjson guarantees valid UTF-8; unsafe_from_utf8 takes raw bytes.
         var bytes = List[UInt8](capacity=length)
         bytes.resize(length, 0)
-        external_call["memcpy", NoneType](Int(bytes.unsafe_ptr()), addr, length)
+        self._memcpy_from_addr(Int(bytes.unsafe_ptr()), addr, length)
         return String(unsafe_from_utf8=bytes^)
 
     fn free_value(self, value: Int):
@@ -329,11 +336,11 @@ struct SimdjsonFFI:
         if length == 0:
             return String("")
 
-        # Use external_call memcpy then unsafe_from_utf8 - simdjson guarantees valid UTF-8
-        # Don't include null terminator - unsafe_from_utf8 takes raw bytes as the string content
+        # Copy via C shim: avoids UnsafePointer-from-Int construction in Mojo.
+        # simdjson guarantees valid UTF-8; unsafe_from_utf8 takes raw bytes.
         var bytes = List[UInt8](capacity=length)
         bytes.resize(length, 0)
-        external_call["memcpy", NoneType](Int(bytes.unsafe_ptr()), addr, length)
+        self._memcpy_from_addr(Int(bytes.unsafe_ptr()), addr, length)
         return String(unsafe_from_utf8=bytes^)
 
     fn object_iter_get_value(self, iter: Int) -> Int:

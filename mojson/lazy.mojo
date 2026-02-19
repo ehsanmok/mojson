@@ -44,10 +44,10 @@ struct LazyValue:
 
         # Skip whitespace
         while i < n and (
-            raw_bytes[i] == ord(" ")
-            or raw_bytes[i] == ord("\t")
-            or raw_bytes[i] == ord("\n")
-            or raw_bytes[i] == ord("\r")
+            raw_bytes[i] == UInt8(ord(" "))
+            or raw_bytes[i] == UInt8(ord("\t"))
+            or raw_bytes[i] == UInt8(ord("\n"))
+            or raw_bytes[i] == UInt8(ord("\r"))
         ):
             i += 1
 
@@ -56,30 +56,36 @@ struct LazyValue:
             return
 
         var c = raw_bytes[i]
-        if c == ord("n"):
+        if c == UInt8(ord("n")):
             self._type = 0  # null
-        elif c == ord("t") or c == ord("f"):
+        elif c == UInt8(ord("t")) or c == UInt8(ord("f")):
             self._type = 1  # bool
-        elif c == ord('"'):
+        elif c == UInt8(ord('"')):
             self._type = 4  # string
-        elif c == ord("["):
+        elif c == UInt8(ord("[")):
             self._type = 5  # array
-        elif c == ord("{"):
+        elif c == UInt8(ord("{")):
             self._type = 6  # object
-        elif c == ord("-") or (c >= ord("0") and c <= ord("9")):
+        elif c == UInt8(ord("-")) or (
+            c >= UInt8(ord("0")) and c <= UInt8(ord("9"))
+        ):
             # Determine if int or float
             self._type = 2  # Assume int
             while i < n:
                 c = raw_bytes[i]
-                if c == ord(".") or c == ord("e") or c == ord("E"):
+                if (
+                    c == UInt8(ord("."))
+                    or c == UInt8(ord("e"))
+                    or c == UInt8(ord("E"))
+                ):
                     self._type = 3  # float
                     break
                 if (
-                    c == ord(",")
-                    or c == ord("}")
-                    or c == ord("]")
-                    or c == ord(" ")
-                    or c == ord("\n")
+                    c == UInt8(ord(","))
+                    or c == UInt8(ord("}"))
+                    or c == UInt8(ord("]"))
+                    or c == UInt8(ord(" "))
+                    or c == UInt8(ord("\n"))
                 ):
                     break
                 i += 1
@@ -252,14 +258,14 @@ fn _lazy_navigate(raw: String, pointer: String) raises -> Value:
     while i < n:
         # Extract next token
         var token = String()
-        while i < n and pointer_bytes[i] != ord("/"):
-            if pointer_bytes[i] == ord("~"):
+        while i < n and pointer_bytes[i] != UInt8(ord("/")):
+            if pointer_bytes[i] == UInt8(ord("~")):
                 if i + 1 < n:
-                    if pointer_bytes[i + 1] == ord("0"):
+                    if pointer_bytes[i + 1] == UInt8(ord("0")):
                         token += "~"
                         i += 2
                         continue
-                    elif pointer_bytes[i + 1] == ord("1"):
+                    elif pointer_bytes[i + 1] == UInt8(ord("1")):
                         token += "/"
                         i += 2
                         continue
@@ -272,9 +278,9 @@ fn _lazy_navigate(raw: String, pointer: String) raises -> Value:
         var current_bytes = current_raw.as_bytes()
         var j = 0
         while j < len(current_bytes) and (
-            current_bytes[j] == ord(" ")
-            or current_bytes[j] == ord("\t")
-            or current_bytes[j] == ord("\n")
+            current_bytes[j] == UInt8(ord(" "))
+            or current_bytes[j] == UInt8(ord("\t"))
+            or current_bytes[j] == UInt8(ord("\n"))
         ):
             j += 1
 
@@ -283,10 +289,10 @@ fn _lazy_navigate(raw: String, pointer: String) raises -> Value:
 
         var first = current_bytes[j]
 
-        if first == ord("{"):
+        if first == UInt8(ord("{")):
             # Object - extract field
             current_raw = _extract_field_value(current_raw, token)
-        elif first == ord("["):
+        elif first == UInt8(ord("[")):
             # Array - extract element by index
             var idx: Int
             try:

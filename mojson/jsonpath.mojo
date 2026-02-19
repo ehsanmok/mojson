@@ -109,73 +109,73 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
     var i = 0
 
     # Skip $
-    if i < n and path_bytes[i] == ord("$"):
+    if i < n and path_bytes[i] == UInt8(ord("$")):
         tokens.append(JSONPathToken(0))  # root
         i += 1
 
     while i < n:
         var c = path_bytes[i]
 
-        if c == ord("."):
+        if c == UInt8(ord(".")):
             i += 1
-            if i < n and path_bytes[i] == ord("."):
+            if i < n and path_bytes[i] == UInt8(ord(".")):
                 # Recursive descent
                 tokens.append(JSONPathToken(4))  # recursive
                 i += 1
 
-            if i < n and path_bytes[i] == ord("*"):
+            if i < n and path_bytes[i] == UInt8(ord("*")):
                 tokens.append(JSONPathToken(3))  # wildcard
                 i += 1
-            elif i < n and path_bytes[i] != ord("["):
+            elif i < n and path_bytes[i] != UInt8(ord("[")):
                 # Property name
                 var start = i
                 while (
                     i < n
-                    and path_bytes[i] != ord(".")
-                    and path_bytes[i] != ord("[")
+                    and path_bytes[i] != UInt8(ord("."))
+                    and path_bytes[i] != UInt8(ord("["))
                 ):
                     i += 1
                 var name = String(path[start:i])
                 tokens.append(JSONPathToken(1, name))  # child
 
-        elif c == ord("["):
+        elif c == UInt8(ord("[")):
             i += 1
 
             # Skip whitespace
-            while i < n and path_bytes[i] == ord(" "):
+            while i < n and path_bytes[i] == UInt8(ord(" ")):
                 i += 1
 
-            if i < n and path_bytes[i] == ord("*"):
+            if i < n and path_bytes[i] == UInt8(ord("*")):
                 tokens.append(JSONPathToken(3))  # wildcard
                 i += 1
-            elif i < n and path_bytes[i] == ord("?"):
+            elif i < n and path_bytes[i] == UInt8(ord("?")):
                 # Filter expression
                 i += 1
                 var depth = 1
                 var start = i
                 while i < n and depth > 0:
-                    if path_bytes[i] == ord("["):
+                    if path_bytes[i] == UInt8(ord("[")):
                         depth += 1
-                    elif path_bytes[i] == ord("]"):
+                    elif path_bytes[i] == UInt8(ord("]")):
                         depth -= 1
                     i += 1
                 var expr = String(path[start : i - 1])
                 tokens.append(JSONPathToken(6, expr))  # filter
                 continue
-            elif i < n and path_bytes[i] == ord("'"):
+            elif i < n and path_bytes[i] == UInt8(ord("'")):
                 # Quoted property ['key']
                 i += 1
                 var start = i
-                while i < n and path_bytes[i] != ord("'"):
+                while i < n and path_bytes[i] != UInt8(ord("'")):
                     i += 1
                 var name = String(path[start:i])
                 tokens.append(JSONPathToken(1, name))  # child
                 i += 1
-            elif i < n and path_bytes[i] == ord('"'):
+            elif i < n and path_bytes[i] == UInt8(ord('"')):
                 # Double quoted property ["key"]
                 i += 1
                 var start = i
-                while i < n and path_bytes[i] != ord('"'):
+                while i < n and path_bytes[i] != UInt8(ord('"')):
                     i += 1
                 var name = String(path[start:i])
                 tokens.append(JSONPathToken(1, name))  # child
@@ -183,7 +183,7 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
             elif i < n:
                 # Index, slice, or negative index
                 var start = i
-                while i < n and path_bytes[i] != ord("]"):
+                while i < n and path_bytes[i] != UInt8(ord("]")):
                     i += 1
                 var content = String(path[start:i])
 
@@ -196,7 +196,7 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                     tokens.append(JSONPathToken(2, content))  # index
 
             # Skip closing ]
-            while i < n and path_bytes[i] != ord("]"):
+            while i < n and path_bytes[i] != UInt8(ord("]")):
                 i += 1
             if i < n:
                 i += 1
@@ -215,7 +215,7 @@ fn _parse_slice(content: String) raises -> JSONPathToken:
     var start = 0
 
     for i in range(len(content_bytes) + 1):
-        if i == len(content_bytes) or content_bytes[i] == ord(":"):
+        if i == len(content_bytes) or content_bytes[i] == UInt8(ord(":")):
             parts.append(String(content[start:i]))
             start = i + 1
 
@@ -354,32 +354,40 @@ fn _evaluate_filter(value: Value, expr: String) -> Bool:
     var op = String()
 
     for i in range(n - 1):
-        if expr_bytes[i] == ord("=") and expr_bytes[i + 1] == ord("="):
+        if expr_bytes[i] == UInt8(ord("=")) and expr_bytes[i + 1] == UInt8(
+            ord("=")
+        ):
             op = "=="
             op_start = i
             op_end = i + 2
             break
-        elif expr_bytes[i] == ord("!") and expr_bytes[i + 1] == ord("="):
+        elif expr_bytes[i] == UInt8(ord("!")) and expr_bytes[i + 1] == UInt8(
+            ord("=")
+        ):
             op = "!="
             op_start = i
             op_end = i + 2
             break
-        elif expr_bytes[i] == ord("<") and expr_bytes[i + 1] == ord("="):
+        elif expr_bytes[i] == UInt8(ord("<")) and expr_bytes[i + 1] == UInt8(
+            ord("=")
+        ):
             op = "<="
             op_start = i
             op_end = i + 2
             break
-        elif expr_bytes[i] == ord(">") and expr_bytes[i + 1] == ord("="):
+        elif expr_bytes[i] == UInt8(ord(">")) and expr_bytes[i + 1] == UInt8(
+            ord("=")
+        ):
             op = ">="
             op_start = i
             op_end = i + 2
             break
-        elif expr_bytes[i] == ord("<"):
+        elif expr_bytes[i] == UInt8(ord("<")):
             op = "<"
             op_start = i
             op_end = i + 1
             break
-        elif expr_bytes[i] == ord(">"):
+        elif expr_bytes[i] == UInt8(ord(">")):
             op = ">"
             op_start = i
             op_end = i + 1
@@ -481,11 +489,12 @@ fn _trim(s: String) -> String:
     var end = len(s_bytes)
 
     while start < end and (
-        s_bytes[start] == ord(" ") or s_bytes[start] == ord("\t")
+        s_bytes[start] == UInt8(ord(" ")) or s_bytes[start] == UInt8(ord("\t"))
     ):
         start += 1
     while end > start and (
-        s_bytes[end - 1] == ord(" ") or s_bytes[end - 1] == ord("\t")
+        s_bytes[end - 1] == UInt8(ord(" "))
+        or s_bytes[end - 1] == UInt8(ord("\t"))
     ):
         end -= 1
 

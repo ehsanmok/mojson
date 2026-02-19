@@ -18,12 +18,12 @@ from math import ceildiv
 from .kernels import BLOCK_SIZE_OPT
 
 # Character type constants (must match stream_compact.mojo)
-comptime CHAR_TYPE_OPEN_BRACE: UInt8 = ord("{")
-comptime CHAR_TYPE_CLOSE_BRACE: UInt8 = ord("}")
-comptime CHAR_TYPE_OPEN_BRACKET: UInt8 = ord("[")
-comptime CHAR_TYPE_CLOSE_BRACKET: UInt8 = ord("]")
-comptime CHAR_TYPE_COLON: UInt8 = ord(":")
-comptime CHAR_TYPE_COMMA: UInt8 = ord(",")
+comptime CHAR_TYPE_OPEN_BRACE: UInt8 = UInt8(ord("{"))
+comptime CHAR_TYPE_CLOSE_BRACE: UInt8 = UInt8(ord("}"))
+comptime CHAR_TYPE_OPEN_BRACKET: UInt8 = UInt8(ord("["))
+comptime CHAR_TYPE_CLOSE_BRACKET: UInt8 = UInt8(ord("]"))
+comptime CHAR_TYPE_COLON: UInt8 = UInt8(ord(":"))
+comptime CHAR_TYPE_COMMA: UInt8 = UInt8(ord(","))
 
 
 fn is_open(c: UInt8) -> Bool:

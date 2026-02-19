@@ -35,9 +35,9 @@ fn cpu_bracket_match(char_types: List[UInt8]) -> List[Int32]:
 
     for i in range(n):
         var c = char_types[i]
-        if c == ord("{") or c == ord("["):
+        if c == UInt8(ord("{")) or c == UInt8(ord("[")):
             stack.append(i)
-        elif c == ord("}") or c == ord("]"):
+        elif c == UInt8(ord("}")) or c == UInt8(ord("]")):
             if len(stack) > 0:
                 var open_idx = stack.pop()
                 pair_pos[open_idx] = Int32(i)
