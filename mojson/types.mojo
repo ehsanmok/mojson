@@ -10,11 +10,11 @@ struct JSONInput(Movable):
     fn __init__(out self, var data: List[UInt8]):
         self.data = data^
 
-    fn __copyinit__(out self, other: Self):
-        self.data = other.data.copy()
+    fn __copyinit__(out self, copy: Self):
+        self.data = copy.data.copy()
 
-    fn __moveinit__(out self, deinit other: Self):
-        self.data = other.data^
+    fn __moveinit__(out self, deinit take: Self):
+        self.data = take.data^
 
 
 struct JSONResult(Movable):
@@ -36,17 +36,17 @@ struct JSONResult(Movable):
         self.depth = 0
         self.file_size = 0
 
-    fn __copyinit__(out self, other: Self):
-        self.structural = other.structural.copy()
-        self.pair_pos = other.pair_pos.copy()
-        self.depth = other.depth
-        self.file_size = other.file_size
+    fn __copyinit__(out self, copy: Self):
+        self.structural = copy.structural.copy()
+        self.pair_pos = copy.pair_pos.copy()
+        self.depth = copy.depth
+        self.file_size = copy.file_size
 
-    fn __moveinit__(out self, deinit other: Self):
-        self.structural = other.structural^
-        self.pair_pos = other.pair_pos^
-        self.depth = other.depth
-        self.file_size = other.file_size
+    fn __moveinit__(out self, deinit take: Self):
+        self.structural = take.structural^
+        self.pair_pos = take.pair_pos^
+        self.depth = take.depth
+        self.file_size = take.file_size
 
     fn total_result_size(self) -> Int:
         return len(self.structural)

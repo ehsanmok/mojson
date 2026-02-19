@@ -86,19 +86,19 @@ struct JSONPathToken(Copyable, Movable):
         self.end = -1
         self.step = 1
 
-    fn __copyinit__(out self, existing: Self):
-        self.type = existing.type
-        self.value = existing.value
-        self.start = existing.start
-        self.end = existing.end
-        self.step = existing.step
+    fn __copyinit__(out self, copy: Self):
+        self.type = copy.type
+        self.value = copy.value
+        self.start = copy.start
+        self.end = copy.end
+        self.step = copy.step
 
-    fn __moveinit__(out self, deinit existing: Self):
-        self.type = existing.type
-        self.value = existing.value^
-        self.start = existing.start
-        self.end = existing.end
-        self.step = existing.step
+    fn __moveinit__(out self, deinit take: Self):
+        self.type = take.type
+        self.value = take.value^
+        self.start = take.start
+        self.end = take.end
+        self.step = take.step
 
 
 fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:

@@ -19,13 +19,13 @@ struct ValidationError(Copyable, Movable):
         self.path = path
         self.message = message
 
-    fn __copyinit__(out self, existing: Self):
-        self.path = existing.path
-        self.message = existing.message
+    fn __copyinit__(out self, copy: Self):
+        self.path = copy.path
+        self.message = copy.message
 
-    fn __moveinit__(out self, deinit existing: Self):
-        self.path = existing.path^
-        self.message = existing.message^
+    fn __moveinit__(out self, deinit take: Self):
+        self.path = take.path^
+        self.message = take.message^
 
     fn __str__(self) -> String:
         if self.path == "":
@@ -43,9 +43,9 @@ struct ValidationResult(Movable):
         self.valid = True
         self.errors = List[ValidationError]()
 
-    fn __moveinit__(out self, deinit existing: Self):
-        self.valid = existing.valid
-        self.errors = existing.errors^
+    fn __moveinit__(out self, deinit take: Self):
+        self.valid = take.valid
+        self.errors = take.errors^
 
     fn add_error(mut self, path: String, message: String):
         self.valid = False
