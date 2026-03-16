@@ -5,20 +5,20 @@ from testing import assert_equal, assert_true, assert_false, TestSuite
 from mojson import Value, Null
 
 
-def test_null_creation():
+def test_null_creation() raises:
     """Test null value creation."""
     var v = Value(None)
     assert_true(v.is_null(), "Should be null")
     assert_equal(String(v), "null")
 
 
-def test_null_from_null_type():
+def test_null_from_null_type() raises:
     """Test null from Null type."""
     var v = Value(Null())
     assert_true(v.is_null(), "Should be null")
 
 
-def test_bool_true():
+def test_bool_true() raises:
     """Test boolean true."""
     var v = Value(True)
     assert_true(v.is_bool(), "Should be bool")
@@ -26,7 +26,7 @@ def test_bool_true():
     assert_equal(String(v), "true")
 
 
-def test_bool_false():
+def test_bool_false() raises:
     """Test boolean false."""
     var v = Value(False)
     assert_true(v.is_bool(), "Should be bool")
@@ -34,7 +34,7 @@ def test_bool_false():
     assert_equal(String(v), "false")
 
 
-def test_int_positive():
+def test_int_positive() raises:
     """Test positive integer."""
     var v = Value(42)
     assert_true(v.is_int(), "Should be int")
@@ -42,77 +42,77 @@ def test_int_positive():
     assert_equal(Int(v.int_value()), 42)
 
 
-def test_int_negative():
+def test_int_negative() raises:
     """Test negative integer."""
     var v = Value(-123)
     assert_true(v.is_int(), "Should be int")
     assert_equal(Int(v.int_value()), -123)
 
 
-def test_int_zero():
+def test_int_zero() raises:
     """Test zero."""
     var v = Value(0)
     assert_true(v.is_int(), "Should be int")
     assert_equal(Int(v.int_value()), 0)
 
 
-def test_float():
+def test_float() raises:
     """Test float value."""
     var v = Value(3.14)
     assert_true(v.is_float(), "Should be float")
     assert_true(v.is_number(), "Should be number")
 
 
-def test_string():
+def test_string() raises:
     """Test string value."""
     var v = Value("hello")
     assert_true(v.is_string(), "Should be string")
     assert_equal(v.string_value(), "hello")
 
 
-def test_string_empty():
+def test_string_empty() raises:
     """Test empty string."""
     var v = Value("")
     assert_true(v.is_string(), "Should be string")
     assert_equal(v.string_value(), "")
 
 
-def test_equality_null():
+def test_equality_null() raises:
     """Test null equality."""
     var a = Value(None)
     var b = Value(None)
     assert_true(a == b, "Nulls should be equal")
 
 
-def test_equality_bool():
+def test_equality_bool() raises:
     """Test bool equality."""
     var a = Value(True)
     var b = Value(True)
     assert_true(a == b, "Bools should be equal")
 
 
-def test_equality_int():
+def test_equality_int() raises:
     """Test int equality."""
     var a = Value(42)
     var b = Value(42)
     assert_true(a == b, "Ints should be equal")
 
 
-def test_equality_string():
+def test_equality_string() raises:
     """Test string equality."""
     var a = Value("hello")
     var b = Value("hello")
     assert_true(a == b, "Strings should be equal")
 
 
-def test_inequality():
+def test_inequality() raises:
     """Test inequality."""
     var a = Value(1)
     var b = Value(2)
     assert_true(a != b, "Different values should not be equal")
 
 
-def test_type_mismatch():
+def test_type_mismatch() raises:
     """Test type mismatch."""
     var a = Value(1)
     var b = Value("1")
@@ -120,7 +120,7 @@ def test_type_mismatch():
 
 
 # JSON Pointer (RFC 6901) tests
-def test_json_pointer_empty():
+def test_json_pointer_empty() raises:
     """Test empty pointer returns whole document."""
     from mojson import loads
 
@@ -131,7 +131,7 @@ def test_json_pointer_empty():
     )
 
 
-def test_json_pointer_simple_object():
+def test_json_pointer_simple_object() raises:
     """Test simple object access."""
     from mojson import loads
 
@@ -145,7 +145,7 @@ def test_json_pointer_simple_object():
     assert_equal(Int(age.int_value()), 30)
 
 
-def test_json_pointer_nested_object():
+def test_json_pointer_nested_object() raises:
     """Test nested object access."""
     from mojson import loads
 
@@ -157,7 +157,7 @@ def test_json_pointer_nested_object():
     assert_equal(email.string_value(), "bob@test.com")
 
 
-def test_json_pointer_array_index():
+def test_json_pointer_array_index() raises:
     """Test array index access."""
     from mojson import loads
 
@@ -172,7 +172,7 @@ def test_json_pointer_array_index():
     assert_equal(Int(third.int_value()), 30)
 
 
-def test_json_pointer_array_of_objects():
+def test_json_pointer_array_of_objects() raises:
     """Test array of objects access."""
     from mojson import loads
 
@@ -184,7 +184,7 @@ def test_json_pointer_array_of_objects():
     assert_equal(second_name.string_value(), "Bob")
 
 
-def test_json_pointer_escape_tilde():
+def test_json_pointer_escape_tilde() raises:
     """Test ~0 escape for tilde."""
     from mojson import loads
 
@@ -193,7 +193,7 @@ def test_json_pointer_escape_tilde():
     assert_equal(Int(result.int_value()), 42)
 
 
-def test_json_pointer_escape_slash():
+def test_json_pointer_escape_slash() raises:
     """Test ~1 escape for slash."""
     from mojson import loads
 
@@ -202,7 +202,7 @@ def test_json_pointer_escape_slash():
     assert_equal(Int(result.int_value()), 42)
 
 
-def test_json_pointer_deep_nesting():
+def test_json_pointer_deep_nesting() raises:
     """Test deeply nested access."""
     from mojson import loads
 
@@ -211,7 +211,7 @@ def test_json_pointer_deep_nesting():
     assert_equal(result.string_value(), "deep")
 
 
-def test_json_pointer_null_value():
+def test_json_pointer_null_value() raises:
     """Test accessing null value."""
     from mojson import loads
 
@@ -220,7 +220,7 @@ def test_json_pointer_null_value():
     assert_true(result.is_null(), "Should be null")
 
 
-def test_json_pointer_bool_value():
+def test_json_pointer_bool_value() raises:
     """Test accessing boolean value."""
     from mojson import loads
 
@@ -235,7 +235,7 @@ def test_json_pointer_bool_value():
 
 
 # Value iteration tests
-def test_array_items():
+def test_array_items() raises:
     """Test iterating over array items."""
     from mojson import loads
 
@@ -247,7 +247,7 @@ def test_array_items():
     assert_equal(Int(items[2].int_value()), 3)
 
 
-def test_array_items_mixed():
+def test_array_items_mixed() raises:
     """Test iterating over mixed array items."""
     from mojson import loads
 
@@ -260,7 +260,7 @@ def test_array_items_mixed():
     assert_true(items[3].is_null())
 
 
-def test_object_items():
+def test_object_items() raises:
     """Test iterating over object items."""
     from mojson import loads
 
@@ -269,7 +269,7 @@ def test_object_items():
     assert_equal(len(items), 2)
 
 
-def test_array_getitem():
+def test_array_getitem() raises:
     """Test array index access."""
     from mojson import loads
 
@@ -279,7 +279,7 @@ def test_array_getitem():
     assert_equal(Int(data[2].int_value()), 30)
 
 
-def test_object_getitem():
+def test_object_getitem() raises:
     """Test object key access."""
     from mojson import loads
 
@@ -288,7 +288,7 @@ def test_object_getitem():
     assert_equal(Int(data["age"].int_value()), 30)
 
 
-def test_nested_access():
+def test_nested_access() raises:
     """Test nested array/object access."""
     from mojson import loads
 
@@ -300,7 +300,7 @@ def test_nested_access():
 
 
 # Value mutation tests
-def test_object_set_new_key():
+def test_object_set_new_key() raises:
     """Test adding a new key to an object."""
     from mojson import loads
 
@@ -309,7 +309,7 @@ def test_object_set_new_key():
     assert_equal(data.object_count(), 2)
 
 
-def test_object_set_update_key():
+def test_object_set_update_key() raises:
     """Test updating an existing key."""
     from mojson import loads
 
@@ -318,7 +318,7 @@ def test_object_set_update_key():
     assert_equal(data["name"].string_value(), "Bob")
 
 
-def test_array_set():
+def test_array_set() raises:
     """Test setting array element."""
     from mojson import loads
 
@@ -327,7 +327,7 @@ def test_array_set():
     assert_equal(Int(data[1].int_value()), 20)
 
 
-def test_array_append():
+def test_array_append() raises:
     """Test appending to array."""
     from mojson import loads
 
@@ -336,7 +336,7 @@ def test_array_append():
     assert_equal(data.array_count(), 3)
 
 
-def test_array_append_empty():
+def test_array_append_empty() raises:
     """Test appending to empty array."""
     from mojson import loads
 
@@ -346,7 +346,7 @@ def test_array_append_empty():
     assert_equal(Int(data[0].int_value()), 1)
 
 
-def test_object_set_empty():
+def test_object_set_empty() raises:
     """Test adding to empty object."""
     from mojson import loads
 
@@ -355,7 +355,7 @@ def test_object_set_empty():
     assert_equal(data.object_count(), 1)
 
 
-def main():
+def main() raises:
     print("=" * 60)
     print("test_value.mojo")
     print("=" * 60)

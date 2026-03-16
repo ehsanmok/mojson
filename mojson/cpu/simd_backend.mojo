@@ -16,6 +16,7 @@ from .types import (
 )
 from ..value import Value, Null, make_array_value, make_object_value
 from ..unicode import unescape_json_string
+from ..errors import json_parse_error
 
 
 # =============================================================================
@@ -89,16 +90,12 @@ struct FastParser:
         self.skip_whitespace()
 
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Empty input", self.raw_json, 0))
 
         var result = self.parse_value()
 
         self.skip_whitespace()
         if not self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unexpected content after JSON value",
@@ -114,8 +111,6 @@ struct FastParser:
         self.skip_whitespace()
 
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unexpected end of input", self.raw_json, self.pos
@@ -141,8 +136,6 @@ struct FastParser:
         elif c == UInt8(ord("{")):
             return self.parse_object()
         else:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unexpected character: " + chr(Int(c)),
@@ -163,7 +156,6 @@ struct FastParser:
             ):
                 self.pos += 4
                 return Value(Null())
-        from ..errors import json_parse_error
 
         raise Error(json_parse_error("Invalid 'null'", self.raw_json, self.pos))
 
@@ -179,7 +171,6 @@ struct FastParser:
             ):
                 self.pos += 4
                 return Value(True)
-        from ..errors import json_parse_error
 
         raise Error(json_parse_error("Invalid 'true'", self.raw_json, self.pos))
 
@@ -196,7 +187,6 @@ struct FastParser:
             ):
                 self.pos += 5
                 return Value(False)
-        from ..errors import json_parse_error
 
         raise Error(
             json_parse_error("Invalid 'false'", self.raw_json, self.pos)
@@ -233,8 +223,6 @@ struct FastParser:
                         or esc == UInt8(ord("t"))
                         or esc == UInt8(ord("u"))
                     ):
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Invalid escape sequence",
@@ -244,8 +232,6 @@ struct FastParser:
                         )
                     self.pos += 1
             elif c < 0x20:  # Control character
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Invalid control character in string",
@@ -255,8 +241,6 @@ struct FastParser:
                 )
             else:
                 self.pos += 1
-
-        from ..errors import json_parse_error
 
         raise Error(
             json_parse_error("Unterminated string", self.raw_json, start - 1)
@@ -297,8 +281,6 @@ struct FastParser:
             self.pos += 1
 
         if self.pos >= length:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Invalid number", self.raw_json, start)
             )
@@ -313,8 +295,6 @@ struct FastParser:
                 and data[self.pos] >= UInt8(ord("0"))
                 and data[self.pos] <= UInt8(ord("9"))
             ):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Leading zeros not allowed", self.raw_json, start
@@ -327,8 +307,6 @@ struct FastParser:
                     break
                 self.pos += 1
         else:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Invalid number", self.raw_json, start)
             )
@@ -342,8 +320,6 @@ struct FastParser:
                 or data[self.pos] < UInt8(ord("0"))
                 or data[self.pos] > UInt8(ord("9"))
             ):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Expected digit after decimal point",
@@ -374,8 +350,6 @@ struct FastParser:
                 or data[self.pos] < UInt8(ord("0"))
                 or data[self.pos] > UInt8(ord("9"))
             ):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Expected digit in exponent", self.raw_json, self.pos
@@ -494,8 +468,6 @@ struct FastParser:
                 depth += 1
             elif c == 0x5D or c == 0x7D:  # ] or }
                 if depth == 1 and c == 0x5D and last_was_comma:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Trailing comma in array",
@@ -506,8 +478,6 @@ struct FastParser:
                 depth -= 1
             elif c == 0x2C and depth == 1:  # Comma at depth 1
                 if last_was_comma:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Double comma in array", self.raw_json, scan_pos
@@ -523,8 +493,6 @@ struct FastParser:
             scan_pos += 1
 
         if depth > 0:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unterminated array", self.raw_json, array_start
@@ -579,8 +547,6 @@ struct FastParser:
 
             # Check for unquoted key
             if depth == 1 and expect_key and c != 0x22 and c != 0x7D:
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Object key must be a string", self.raw_json, scan_pos
@@ -626,8 +592,6 @@ struct FastParser:
                     if (
                         check_pos >= self.length or self.data[check_pos] != 0x3A
                     ):  # :
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Expected ':' after object key",
@@ -652,8 +616,6 @@ struct FastParser:
 
             if c == 0x2C and depth == 1:  # ,
                 if expect_value and not has_value_after_colon:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Expected value after ':'", self.raw_json, scan_pos
@@ -673,8 +635,6 @@ struct FastParser:
             elif c == 0x7D or c == 0x5D:  # } or ]
                 if depth == 1 and c == 0x7D:
                     if last_was_comma:
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Trailing comma in object",
@@ -683,8 +643,6 @@ struct FastParser:
                             )
                         )
                     if expect_value and not has_value_after_colon:
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Expected value after ':'",
@@ -702,8 +660,6 @@ struct FastParser:
             scan_pos += 1
 
         if depth > 0:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unterminated object", self.raw_json, object_start

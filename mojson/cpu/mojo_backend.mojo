@@ -16,6 +16,7 @@ from .types import (
 )
 from ..value import Value, Null, make_array_value, make_object_value
 from ..unicode import unescape_json_string
+from ..errors import json_parse_error
 
 
 # =============================================================================
@@ -197,8 +198,6 @@ struct MojoJSONParser:
         self.skip_whitespace()
 
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Empty input", raw_json, 0))
 
         var result = self.parse_value(raw_json)
@@ -206,8 +205,6 @@ struct MojoJSONParser:
         # Check for extra content after valid JSON
         self.skip_whitespace()
         if not self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unexpected content after JSON value", raw_json, self.pos
@@ -221,8 +218,6 @@ struct MojoJSONParser:
         self.skip_whitespace()
 
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Unexpected end of input", raw_json, self.pos)
             )
@@ -244,8 +239,6 @@ struct MojoJSONParser:
         elif c == UInt8(ord("{")):
             return self.parse_object(raw_json)
         else:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error(
                     "Unexpected character: " + chr(Int(c)), raw_json, self.pos
@@ -264,8 +257,6 @@ struct MojoJSONParser:
             self.advance_n(4)
             return Value(Null())
         else:
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Invalid 'null'", raw_json, self.pos))
 
     fn parse_true(mut self, raw_json: String) raises -> Value:
@@ -280,8 +271,6 @@ struct MojoJSONParser:
             self.advance_n(4)
             return Value(True)
         else:
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Invalid 'true'", raw_json, self.pos))
 
     fn parse_false(mut self, raw_json: String) raises -> Value:
@@ -297,15 +286,11 @@ struct MojoJSONParser:
             self.advance_n(5)
             return Value(False)
         else:
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Invalid 'false'", raw_json, self.pos))
 
     fn parse_string(mut self, raw_json: String) raises -> Value:
         """Parse a JSON string value."""
         if self.peek() != UInt8(ord('"')):
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Expected '\"'", raw_json, self.pos))
 
         self.advance()  # Skip opening quote
@@ -319,8 +304,6 @@ struct MojoJSONParser:
                 has_escapes = True
                 self.advance()
                 if self.at_end():
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Unterminated escape sequence",
@@ -341,8 +324,6 @@ struct MojoJSONParser:
                     or esc == UInt8(ord("t"))
                     or esc == UInt8(ord("u"))
                 ):
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Invalid escape sequence: \\" + chr(Int(esc)),
@@ -356,8 +337,6 @@ struct MojoJSONParser:
                 break
             # Check for invalid control characters
             if c < 0x20:
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Invalid control character in string",
@@ -368,8 +347,6 @@ struct MojoJSONParser:
             self.advance()
 
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Unterminated string", raw_json, start - 1)
             )
@@ -415,8 +392,6 @@ struct MojoJSONParser:
 
         # Integer part
         if self.at_end():
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Invalid number", raw_json, start))
 
         var c = self.peek()
@@ -424,8 +399,6 @@ struct MojoJSONParser:
             self.advance()
             # Check for leading zeros (e.g., 007 is invalid)
             if not self.at_end() and is_digit(self.peek()):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Leading zeros not allowed", raw_json, start
@@ -435,8 +408,6 @@ struct MojoJSONParser:
             while not self.at_end() and is_digit(self.peek()):
                 self.advance()
         else:
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Invalid number", raw_json, start))
 
         # Fractional part
@@ -444,8 +415,6 @@ struct MojoJSONParser:
             is_float = True
             self.advance()
             if self.at_end() or not is_digit(self.peek()):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Expected digit after decimal point", raw_json, self.pos
@@ -465,8 +434,6 @@ struct MojoJSONParser:
             ):
                 self.advance()
             if self.at_end() or not is_digit(self.peek()):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Expected digit in exponent", raw_json, self.pos
@@ -494,8 +461,6 @@ struct MojoJSONParser:
     fn parse_array(mut self, raw_json: String) raises -> Value:
         """Parse a JSON array."""
         if self.peek() != UInt8(ord("[")):
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Expected '['", raw_json, self.pos))
 
         var array_start = self.pos
@@ -540,8 +505,6 @@ struct MojoJSONParser:
             elif c == UInt8(ord("]")) or c == UInt8(ord("}")):
                 # Check for trailing comma before closing bracket
                 if depth == 1 and c == UInt8(ord("]")) and last_was_comma:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Trailing comma in array", raw_json, scan_pos - 1
@@ -551,8 +514,6 @@ struct MojoJSONParser:
             elif c == UInt8(ord(",")) and depth == 1:
                 # Check for double comma
                 if last_was_comma:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Double comma in array", raw_json, scan_pos
@@ -569,8 +530,6 @@ struct MojoJSONParser:
             scan_pos += 1
 
         if depth > 0:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Unterminated array", raw_json, array_start)
             )
@@ -606,8 +565,6 @@ struct MojoJSONParser:
     fn parse_object(mut self, raw_json: String) raises -> Value:
         """Parse a JSON object."""
         if self.peek() != UInt8(ord("{")):
-            from ..errors import json_parse_error
-
             raise Error(json_parse_error("Expected '{'", raw_json, self.pos))
 
         var object_start = self.pos
@@ -644,8 +601,6 @@ struct MojoJSONParser:
                 and c != UInt8(ord('"'))
                 and c != UInt8(ord("}"))
             ):
-                from ..errors import json_parse_error
-
                 raise Error(
                     json_parse_error(
                         "Object key must be a string", raw_json, scan_pos
@@ -682,8 +637,6 @@ struct MojoJSONParser:
                     if check_pos >= self.length or self.data[
                         check_pos
                     ] != UInt8(ord(":")):
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Expected ':' after object key",
@@ -710,8 +663,6 @@ struct MojoJSONParser:
             if c == UInt8(ord(",")) and depth == 1:
                 # Check for missing value after colon
                 if expect_value and not has_value_after_colon:
-                    from ..errors import json_parse_error
-
                     raise Error(
                         json_parse_error(
                             "Expected value after ':'", raw_json, scan_pos
@@ -732,8 +683,6 @@ struct MojoJSONParser:
                 # Check for trailing comma or missing value
                 if depth == 1 and c == UInt8(ord("}")):
                     if last_was_comma:
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Trailing comma in object",
@@ -742,8 +691,6 @@ struct MojoJSONParser:
                             )
                         )
                     if expect_value and not has_value_after_colon:
-                        from ..errors import json_parse_error
-
                         raise Error(
                             json_parse_error(
                                 "Expected value after ':'", raw_json, scan_pos
@@ -760,8 +707,6 @@ struct MojoJSONParser:
             scan_pos += 1
 
         if depth > 0:
-            from ..errors import json_parse_error
-
             raise Error(
                 json_parse_error("Unterminated object", raw_json, object_start)
             )

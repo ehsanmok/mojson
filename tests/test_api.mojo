@@ -25,21 +25,21 @@ from mojson import (
 # =============================================================================
 
 
-def test_loads_basic():
+def test_loads_basic() raises:
     """Test basic JSON parsing."""
     var data = loads('{"name":"Alice","age":30}')
     assert_equal(data["name"].string_value(), "Alice")
     assert_equal(Int(data["age"].int_value()), 30)
 
 
-def test_loads_with_config():
+def test_loads_with_config() raises:
     """Test loads with ParserConfig."""
     var config = ParserConfig(allow_comments=True, allow_trailing_comma=True)
     var data = loads('{"a": 1,} // comment', config)
     assert_equal(Int(data["a"].int_value()), 1)
 
 
-def test_loads_ndjson():
+def test_loads_ndjson() raises:
     """Test loads with format=ndjson."""
     var values = loads[format="ndjson"]('{"a":1}\n{"a":2}\n{"a":3}')
     assert_equal(len(values), 3)
@@ -47,14 +47,14 @@ def test_loads_ndjson():
     assert_equal(Int(values[2]["a"].int_value()), 3)
 
 
-def test_loads_lazy():
+def test_loads_lazy() raises:
     """Test loads with lazy=True."""
     var lazy = loads[lazy=True]('{"users":[{"name":"Alice"},{"name":"Bob"}]}')
     var name = lazy.get("/users/0/name")
     assert_equal(name.string_value(), "Alice")
 
 
-def test_loads_all_types():
+def test_loads_all_types() raises:
     """Test parsing all JSON types."""
     assert_true(loads("null").is_null())
     assert_true(loads("true").is_bool())
@@ -71,7 +71,7 @@ def test_loads_all_types():
 # =============================================================================
 
 
-def test_dumps_basic():
+def test_dumps_basic() raises:
     """Test basic serialization."""
     var data = loads('{"a":1}')
     var s = dumps(data)
@@ -79,14 +79,14 @@ def test_dumps_basic():
     assert_true(s.find("1") >= 0)
 
 
-def test_dumps_pretty():
+def test_dumps_pretty() raises:
     """Test dumps with indentation."""
     var data = loads('{"a":1,"b":2}')
     var s = dumps(data, indent="  ")
     assert_true(s.find("\n") >= 0)
 
 
-def test_dumps_config():
+def test_dumps_config() raises:
     """Test dumps with SerializerConfig."""
     var data = loads('{"url":"http://x.com"}')
     var config = SerializerConfig(escape_forward_slash=True)
@@ -94,7 +94,7 @@ def test_dumps_config():
     assert_true(s.find("\\/") >= 0)
 
 
-def test_dumps_ndjson():
+def test_dumps_ndjson() raises:
     """Test dumps with format=ndjson."""
     var values = List[Value]()
     values.append(loads('{"a":1}'))
@@ -103,7 +103,7 @@ def test_dumps_ndjson():
     assert_true(s.find("\n") >= 0)
 
 
-def test_dumps_roundtrip():
+def test_dumps_roundtrip() raises:
     """Test serialization roundtrip."""
     var original = '{"name":"Alice","scores":[95,87,92]}'
     var data = loads(original)
@@ -117,7 +117,7 @@ def test_dumps_roundtrip():
 # =============================================================================
 
 
-def test_load_dump_roundtrip():
+def test_load_dump_roundtrip() raises:
     """Test file load/dump roundtrip."""
     var data = loads('{"test":123,"arr":[1,2,3]}')
 
@@ -129,7 +129,7 @@ def test_load_dump_roundtrip():
     assert_equal(Int(loaded["test"].int_value()), 123)
 
 
-def test_load_ndjson():
+def test_load_ndjson() raises:
     """Test load auto-detects .ndjson files."""
     var f_out = open("test_api.ndjson", "w")
     f_out.write('{"a":1}\n{"a":2}\n')
@@ -140,7 +140,7 @@ def test_load_ndjson():
     assert_equal(data.array_count(), 2)
 
 
-def test_load_ndjson_gpu():
+def test_load_ndjson_gpu() raises:
     """Test load with GPU + .ndjson auto-detection."""
     var f_out = open("test_api_gpu.ndjson", "w")
     f_out.write('{"x":1}\n{"x":2}\n{"x":3}\n')
@@ -151,14 +151,14 @@ def test_load_ndjson_gpu():
     assert_equal(data.array_count(), 3)
 
 
-def test_loads_ndjson_gpu():
+def test_loads_ndjson_gpu() raises:
     """Test loads[format='ndjson'] with GPU."""
     var ndjson = '{"id":1}\n{"id":2}'
     var values = loads[target="gpu", format="ndjson"](ndjson)
     assert_equal(len(values), 2)
 
 
-def test_load_streaming():
+def test_load_streaming() raises:
     """Test load with streaming=True."""
     var f_out = open("test_api_stream.ndjson", "w")
     f_out.write('{"a":1}\n{"a":2}\n{"a":3}\n')
@@ -179,21 +179,21 @@ def test_load_streaming():
 # =============================================================================
 
 
-def test_value_access():
+def test_value_access() raises:
     """Test value access methods."""
     var data = loads('{"users":[{"name":"Alice"},{"name":"Bob"}]}')
     assert_equal(data["users"][0]["name"].string_value(), "Alice")
     assert_equal(data.at("/users/1/name").string_value(), "Bob")
 
 
-def test_value_mutation():
+def test_value_mutation() raises:
     """Test value mutation."""
     var data = loads('{"a":1}')
     data.set("b", Value(2))
     assert_equal(Int(data["b"].int_value()), 2)
 
 
-def test_value_iteration():
+def test_value_iteration() raises:
     """Test array/object iteration."""
     var arr = loads("[1,2,3]")
     var items = arr.array_items()
@@ -209,14 +209,14 @@ def test_value_iteration():
 # =============================================================================
 
 
-def test_jsonpath():
+def test_jsonpath() raises:
     """Test JSONPath queries."""
     var data = loads('{"users":[{"name":"Alice"},{"name":"Bob"}]}')
     var names = jsonpath_query(data, "$.users[*].name")
     assert_equal(len(names), 2)
 
 
-def test_json_patch():
+def test_json_patch() raises:
     """Test JSON Patch."""
     var doc = loads('{"a":1}')
     var patch = loads('[{"op":"add","path":"/b","value":2}]')
@@ -224,7 +224,7 @@ def test_json_patch():
     assert_equal(Int(result["b"].int_value()), 2)
 
 
-def test_merge_patch():
+def test_merge_patch() raises:
     """Test JSON Merge Patch."""
     var target = loads('{"a":1,"b":2}')
     var patch = loads('{"b":null,"c":3}')
@@ -232,7 +232,7 @@ def test_merge_patch():
     assert_equal(Int(result["c"].int_value()), 3)
 
 
-def test_schema_validation():
+def test_schema_validation() raises:
     """Test JSON Schema validation."""
     var schema = loads('{"type":"object","required":["name"]}')
     var valid_doc = loads('{"name":"Alice"}')
@@ -247,7 +247,7 @@ def test_schema_validation():
 # =============================================================================
 
 
-def test_ndjson_roundtrip():
+def test_ndjson_roundtrip() raises:
     """Test NDJSON roundtrip."""
     var original = '{"id":1}\n{"id":2}\n{"id":3}'
     var values = loads[format="ndjson"](original)
@@ -256,7 +256,7 @@ def test_ndjson_roundtrip():
     assert_equal(len(reparsed), 3)
 
 
-def main():
+def main() raises:
     print("=" * 60)
     print("test_api.mojo - Unified API Tests")
     print("=" * 60)

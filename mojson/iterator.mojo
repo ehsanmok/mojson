@@ -9,6 +9,7 @@ from .types import (
     is_close_bracket,
     CHAR_QUOTE,
 )
+from .unicode import unescape_json_string
 
 
 struct JSONIterator:
@@ -376,7 +377,6 @@ struct JSONIterator:
             return String(unsafe_from_utf8=bytes^)
 
         # Slow path: handle escapes (including \uXXXX unicode)
-        from .unicode import unescape_json_string
 
         var bytes = unescape_json_string(self.input_data, i, end_pos)
         return String(unsafe_from_utf8=bytes^)

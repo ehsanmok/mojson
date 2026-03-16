@@ -261,8 +261,12 @@ fn _remove_trailing_commas(json: String) -> String:
             c == UInt8(ord("]")) or c == UInt8(ord("}"))
         ) and last_comma_pos >= 0:
             # Remove the trailing comma
-            var before_comma = result[:last_comma_pos]
-            var after_comma = result[last_comma_pos + 1 :]
+            var before_comma = String(
+                unsafe_from_utf8=result.as_bytes()[:last_comma_pos]
+            )
+            var after_comma = String(
+                unsafe_from_utf8=result.as_bytes()[last_comma_pos + 1 :]
+            )
             result = before_comma + after_comma
 
         result += chr(Int(c))

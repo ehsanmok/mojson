@@ -141,8 +141,10 @@ struct StreamingParser:
             var end = line_end
             if end > 0 and buffer_bytes[end - 1] == UInt8(ord("\r")):
                 end -= 1
-            line = String(self._buffer[:end])
-            self._buffer = String(self._buffer[line_end + 1 :])
+            line = String(unsafe_from_utf8=self._buffer.as_bytes()[:end])
+            self._buffer = String(
+                unsafe_from_utf8=self._buffer.as_bytes()[line_end + 1 :]
+            )
         else:
             # No newline found, return entire buffer (EOF case)
             line = self._buffer
@@ -281,7 +283,9 @@ struct ArrayStreamingParser:
             for i in range(len(buffer_bytes)):
                 var c = buffer_bytes[i]
                 if c == UInt8(ord("[")):
-                    self._buffer = String(self._buffer[i + 1 :])
+                    self._buffer = String(
+                        unsafe_from_utf8=self._buffer.as_bytes()[i + 1 :]
+                    )
                     self._started = True
                     self._depth = 1
                     return
@@ -437,8 +441,10 @@ struct ArrayStreamingParser:
         if end < 0:
             end = n
 
-        var element_str = String(self._buffer[start:end])
-        self._buffer = String(self._buffer[end:])
+        var element_str = String(
+            unsafe_from_utf8=self._buffer.as_bytes()[start:end]
+        )
+        self._buffer = String(unsafe_from_utf8=self._buffer.as_bytes()[end:])
 
         return loads[target="cpu"](element_str)
 

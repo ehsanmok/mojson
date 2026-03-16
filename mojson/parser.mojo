@@ -112,8 +112,6 @@ fn _parse_gpu(s: String) raises -> Value:
         start += 1
 
     if start >= len(data):
-        from .errors import json_parse_error
-
         raise Error(json_parse_error("Empty or whitespace-only input", s, 0))
 
     var first_char = data[start]
@@ -170,10 +168,9 @@ fn _parse_string_value(s: String, start: Int) raises -> Value:
 
     # Fast path: no escapes
     if not has_escapes:
-        return Value(String(s[i:end_idx]))
+        return Value(String(String(unsafe_from_utf8=s.as_bytes()[i:end_idx])))
 
     # Slow path: handle escapes including \uXXXX
-    from .unicode import unescape_json_string
 
     var bytes_list = List[UInt8](capacity=n)
     for j in range(n):
@@ -244,8 +241,6 @@ fn _build_value(mut iter: JSONIterator, json: String) raises -> Value:
         return _build_array(iter, json)
     if c == 0x7B:
         return _build_object(iter, json)
-
-    from .errors import json_parse_error
 
     var pos = iter.get_position()
     raise Error(json_parse_error("Unexpected character", json, pos))
@@ -389,7 +384,6 @@ fn loads[
     Example:
         var data = loads('{"a": 1} // comment', ParserConfig(allow_comments=True)).
     """
-    from .config import preprocess_json
 
     var preprocessed = preprocess_json(s, config)
     return loads[target](preprocessed)
@@ -418,8 +412,6 @@ fn loads[
     @parameter
     if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] return type"]()
-
-    from .ndjson import _split_lines, _is_whitespace_only
 
     var result = List[Value]()
     var lines = _split_lines(s)
@@ -585,3 +577,7 @@ fn loads_with_config[
 from .config import ParserConfig
 from .lazy import LazyValue
 from .streaming import StreamingParser
+from .errors import json_parse_error
+from .unicode import unescape_json_string
+from .config import preprocess_json
+from .ndjson import _split_lines, _is_whitespace_only

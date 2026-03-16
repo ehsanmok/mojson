@@ -222,9 +222,8 @@ fn merge_patch(target: Value, patch: Value) raises -> Value:
 
     var patch_items = patch.object_items()
     for i in range(len(patch_items)):
-        var item = patch_items[i]
-        var key = item[0]
-        var value = item[1].copy()
+        var key = patch_items[i][0]
+        var value = patch_items[i][1].copy()
 
         if value.is_null():
             # Remove the key
@@ -270,9 +269,8 @@ fn create_merge_patch(source: Value, target: Value) raises -> Value:
     # Find removed and changed keys
     var source_items = source.object_items()
     for i in range(len(source_items)):
-        var item = source_items[i]
-        var key = item[0]
-        var source_val = item[1].copy()
+        var key = source_items[i][0]
+        var source_val = source_items[i][1].copy()
 
         var target_has_key = False
         var target_val: Value
@@ -296,9 +294,8 @@ fn create_merge_patch(source: Value, target: Value) raises -> Value:
     # Find added keys
     var target_items = target.object_items()
     for i in range(len(target_items)):
-        var item = target_items[i]
-        var key = item[0]
-        var target_val = item[1].copy()
+        var key = target_items[i][0]
+        var target_val = target_items[i][1].copy()
 
         var source_has_key = False
         try:
@@ -328,7 +325,7 @@ fn _get_parent_path(path: String) -> String:
 
     if last_slash <= 0:
         return ""
-    return String(path[:last_slash])
+    return String(String(unsafe_from_utf8=path.as_bytes()[:last_slash]))
 
 
 fn _get_last_token(path: String) -> String:
@@ -342,7 +339,9 @@ fn _get_last_token(path: String) -> String:
     if last_slash < 0:
         return path
 
-    var token = String(path[last_slash + 1 :])
+    var token = String(
+        String(unsafe_from_utf8=path.as_bytes()[last_slash + 1 :])
+    )
     # Unescape ~1 and ~0
     token = _unescape_pointer_token(token)
     return token^
@@ -453,7 +452,9 @@ fn _parse_path_tokens(path: String) -> List[String]:
 
     for i in range(1, len(path_bytes) + 1):
         if i == len(path_bytes) or path_bytes[i] == UInt8(ord("/")):
-            var token = String(path[start:i])
+            var token = String(
+                String(unsafe_from_utf8=path.as_bytes()[start:i])
+            )
             tokens.append(_unescape_pointer_token(token))
             start = i + 1
 
@@ -470,12 +471,11 @@ fn _remove_object_key(obj: Value, key: String) raises -> Value:
     var first = True
 
     for i in range(len(items)):
-        var item = items[i]
-        if item[0] != key:
+        if items[i][0] != key:
             if not first:
                 json += ","
-            json += '"' + item[0] + '":'
-            json += dumps(item[1])
+            json += '"' + items[i][0] + '":'
+            json += dumps(items[i][1])
             first = False
 
     json += "}"

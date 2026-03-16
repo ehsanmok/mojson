@@ -1,9 +1,10 @@
 # mojson - Value type for JSON values
 
 from collections import List
+from .unicode import unescape_json_string
 
 
-struct Null(Stringable, Writable):
+struct Null(Writable):
     """Represents JSON null."""
 
     fn __init__(out self):
@@ -16,7 +17,7 @@ struct Null(Stringable, Writable):
         writer.write("null")
 
 
-struct Value(Copyable, Movable, Stringable, Writable):
+struct Value(Copyable, Movable, Writable):
     """A JSON value that can hold null, bool, int, float, string, array, or object.
     """
 
@@ -534,7 +535,7 @@ fn _extract_field_value(raw: String, key: String) raises -> String:
                 else:
                     i += 1
 
-            var found_key = raw[key_start:i]
+            var found_key = String(unsafe_from_utf8=raw.as_bytes()[key_start:i])
             i += 1  # Skip closing quote
 
             # Skip whitespace and colon
@@ -594,7 +595,9 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
             if raw_bytes[i] == UInt8(ord("\\")):
                 i += 2  # Skip escaped character
             elif raw_bytes[i] == UInt8(ord('"')):
-                return String(raw[value_start : i + 1])
+                return String(
+                    String(unsafe_from_utf8=raw.as_bytes()[value_start : i + 1])
+                )
             else:
                 i += 1
         raise Error("Unterminated string")
@@ -622,7 +625,7 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
                     depth -= 1
             i += 1
 
-        return String(raw[value_start:i])
+        return String(String(unsafe_from_utf8=raw.as_bytes()[value_start:i]))
 
     # null, true, false, or number
     else:
@@ -637,7 +640,7 @@ fn _extract_json_value(raw: String, start: Int) raises -> String:
             and raw_bytes[i] != UInt8(ord("\n"))
         ):
             i += 1
-        return String(raw[value_start:i])
+        return String(String(unsafe_from_utf8=raw.as_bytes()[value_start:i]))
 
 
 fn _parse_json_pointer(pointer: String) raises -> List[String]:
@@ -869,10 +872,11 @@ fn _parse_json_value_to_value(json_str: String) raises -> Value:
 
         # Fast path: no escapes
         if not has_escapes:
-            return Value(String(s[start_idx:end_idx]))
+            return Value(
+                String(String(unsafe_from_utf8=s.as_bytes()[start_idx:end_idx]))
+            )
 
         # Slow path: handle escapes including \uXXXX
-        from .unicode import unescape_json_string
 
         var bytes_list = List[UInt8](capacity=n)
         for j in range(n):
@@ -1011,7 +1015,11 @@ fn _extract_object_keys(raw: String) -> List[String]:
                 in_string = False
                 if key_start >= 0 and depth == 1:
                     _ = i - key_start  # key_len computed for reference
-                    keys.append(String(raw[key_start:i]))
+                    keys.append(
+                        String(
+                            String(unsafe_from_utf8=raw.as_bytes()[key_start:i])
+                        )
+                    )
                     key_start = -1
             continue
         if in_string:
@@ -1097,7 +1105,7 @@ fn _update_object_value(raw: String, key: String, new_value: String) -> String:
                 else:
                     i += 1
 
-            var found_key = raw[key_start:i]
+            var found_key = String(unsafe_from_utf8=raw.as_bytes()[key_start:i])
             i += 1  # Skip closing quote
 
             # Skip to colon
@@ -1119,7 +1127,11 @@ fn _update_object_value(raw: String, key: String, new_value: String) -> String:
                 # Find end of value
                 var value_end = _find_value_end_str(raw, i)
                 # Build new string
-                return raw[:value_start] + new_value + raw[value_end:]
+                return (
+                    String(unsafe_from_utf8=raw.as_bytes()[:value_start])
+                    + new_value
+                    + String(unsafe_from_utf8=raw.as_bytes()[value_end:])
+                )
 
         i += 1
 
@@ -1201,7 +1213,14 @@ fn _add_object_key(raw: String, key: String, value: String) -> String:
     if is_empty:
         return '{"' + key + '":' + value + "}"
     else:
-        return raw[:close_pos] + ',"' + key + '":' + value + "}"
+        return (
+            String(unsafe_from_utf8=raw.as_bytes()[:close_pos])
+            + ',"'
+            + key
+            + '":'
+            + value
+            + "}"
+        )
 
 
 fn _update_array_element(raw: String, index: Int, new_value: String) -> String:
@@ -1230,7 +1249,11 @@ fn _update_array_element(raw: String, index: Int, new_value: String) -> String:
             # Found the element to replace
             var value_start = i
             var value_end = _find_value_end_str(raw, i)
-            return raw[:value_start] + new_value + raw[value_end:]
+            return (
+                String(unsafe_from_utf8=raw.as_bytes()[:value_start])
+                + new_value
+                + String(unsafe_from_utf8=raw.as_bytes()[value_end:])
+            )
 
         # Skip this element
         var elem_end = _find_value_end_str(raw, i)
@@ -1283,4 +1306,9 @@ fn _append_to_array(raw: String, value: String) -> String:
     if is_empty:
         return "[" + value + "]"
     else:
-        return raw[:close_pos] + "," + value + "]"
+        return (
+            String(unsafe_from_utf8=raw.as_bytes()[:close_pos])
+            + ","
+            + value
+            + "]"
+        )

@@ -135,7 +135,7 @@ fn test_gpu_dumps_roundtrip() raises:
     assert_true(v2.is_object(), "GPU roundtrip should produce valid object")
 
 
-def main():
+def main() raises:
     print("=" * 60)
     print("test_gpu.mojo - GPU loads() tests")
     print("=" * 60)

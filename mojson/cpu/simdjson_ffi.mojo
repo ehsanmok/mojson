@@ -6,6 +6,7 @@ from ffi import OwnedDLHandle, external_call
 from os import getenv
 from memory import UnsafePointer, Span
 from collections import List
+from ..errors import json_parse_error, find_error_position
 
 
 fn _find_simdjson_library() -> String:
@@ -193,8 +194,6 @@ struct SimdjsonFFI:
         var err = self._parse(self._parser, ptr, length)
 
         if err != SIMDJSON_OK:
-            from ..errors import json_parse_error, find_error_position
-
             var pos = find_error_position(json)
             if err == SIMDJSON_ERROR_INVALID_JSON:
                 raise Error(json_parse_error("Invalid JSON syntax", json, pos))

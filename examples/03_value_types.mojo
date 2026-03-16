@@ -81,7 +81,8 @@ fn main() raises:
     var obj = loads('{"a": 1, "b": 2, "c": 3}')
     print("  Object count:", obj.object_count())
     print("  Object raw JSON:", obj.raw_json())
-    print("  Object keys:", obj.object_keys().__str__())
+    var obj_keys = obj.object_keys()
+    print("  Object keys:", len(obj_keys), "keys")
     print()
 
     # Value equality

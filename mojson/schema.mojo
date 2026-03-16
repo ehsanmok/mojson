@@ -372,7 +372,9 @@ fn _validate_string(
         # Full regex support would require a regex library
         if pat.startswith("^") and pat.endswith("$"):
             # Exact match
-            var inner = String(pat[1 : len(pat) - 1])
+            var inner = String(
+                String(unsafe_from_utf8=pat.as_bytes()[1 : len(pat) - 1])
+            )
             if s != inner:
                 result.add_error(path, "String does not match pattern")
         elif not s.find(pat) >= 0:

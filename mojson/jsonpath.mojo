@@ -135,7 +135,9 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                     and path_bytes[i] != UInt8(ord("["))
                 ):
                     i += 1
-                var name = String(path[start:i])
+                var name = String(
+                    String(unsafe_from_utf8=path.as_bytes()[start:i])
+                )
                 tokens.append(JSONPathToken(1, name))  # child
 
         elif c == UInt8(ord("[")):
@@ -159,7 +161,9 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                     elif path_bytes[i] == UInt8(ord("]")):
                         depth -= 1
                     i += 1
-                var expr = String(path[start : i - 1])
+                var expr = String(
+                    String(unsafe_from_utf8=path.as_bytes()[start : i - 1])
+                )
                 tokens.append(JSONPathToken(6, expr))  # filter
                 continue
             elif i < n and path_bytes[i] == UInt8(ord("'")):
@@ -168,7 +172,9 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                 var start = i
                 while i < n and path_bytes[i] != UInt8(ord("'")):
                     i += 1
-                var name = String(path[start:i])
+                var name = String(
+                    String(unsafe_from_utf8=path.as_bytes()[start:i])
+                )
                 tokens.append(JSONPathToken(1, name))  # child
                 i += 1
             elif i < n and path_bytes[i] == UInt8(ord('"')):
@@ -177,7 +183,9 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                 var start = i
                 while i < n and path_bytes[i] != UInt8(ord('"')):
                     i += 1
-                var name = String(path[start:i])
+                var name = String(
+                    String(unsafe_from_utf8=path.as_bytes()[start:i])
+                )
                 tokens.append(JSONPathToken(1, name))  # child
                 i += 1
             elif i < n:
@@ -185,7 +193,9 @@ fn _tokenize_jsonpath(path: String) raises -> List[JSONPathToken]:
                 var start = i
                 while i < n and path_bytes[i] != UInt8(ord("]")):
                     i += 1
-                var content = String(path[start:i])
+                var content = String(
+                    String(unsafe_from_utf8=path.as_bytes()[start:i])
+                )
 
                 if content.find(":") >= 0:
                     # Slice
@@ -216,7 +226,9 @@ fn _parse_slice(content: String) raises -> JSONPathToken:
 
     for i in range(len(content_bytes) + 1):
         if i == len(content_bytes) or content_bytes[i] == UInt8(ord(":")):
-            parts.append(String(content[start:i]))
+            parts.append(
+                String(String(unsafe_from_utf8=content.as_bytes()[start:i]))
+            )
             start = i + 1
 
     if len(parts) >= 1 and len(parts[0]) > 0:
@@ -397,8 +409,8 @@ fn _evaluate_filter(value: Value, expr: String) -> Bool:
         return False
 
     # Extract field path (after @)
-    var left = String(expr[:op_start])
-    var right = String(expr[op_end:])
+    var left = String(String(unsafe_from_utf8=expr.as_bytes()[:op_start]))
+    var right = String(String(unsafe_from_utf8=expr.as_bytes()[op_end:]))
 
     # Trim whitespace
     left = _trim(left)
@@ -407,7 +419,7 @@ fn _evaluate_filter(value: Value, expr: String) -> Bool:
     # Extract field name from @.field
     if not left.startswith("@."):
         return False
-    var field = String(left[2:])
+    var field = String(String(unsafe_from_utf8=left.as_bytes()[2:]))
 
     # Get field value
     var field_value: Value
@@ -498,4 +510,4 @@ fn _trim(s: String) -> String:
     ):
         end -= 1
 
-    return String(s[start:end])
+    return String(String(unsafe_from_utf8=s.as_bytes()[start:end]))

@@ -26,7 +26,7 @@ fn _test_loads(json: String) raises -> Value:
     return loads[target="cpu"](json)
 
 
-def test_roundtrip_null():
+def test_roundtrip_null() raises:
     """Test null roundtrip."""
     var original = "null"
     var v1 = _test_loads(original)
@@ -36,7 +36,7 @@ def test_roundtrip_null():
     assert_equal(serialized, "null")
 
 
-def test_roundtrip_bool_true():
+def test_roundtrip_bool_true() raises:
     """Test true roundtrip."""
     var original = "true"
     var v1 = _test_loads(original)
@@ -46,7 +46,7 @@ def test_roundtrip_bool_true():
     assert_equal(serialized, "true")
 
 
-def test_roundtrip_bool_false():
+def test_roundtrip_bool_false() raises:
     """Test false roundtrip."""
     var original = "false"
     var v1 = _test_loads(original)
@@ -56,7 +56,7 @@ def test_roundtrip_bool_false():
     assert_equal(serialized, "false")
 
 
-def test_roundtrip_int():
+def test_roundtrip_int() raises:
     """Test integer roundtrip."""
     var original = "42"
     var v1 = _test_loads(original)
@@ -66,7 +66,7 @@ def test_roundtrip_int():
     assert_equal(serialized, "42")
 
 
-def test_roundtrip_int_negative():
+def test_roundtrip_int_negative() raises:
     """Test negative integer roundtrip."""
     var original = "-12345"
     var v1 = _test_loads(original)
@@ -76,7 +76,7 @@ def test_roundtrip_int_negative():
     assert_equal(serialized, "-12345")
 
 
-def test_roundtrip_string():
+def test_roundtrip_string() raises:
     """Test string roundtrip."""
     var original = '"hello world"'
     var v1 = _test_loads(original)
@@ -86,7 +86,7 @@ def test_roundtrip_string():
     assert_equal(serialized, '"hello world"')
 
 
-def test_roundtrip_string_empty():
+def test_roundtrip_string_empty() raises:
     """Test empty string roundtrip."""
     var original = '""'
     var v1 = _test_loads(original)
@@ -96,7 +96,7 @@ def test_roundtrip_string_empty():
     assert_equal(serialized, '""')
 
 
-def test_roundtrip_array_empty():
+def test_roundtrip_array_empty() raises:
     """Test empty array roundtrip."""
     # Note: GPU parser currently has issues with top-level arrays
     # This test uses CPU to verify roundtrip behavior
@@ -116,7 +116,7 @@ def test_roundtrip_array_empty():
     assert_equal(serialized, "[]")
 
 
-def test_roundtrip_array_simple():
+def test_roundtrip_array_simple() raises:
     """Test simple array roundtrip."""
     # Note: GPU parser currently has issues with top-level arrays
     if _is_gpu_mode():
@@ -137,7 +137,7 @@ def test_roundtrip_array_simple():
     assert_equal(v2.array_count(), 3)
 
 
-def test_roundtrip_object_empty():
+def test_roundtrip_object_empty() raises:
     """Test empty object roundtrip."""
     var original = "{}"
     var v1 = _test_loads(original)
@@ -147,7 +147,7 @@ def test_roundtrip_object_empty():
     assert_equal(serialized, "{}")
 
 
-def test_roundtrip_object_simple():
+def test_roundtrip_object_simple() raises:
     """Test simple object roundtrip."""
     var original = '{"name":"Alice","age":30}'
     var v1 = _test_loads(original)
@@ -159,7 +159,7 @@ def test_roundtrip_object_simple():
     assert_equal(v2.object_count(), 2)
 
 
-def test_roundtrip_nested():
+def test_roundtrip_nested() raises:
     """Test nested structure roundtrip."""
     var original = '{"users":[{"name":"Bob","active":true}],"count":1}'
     var v1 = _test_loads(original)
@@ -170,7 +170,7 @@ def test_roundtrip_nested():
     assert_equal(v1.raw_json(), v2.raw_json())
 
 
-def test_roundtrip_complex():
+def test_roundtrip_complex() raises:
     """Test complex JSON roundtrip."""
     var original = '{"data":{"items":[1,2,3],"meta":{"version":"1.0","enabled":true}},"status":"ok"}'
     var v1 = _test_loads(original)
@@ -181,7 +181,7 @@ def test_roundtrip_complex():
     assert_equal(v1.raw_json(), v2.raw_json())
 
 
-def test_roundtrip_array_mixed():
+def test_roundtrip_array_mixed() raises:
     """Test mixed-type array roundtrip."""
     # Note: GPU parser currently has issues with top-level arrays
     if _is_gpu_mode():
@@ -201,7 +201,7 @@ def test_roundtrip_array_mixed():
     assert_equal(v2.array_count(), 5)
 
 
-def test_error_empty_input():
+def test_error_empty_input() raises:
     """Test that empty input raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate empty input
@@ -209,7 +209,7 @@ def test_error_empty_input():
         _ = _test_loads("")
 
 
-def test_error_whitespace_only():
+def test_error_whitespace_only() raises:
     """Test that whitespace-only input raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate whitespace-only
@@ -217,7 +217,7 @@ def test_error_whitespace_only():
         _ = _test_loads("   ")
 
 
-def test_error_invalid_token():
+def test_error_invalid_token() raises:
     """Test that invalid token raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate tokens
@@ -225,7 +225,7 @@ def test_error_invalid_token():
         _ = _test_loads("invalid")
 
 
-def test_error_unclosed_string():
+def test_error_unclosed_string() raises:
     """Test that unclosed string raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate unclosed strings
@@ -233,7 +233,7 @@ def test_error_unclosed_string():
         _ = _test_loads('"hello')
 
 
-def test_error_unclosed_array():
+def test_error_unclosed_array() raises:
     """Test that unclosed array raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate brackets
@@ -241,7 +241,7 @@ def test_error_unclosed_array():
         _ = _test_loads("[1, 2, 3")
 
 
-def test_error_unclosed_object():
+def test_error_unclosed_object() raises:
     """Test that unclosed object raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate brackets
@@ -249,7 +249,7 @@ def test_error_unclosed_object():
         _ = _test_loads('{"key": "value"')
 
 
-def test_error_trailing_comma_array():
+def test_error_trailing_comma_array() raises:
     """Test that trailing comma in array raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate trailing commas
@@ -257,7 +257,7 @@ def test_error_trailing_comma_array():
         _ = _test_loads("[1, 2, 3,]")
 
 
-def test_error_trailing_comma_object():
+def test_error_trailing_comma_object() raises:
     """Test that trailing comma in object raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate trailing commas
@@ -265,7 +265,7 @@ def test_error_trailing_comma_object():
         _ = _test_loads('{"a": 1,}')
 
 
-def test_error_missing_value():
+def test_error_missing_value() raises:
     """Test that missing value raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate missing values
@@ -273,7 +273,7 @@ def test_error_missing_value():
         _ = _test_loads('{"key":}')
 
 
-def test_error_missing_colon():
+def test_error_missing_colon() raises:
     """Test that missing colon in object raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate missing colons
@@ -281,7 +281,7 @@ def test_error_missing_colon():
         _ = _test_loads('{"key" "value"}')
 
 
-def test_error_double_comma():
+def test_error_double_comma() raises:
     """Test that double comma raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate double commas
@@ -289,7 +289,7 @@ def test_error_double_comma():
         _ = _test_loads("[1,, 2]")
 
 
-def test_error_leading_zeros():
+def test_error_leading_zeros() raises:
     """Test that leading zeros raise error (per JSON spec, CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate number format
@@ -297,7 +297,7 @@ def test_error_leading_zeros():
         _ = _test_loads("007")
 
 
-def test_error_single_quotes():
+def test_error_single_quotes() raises:
     """Test that single quotes raise error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate quote style
@@ -305,7 +305,7 @@ def test_error_single_quotes():
         _ = _test_loads("'hello'")
 
 
-def test_error_unquoted_key():
+def test_error_unquoted_key() raises:
     """Test that unquoted object key raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate key quoting
@@ -313,7 +313,7 @@ def test_error_unquoted_key():
         _ = _test_loads("{key: 1}")
 
 
-def test_error_extra_content():
+def test_error_extra_content() raises:
     """Test that extra content after valid JSON raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate trailing content
@@ -321,7 +321,7 @@ def test_error_extra_content():
         _ = _test_loads("true false")
 
 
-def test_error_invalid_escape():
+def test_error_invalid_escape() raises:
     """Test that invalid escape sequence raises error (CPU only)."""
     if _is_gpu_mode():
         return  # GPU parser doesn't validate escape sequences
@@ -329,7 +329,7 @@ def test_error_invalid_escape():
         _ = _test_loads('"hello\\x"')
 
 
-def test_edge_deeply_nested_array():
+def test_edge_deeply_nested_array() raises:
     """Test deeply nested arrays."""
     var original = "[[[[[[1]]]]]]"
     var v1 = _test_loads(original)
@@ -338,7 +338,7 @@ def test_edge_deeply_nested_array():
     assert_true(v1.is_array() and v2.is_array(), "Should be arrays")
 
 
-def test_edge_deeply_nested_object():
+def test_edge_deeply_nested_object() raises:
     """Test deeply nested objects."""
     var original = '{"a":{"b":{"c":{"d":1}}}}'
     var v1 = _test_loads(original)
@@ -348,7 +348,7 @@ def test_edge_deeply_nested_object():
     assert_equal(v1.raw_json(), v2.raw_json())
 
 
-def test_edge_unicode_string():
+def test_edge_unicode_string() raises:
     """Test unicode escape sequence handling."""
     var original = '"Hello \\u0048\\u0065\\u006c\\u006c\\u006f"'
     var v1 = _test_loads(original)
@@ -357,7 +357,7 @@ def test_edge_unicode_string():
     assert_true(v1.is_string() and v2.is_string(), "Should be strings")
 
 
-def test_edge_special_chars():
+def test_edge_special_chars() raises:
     """Test special character escaping."""
     var original = '"line1\\nline2\\ttab"'
     var v1 = _test_loads(original)
@@ -366,7 +366,7 @@ def test_edge_special_chars():
     assert_true(v1.is_string() and v2.is_string(), "Should be strings")
 
 
-def test_edge_large_number():
+def test_edge_large_number() raises:
     """Test large integer handling."""
     var original = "9007199254740992"  # 2^53
     var v1 = _test_loads(original)
@@ -375,14 +375,14 @@ def test_edge_large_number():
     assert_true(v1.is_int() and v2.is_int(), "Should be ints")
 
 
-def test_edge_negative_zero():
+def test_edge_negative_zero() raises:
     """Test negative zero (should be treated as zero)."""
     var original = "-0"
     var v1 = _test_loads(original)
     assert_true(v1.is_int() or v1.is_float(), "Should be numeric")
 
 
-def test_edge_scientific_notation():
+def test_edge_scientific_notation() raises:
     """Test scientific notation float."""
     var original = "1.23e+10"
     var v1 = _test_loads(original)
@@ -391,14 +391,14 @@ def test_edge_scientific_notation():
     assert_true(v1.is_float() and v2.is_float(), "Should be floats")
 
 
-def test_edge_very_small_float():
+def test_edge_very_small_float() raises:
     """Test very small float."""
     var original = "1e-300"
     var v1 = _test_loads(original)
     assert_true(v1.is_float(), "Should be float")
 
 
-def main():
+def main() raises:
     var backend = "GPU" if _is_gpu_mode() else "CPU"
     print("=" * 60)
     print("test_e2e.mojo - End-to-End Tests (" + backend + ")")

@@ -5,62 +5,62 @@ from testing import assert_equal, assert_true, TestSuite
 from mojson import Value, Null, dumps
 
 
-def test_serialize_null():
+def test_serialize_null() raises:
     """Test serializing null."""
     var v = Value(None)
     assert_equal(dumps(v), "null")
 
 
-def test_serialize_true():
+def test_serialize_true() raises:
     """Test serializing true."""
     var v = Value(True)
     assert_equal(dumps(v), "true")
 
 
-def test_serialize_false():
+def test_serialize_false() raises:
     """Test serializing false."""
     var v = Value(False)
     assert_equal(dumps(v), "false")
 
 
-def test_serialize_int_positive():
+def test_serialize_int_positive() raises:
     """Test serializing positive int."""
     var v = Value(42)
     assert_equal(dumps(v), "42")
 
 
-def test_serialize_int_negative():
+def test_serialize_int_negative() raises:
     """Test serializing negative int."""
     var v = Value(-123)
     assert_equal(dumps(v), "-123")
 
 
-def test_serialize_int_zero():
+def test_serialize_int_zero() raises:
     """Test serializing zero."""
     var v = Value(0)
     assert_equal(dumps(v), "0")
 
 
-def test_serialize_string():
+def test_serialize_string() raises:
     """Test serializing string."""
     var v = Value("hello")
     assert_equal(dumps(v), '"hello"')
 
 
-def test_serialize_string_empty():
+def test_serialize_string_empty() raises:
     """Test serializing empty string."""
     var v = Value("")
     assert_equal(dumps(v), '""')
 
 
-def test_serialize_string_with_escapes():
+def test_serialize_string_with_escapes() raises:
     """Test serializing string with special characters."""
     var v = Value('hello\nworld\ttab"quote')
     var result = dumps(v)
     assert_equal(result, '"hello\\nworld\\ttab\\"quote"')
 
 
-def test_dumps_pretty_simple_object():
+def test_dumps_pretty_simple_object() raises:
     """Test pretty printing a simple object."""
     from mojson import loads
 
@@ -73,7 +73,7 @@ def test_dumps_pretty_simple_object():
     assert_true(result.find('"Alice"') >= 0, "Should contain Alice value")
 
 
-def test_dumps_pretty_nested_object():
+def test_dumps_pretty_nested_object() raises:
     """Test pretty printing a nested object."""
     from mojson import loads
 
@@ -85,7 +85,7 @@ def test_dumps_pretty_nested_object():
     assert_true(result.find('"name"') >= 0, "Should contain name key")
 
 
-def test_dumps_pretty_array():
+def test_dumps_pretty_array() raises:
     """Test pretty printing an array."""
     from mojson import loads
 
@@ -96,7 +96,7 @@ def test_dumps_pretty_array():
     assert_true(result.find('"hello"') >= 0, "Should contain hello")
 
 
-def test_dumps_pretty_empty_object():
+def test_dumps_pretty_empty_object() raises:
     """Test pretty printing an empty object."""
     from mojson import loads
 
@@ -105,7 +105,7 @@ def test_dumps_pretty_empty_object():
     assert_equal(result, "{}")
 
 
-def test_dumps_pretty_empty_array():
+def test_dumps_pretty_empty_array() raises:
     """Test pretty printing an empty array."""
     from mojson import loads
 
@@ -114,7 +114,7 @@ def test_dumps_pretty_empty_array():
     assert_equal(result, "[]")
 
 
-def test_dumps_compact_default():
+def test_dumps_compact_default() raises:
     """Test that dumps without indent is compact."""
     from mojson import loads
 
@@ -126,7 +126,7 @@ def test_dumps_compact_default():
     )
 
 
-def main():
+def main() raises:
     print("=" * 60)
     print("test_serialize.mojo")
     print("=" * 60)

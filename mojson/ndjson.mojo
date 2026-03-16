@@ -9,6 +9,7 @@
 from collections import List
 from .value import Value
 from .parser import loads
+from .serialize import dumps
 
 
 fn parse_ndjson[target: StaticString = "cpu"](s: String) raises -> List[Value]:
@@ -142,7 +143,9 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         if end > line_start and data_bytes[end - 1] == UInt8(ord("\r")):
             end -= 1
 
-        var line = String(self._data[line_start:end])
+        var line = String(
+            unsafe_from_utf8=self._data.as_bytes()[line_start:end]
+        )
 
         # Move position past newline
         self._pos = line_end + 1
@@ -194,7 +197,6 @@ fn dumps_ndjson(values: List[Value]) -> String:
         print(dumps_ndjson(values))
         Outputs `{"a":1}` and `{"a":2}` on separate lines.
     """
-    from .serialize import dumps
 
     var result = String()
     for i in range(len(values)):
@@ -220,7 +222,7 @@ fn _split_lines(s: String) -> List[String]:
             var end = i
             if end > line_start and s_bytes[end - 1] == UInt8(ord("\r")):
                 end -= 1
-            result.append(String(s[line_start:end]))
+            result.append(String(unsafe_from_utf8=s.as_bytes()[line_start:end]))
             line_start = i + 1
 
     # Add last line if not empty
@@ -228,7 +230,7 @@ fn _split_lines(s: String) -> List[String]:
         var end = n
         if end > line_start and s_bytes[end - 1] == UInt8(ord("\r")):
             end -= 1
-        result.append(String(s[line_start:end]))
+        result.append(String(unsafe_from_utf8=s.as_bytes()[line_start:end]))
 
     return result^
 

@@ -8,7 +8,7 @@ from mojson import loads, dumps, apply_patch, merge_patch, create_merge_patch
 # JSON Patch tests
 
 
-def test_patch_add_new_key():
+def test_patch_add_new_key() raises:
     """Test adding a new key to an object."""
     var doc = loads('{"name":"Alice"}')
     var patch = loads('[{"op":"add","path":"/age","value":30}]')
@@ -16,7 +16,7 @@ def test_patch_add_new_key():
     assert_true(result["age"].int_value() == 30)
 
 
-def test_patch_add_to_array():
+def test_patch_add_to_array() raises:
     """Test adding to an array."""
     var doc = loads('{"items":[1,2]}')
     var patch = loads('[{"op":"add","path":"/items/-","value":3}]')
@@ -24,7 +24,7 @@ def test_patch_add_to_array():
     assert_equal(result["items"].array_count(), 3)
 
 
-def test_patch_add_array_middle():
+def test_patch_add_array_middle() raises:
     """Test adding to middle of array."""
     var doc = loads("[1,2,3]")
     var patch = loads('[{"op":"add","path":"/1","value":99}]')
@@ -32,7 +32,7 @@ def test_patch_add_array_middle():
     assert_equal(Int(result[1].int_value()), 99)
 
 
-def test_patch_remove_key():
+def test_patch_remove_key() raises:
     """Test removing a key."""
     var doc = loads('{"a":1,"b":2}')
     var patch = loads('[{"op":"remove","path":"/a"}]')
@@ -45,7 +45,7 @@ def test_patch_remove_key():
     assert_true(caught)
 
 
-def test_patch_remove_array_element():
+def test_patch_remove_array_element() raises:
     """Test removing array element."""
     var doc = loads("[1,2,3]")
     var patch = loads('[{"op":"remove","path":"/1"}]')
@@ -53,7 +53,7 @@ def test_patch_remove_array_element():
     assert_equal(result.array_count(), 2)
 
 
-def test_patch_replace():
+def test_patch_replace() raises:
     """Test replacing a value."""
     var doc = loads('{"name":"Alice"}')
     var patch = loads('[{"op":"replace","path":"/name","value":"Bob"}]')
@@ -61,7 +61,7 @@ def test_patch_replace():
     assert_equal(result["name"].string_value(), "Bob")
 
 
-def test_patch_move():
+def test_patch_move() raises:
     """Test moving a value."""
     var doc = loads('{"a":1,"b":2}')
     var patch = loads('[{"op":"move","from":"/a","path":"/c"}]')
@@ -69,7 +69,7 @@ def test_patch_move():
     assert_equal(Int(result["c"].int_value()), 1)
 
 
-def test_patch_copy():
+def test_patch_copy() raises:
     """Test copying a value."""
     var doc = loads('{"a":1}')
     var patch = loads('[{"op":"copy","from":"/a","path":"/b"}]')
@@ -78,7 +78,7 @@ def test_patch_copy():
     assert_equal(Int(result["b"].int_value()), 1)
 
 
-def test_patch_test_pass():
+def test_patch_test_pass() raises:
     """Test the test operation (passing)."""
     var doc = loads('{"a":1}')
     var patch = loads('[{"op":"test","path":"/a","value":1}]')
@@ -86,7 +86,7 @@ def test_patch_test_pass():
     assert_true(result.is_object())
 
 
-def test_patch_test_fail():
+def test_patch_test_fail() raises:
     """Test the test operation (failing)."""
     var doc = loads('{"a":1}')
     var patch = loads('[{"op":"test","path":"/a","value":2}]')
@@ -98,7 +98,7 @@ def test_patch_test_fail():
     assert_true(caught)
 
 
-def test_patch_multiple_ops():
+def test_patch_multiple_ops() raises:
     """Test multiple operations."""
     var doc = loads('{"name":"Alice","age":25}')
     var patch = loads(
@@ -112,7 +112,7 @@ def test_patch_multiple_ops():
 # JSON Merge Patch tests
 
 
-def test_merge_patch_add():
+def test_merge_patch_add() raises:
     """Test merge patch adding a key."""
     var target = loads('{"a":1}')
     var patch = loads('{"b":2}')
@@ -121,7 +121,7 @@ def test_merge_patch_add():
     assert_equal(Int(result["b"].int_value()), 2)
 
 
-def test_merge_patch_remove():
+def test_merge_patch_remove() raises:
     """Test merge patch removing a key (null)."""
     var target = loads('{"a":1,"b":2}')
     var patch = loads('{"b":null}')
@@ -134,7 +134,7 @@ def test_merge_patch_remove():
     assert_true(caught)
 
 
-def test_merge_patch_replace():
+def test_merge_patch_replace() raises:
     """Test merge patch replacing a value."""
     var target = loads('{"a":1}')
     var patch = loads('{"a":2}')
@@ -142,7 +142,7 @@ def test_merge_patch_replace():
     assert_equal(Int(result["a"].int_value()), 2)
 
 
-def test_merge_patch_nested():
+def test_merge_patch_nested() raises:
     """Test nested merge patch."""
     var target = loads('{"a":{"b":1}}')
     var patch = loads('{"a":{"c":2}}')
@@ -151,7 +151,7 @@ def test_merge_patch_nested():
     assert_equal(Int(result["a"]["c"].int_value()), 2)
 
 
-def test_merge_patch_replace_object():
+def test_merge_patch_replace_object() raises:
     """Test merge patch replacing entire object."""
     var target = loads('{"a":1}')
     var patch = loads("[1,2,3]")
@@ -159,7 +159,7 @@ def test_merge_patch_replace_object():
     assert_true(result.is_array())
 
 
-def test_create_merge_patch():
+def test_create_merge_patch() raises:
     """Test creating a merge patch."""
     var source = loads('{"a":1,"b":2}')
     var target = loads('{"a":1,"c":3}')
@@ -168,7 +168,7 @@ def test_create_merge_patch():
     assert_equal(Int(patch["c"].int_value()), 3)
 
 
-def main():
+def main() raises:
     print("=" * 60)
     print("test_patch.mojo - JSON Patch Tests")
     print("=" * 60)
