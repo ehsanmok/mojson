@@ -3,7 +3,7 @@
 # Process JSON files larger than memory by reading in chunks.
 # Best suited for NDJSON (newline-delimited JSON) files.
 
-from collections import List
+from std.collections import List
 from .value import Value
 from .parser import loads
 

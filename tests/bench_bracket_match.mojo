@@ -1,9 +1,9 @@
 # Benchmark: GPU vs CPU bracket matching
 
-from time import perf_counter_ns
-from gpu.host import DeviceContext
-from collections import List
-from memory import memcpy
+from std.time import perf_counter_ns
+from std.gpu.host import DeviceContext
+from std.collections import List
+from std.memory import memcpy
 
 from mojson.gpu.bracket_match import match_brackets_gpu
 from mojson.types import JSONResult

@@ -1,6 +1,6 @@
 # mojson - Unicode handling for JSON
 
-from collections import List
+from std.collections import List
 
 
 fn hex_digit_value(c: UInt8) -> Int:

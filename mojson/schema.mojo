@@ -3,7 +3,7 @@
 # Validates JSON documents against JSON Schema.
 # Implements a useful subset of JSON Schema draft-07.
 
-from collections import List
+from std.collections import List
 from .value import Value, Null
 from .parser import loads
 from .serialize import dumps

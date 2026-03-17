@@ -7,7 +7,7 @@
 #   $..author                - Recursive descent, get all authors
 #   $.store.book[?@.price<10] - Filter books by price
 
-from collections import List
+from std.collections import List
 from .value import Value, Null
 from .parser import loads
 from .serialize import dumps

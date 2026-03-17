@@ -2,7 +2,7 @@
 #
 # Demonstrates: Handling JSON parse errors using try/except and assert_raises
 
-from testing import assert_raises
+from std.testing import assert_raises
 from mojson import loads, dumps, Value
 
 
@@ -31,31 +31,31 @@ fn main() raises:
 
     # Invalid JSON - using assert_raises to verify errors are raised
     print("Invalid JSON (verified with assert_raises):")
-    
+
     with assert_raises():
         _ = loads("")  # empty
     print("  '' (empty) -> correctly raises error")
-    
+
     with assert_raises():
         _ = loads("{")  # unclosed
     print("  '{' (unclosed) -> correctly raises error")
-    
+
     with assert_raises():
         _ = loads("[1,2,")  # incomplete
     print("  '[1,2,' (incomplete) -> correctly raises error")
-    
+
     with assert_raises():
         _ = loads('{"key":}')  # missing value
     print("  '{\"key\":}' (missing value) -> correctly raises error")
-    
+
     with assert_raises():
         _ = loads("undefined")  # not JSON
     print("  'undefined' (not JSON) -> correctly raises error")
-    
+
     with assert_raises():
         _ = loads("{key: 1}")  # unquoted key
     print("  '{key: 1}' (unquoted key) -> correctly raises error")
-    
+
     print()
 
     # Practical error handling pattern

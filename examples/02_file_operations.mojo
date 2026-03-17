@@ -3,7 +3,7 @@
 # Demonstrates: load() and dump() for file-based JSON operations
 
 from mojson import load, dump, loads, dumps, Value
-from os import remove
+from std.os import remove
 
 
 fn main() raises:

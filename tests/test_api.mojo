@@ -1,6 +1,6 @@
 # Comprehensive tests for the unified API
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import (
     loads,

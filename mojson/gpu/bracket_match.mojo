@@ -8,12 +8,12 @@
 #
 # Uses Mojo's block.prefix_sum for efficient GPU prefix sums
 
-from gpu.host import DeviceContext, DeviceBuffer, HostBuffer
-from gpu import block_dim, block_idx, thread_idx, barrier
-from gpu.primitives import block, warp
-from collections import List
-from memory import UnsafePointer, memcpy
-from math import ceildiv
+from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
+from std.gpu import block_dim, block_idx, thread_idx, barrier
+from std.gpu.primitives import block, warp
+from std.collections import List
+from std.memory import UnsafePointer, memcpy
+from std.math import ceildiv
 
 from .kernels import BLOCK_SIZE_OPT
 

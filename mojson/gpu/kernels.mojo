@@ -8,10 +8,10 @@
 # 4. Warp-level primitives - fast prefix operations
 # 5. Coalesced memory access patterns
 
-from gpu import thread_idx, block_idx, block_dim, barrier
-from gpu.host import DeviceContext
-from gpu.memory import AddressSpace
-from memory import UnsafePointer
+from std.gpu import thread_idx, block_idx, block_dim, barrier
+from std.gpu.host import DeviceContext
+from std.gpu.memory import AddressSpace
+from std.memory import UnsafePointer
 from ..types import (
     CHAR_OPEN_BRACE,
     CHAR_CLOSE_BRACE,

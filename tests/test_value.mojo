@@ -1,6 +1,6 @@
 # Tests for mojson/value.mojo
 
-from testing import assert_equal, assert_true, assert_false, TestSuite
+from std.testing import assert_equal, assert_true, assert_false, TestSuite
 
 from mojson import Value, Null
 

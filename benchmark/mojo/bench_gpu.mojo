@@ -4,7 +4,7 @@
 # Usage:
 #   mojo -I . benchmark/mojo/bench_gpu.mojo [json_file]
 
-from benchmark import (
+from std.benchmark import (
     Bench,
     BenchConfig,
     Bencher,
@@ -13,16 +13,16 @@ from benchmark import (
     BenchMetric,
     Unit,
 )
-from pathlib import Path
-from sys import argv
-from time import perf_counter_ns
-from memory import memcpy
-from collections import List
+from std.pathlib import Path
+from std.sys import argv
+from std.time import perf_counter_ns
+from std.memory import memcpy
+from std.collections import List
 
 from mojson import loads
 from mojson.gpu import parse_json_gpu, parse_json_gpu_from_pinned
 from mojson.types import JSONInput
-from gpu.host import DeviceContext
+from std.gpu.host import DeviceContext
 
 
 fn main() raises:

@@ -1,6 +1,6 @@
 # Tests for mojson/serialize.mojo
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import Value, Null, dumps
 

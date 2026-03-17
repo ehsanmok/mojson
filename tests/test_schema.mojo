@@ -1,6 +1,6 @@
 # Tests for JSON Schema validation
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import loads, validate, is_valid
 

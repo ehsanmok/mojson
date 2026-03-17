@@ -1,6 +1,6 @@
 # mojson - Value type for JSON values
 
-from collections import List
+from std.collections import List
 from .unicode import unescape_json_string
 
 

@@ -1,6 +1,6 @@
 # JSON Iterator - Navigate parsed JSON results
-from collections import List
-from memory import memcpy
+from std.collections import List
+from std.memory import memcpy
 
 from .types import (
     JSONResult,

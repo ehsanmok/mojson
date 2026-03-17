@@ -1,6 +1,6 @@
 # Tests for JSON Patch (RFC 6902) and JSON Merge Patch (RFC 7396)
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import loads, dumps, apply_patch, merge_patch, create_merge_patch
 

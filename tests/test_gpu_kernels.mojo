@@ -1,9 +1,9 @@
 # Tests for GPU kernels - stream compaction and bracket matching
 
-from testing import assert_equal, assert_true
-from gpu.host import DeviceContext
-from collections import List
-from memory import memcpy
+from std.testing import assert_equal, assert_true
+from std.gpu.host import DeviceContext
+from std.collections import List
+from std.memory import memcpy
 
 
 fn test_stream_compact_simple() raises:

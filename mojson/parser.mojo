@@ -1,8 +1,8 @@
 # mojson - JSON Parser
 # Unified CPU/GPU parser with compile-time target and backend selection
 
-from collections import List
-from memory import memcpy
+from std.collections import List
+from std.memory import memcpy
 
 from .value import Value, Null, make_array_value, make_object_value
 from .serialize import dumps

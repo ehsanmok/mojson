@@ -6,7 +6,7 @@
 #
 # Default: benchmark/simdjson/jsonexamples/twitter.json
 
-from benchmark import (
+from std.benchmark import (
     Bench,
     BenchConfig,
     Bencher,
@@ -14,8 +14,8 @@ from benchmark import (
     ThroughputMeasure,
     BenchMetric,
 )
-from pathlib import Path
-from sys import argv
+from std.pathlib import Path
+from std.sys import argv
 from mojson import loads
 
 

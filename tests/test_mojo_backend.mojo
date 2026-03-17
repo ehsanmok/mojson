@@ -1,7 +1,7 @@
 # Tests for pure Mojo JSON parsing backend
 # Ensures parity with simdjson FFI backend
 
-from testing import assert_equal, assert_true, assert_false, TestSuite
+from std.testing import assert_equal, assert_true, assert_false, TestSuite
 
 from mojson import loads
 from mojson.value import Value

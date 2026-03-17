@@ -6,7 +6,7 @@
 #   {"id": 2, "name": "Bob"}
 #   {"id": 3, "name": "Charlie"}
 
-from collections import List
+from std.collections import List
 from .value import Value
 from .parser import loads
 from .serialize import dumps

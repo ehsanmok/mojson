@@ -3,7 +3,7 @@
 # JSON Patch: Apply a sequence of operations to a JSON document
 # JSON Merge Patch: Merge two JSON documents together
 
-from collections import List
+from std.collections import List
 from .value import Value, Null, _parse_json_value_to_value
 from .parser import loads
 from .serialize import dumps

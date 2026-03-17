@@ -2,8 +2,8 @@
 # High-performance parsing with optimized algorithms
 # Target: Match simdjson performance
 
-from collections import List
-from memory import memcpy
+from std.collections import List
+from std.memory import memcpy
 
 from .types import (
     JSON_TYPE_NULL,

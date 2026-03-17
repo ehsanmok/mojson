@@ -8,12 +8,12 @@
 # 2. Prefix Sum: Exclusive prefix sum of popcounts gives write offsets
 # 3. Scatter: Each thread writes positions using CTZ to extract set bits
 
-from gpu.host import DeviceContext, DeviceBuffer
-from gpu import block_dim, block_idx, thread_idx, barrier
-from gpu.primitives import block
-from collections import List
-from memory import UnsafePointer, memcpy
-from math import ceildiv
+from std.gpu.host import DeviceContext, DeviceBuffer
+from std.gpu import block_dim, block_idx, thread_idx, barrier
+from std.gpu.primitives import block
+from std.collections import List
+from std.memory import UnsafePointer, memcpy
+from std.math import ceildiv
 
 from .kernels import popcount_fast, BLOCK_SIZE_OPT
 

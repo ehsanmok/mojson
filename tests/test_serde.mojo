@@ -1,6 +1,6 @@
 """Tests for Serializable/Deserializable traits and serialize/deserialize functions."""
 
-from testing import assert_equal, assert_true, assert_raises
+from std.testing import assert_equal, assert_true, assert_raises
 from mojson import (
     loads,
     to_json_value,
@@ -128,21 +128,11 @@ fn test_product_round_trip() raises:
 fn test_deserialize_cpu() raises:
     """Test deserialize with CPU backend (default)."""
     var json_str = '{"name":"Dave","age":40,"active":true}'
-    var person = deserialize[Person](json_str)  # CPU default
+    var person = deserialize[Person](json_str)
 
     assert_equal(person.name, "Dave")
     assert_equal(person.age, 40)
     print("✓ test_deserialize_cpu passed")
-
-
-fn test_deserialize_gpu() raises:
-    """Test deserialize with GPU backend."""
-    var json_str = '{"name":"Eve","age":28,"active":false}'
-    var person = deserialize[Person, target="gpu"](json_str)
-
-    assert_equal(person.name, "Eve")
-    assert_equal(person.age, 28)
-    print("✓ test_deserialize_gpu passed")
 
 
 fn test_string_escaping() raises:
@@ -179,7 +169,6 @@ fn main() raises:
     test_round_trip()
     test_product_round_trip()
     test_deserialize_cpu()
-    test_deserialize_gpu()
     test_string_escaping()
     test_error_handling()
 

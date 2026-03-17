@@ -9,8 +9,8 @@
 #   pixi run bench-cpu       # Uses benchmark.run() with warmup/batching
 #   pixi run bench-gpu
 
-from os import getenv
-from testing import assert_equal, assert_true, assert_raises, TestSuite
+from std.os import getenv
+from std.testing import assert_equal, assert_true, assert_raises, TestSuite
 
 from mojson import loads, dumps, Value
 

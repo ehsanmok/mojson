@@ -1,6 +1,6 @@
 # mojson - Parser and Serializer configuration
 
-from collections import List
+from std.collections import List
 
 
 struct ParserConfig:

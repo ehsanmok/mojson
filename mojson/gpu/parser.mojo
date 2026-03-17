@@ -6,13 +6,13 @@
 # 3. Minimal host-device synchronization
 # 4. Fused kernels
 
-from gpu.host import DeviceContext, DeviceBuffer, HostBuffer
-from gpu import block_dim, block_idx, thread_idx, barrier, global_idx
-from gpu.primitives import block
-from gpu.memory import AddressSpace
-from collections import List
-from memory import UnsafePointer, memcpy
-from math import ceildiv
+from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
+from std.gpu import block_dim, block_idx, thread_idx, barrier, global_idx
+from std.gpu.primitives import block
+from std.gpu.memory import AddressSpace
+from std.collections import List
+from std.memory import UnsafePointer, memcpy
+from std.math import ceildiv
 
 from ..types import JSONInput, JSONResult
 from .kernels import (

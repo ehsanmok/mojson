@@ -1,5 +1,5 @@
 # cuJSON Types - Data structures for JSON parsing
-from collections import List
+from std.collections import List
 
 
 struct JSONInput(Movable):

@@ -1,6 +1,6 @@
 # Tests for JSONPath queries
 
-from testing import assert_equal, assert_true, TestSuite
+from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import loads, jsonpath_query, jsonpath_one
 
