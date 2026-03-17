@@ -30,7 +30,7 @@ comptime BLOCK_SIZE_OPT: Int = 256
 
 
 @always_inline
-fn popcount_fast(value: UInt32) -> UInt32:
+def popcount_fast(value: UInt32) -> UInt32:
     """Fast popcount using hardware instruction if available."""
     var v = value
     v = v - ((v >> 1) & 0x55555555)
@@ -41,7 +41,7 @@ fn popcount_fast(value: UInt32) -> UInt32:
 
 
 @always_inline
-fn prefix_xor_fast(value: UInt32) -> UInt32:
+def prefix_xor_fast(value: UInt32) -> UInt32:
     """Compute prefix XOR for in-string detection."""
     var result = value
     result = result ^ (result << 1)
@@ -52,7 +52,7 @@ fn prefix_xor_fast(value: UInt32) -> UInt32:
     return result
 
 
-fn fused_json_kernel(
+def fused_json_kernel(
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
     output_structural: UnsafePointer[UInt32, MutAnyOrigin],
     output_open_close: UnsafePointer[UInt32, MutAnyOrigin],
@@ -89,8 +89,7 @@ fn fused_json_kernel(
 
     # Step 1: Build bitmaps by scanning 32 bytes
     # Use manual unrolling for better instruction-level parallelism
-    @parameter
-    for j in range(32):
+    comptime for j in range(32):
         var pos = start_pos + j
         if pos >= Int(size):
             break
@@ -149,7 +148,7 @@ fn fused_json_kernel(
     output_open_close[global_id] = structural_open_close
 
 
-fn parallel_prefix_sum_kernel(
+def parallel_prefix_sum_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
     total_padded_32: UInt,
@@ -174,7 +173,7 @@ fn parallel_prefix_sum_kernel(
     output_prefix[global_id] = local_count
 
 
-fn extract_positions_kernel(
+def extract_positions_kernel(
     structural_bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     prefix_counts: UnsafePointer[UInt32, MutAnyOrigin],
     output_positions: UnsafePointer[Int32, MutAnyOrigin],
@@ -213,7 +212,7 @@ fn extract_positions_kernel(
         remaining = remaining & (remaining - 1)  # Clear lowest bit
 
 
-fn structural_popcount_kernel(
+def structural_popcount_kernel(
     structural_bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     output_popcounts: UnsafePointer[UInt32, MutAnyOrigin],
     total_padded_32: UInt,
@@ -228,7 +227,7 @@ fn structural_popcount_kernel(
 
 
 @always_inline
-fn _ctz32_gpu(x: UInt32) -> UInt32:
+def _ctz32_gpu(x: UInt32) -> UInt32:
     """Count trailing zeros - GPU version."""
     if x == 0:
         return 32

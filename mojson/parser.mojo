@@ -3,6 +3,7 @@
 
 from std.collections import List
 from std.memory import memcpy
+from std.sys import has_apple_gpu_accelerator
 
 from .value import Value, Null, make_array_value, make_object_value
 from .serialize import dumps
@@ -82,8 +83,7 @@ fn _parse_cpu[backend: StaticString = "simdjson"](s: String) raises -> Value:
         Parsed Value.
     """
 
-    @parameter
-    if backend == "simdjson":
+    comptime if backend == "simdjson":
         return _parse_cpu_simdjson(s)
     elif backend == "mojo":
         return _parse_cpu_mojo(s)
@@ -357,13 +357,21 @@ fn loads[target: StaticString = "cpu"](s: String) raises -> Value:
         var data = loads[target="cpu-simdjson"](s)  # Use simdjson FFI.
     """
 
-    @parameter
-    if target == "cpu":
+    comptime if target == "cpu":
         return _parse_cpu["mojo"](s)
     elif target == "cpu-simdjson":
         return _parse_cpu["simdjson"](s)
+    elif target == "gpu":
+        # On Apple Silicon the Metal compiler backend in this Mojo nightly
+        # does not yet fully support raw-pointer GPU kernels. Fall back to the
+        # native Mojo CPU parser which is already fast (1.4 GB/s) and avoids
+        # H2D/D2H overhead (unified memory). Non-Apple targets use the GPU path.
+        comptime if has_apple_gpu_accelerator():
+            return _parse_cpu["mojo"](s)
+        else:
+            return _parse_gpu(s)
     else:
-        return _parse_gpu(s)
+        return _parse_cpu["mojo"](s)
 
 
 fn loads[
@@ -409,8 +417,7 @@ fn loads[
         var values = loads[format="ndjson"]('{"a":1}\\n{"a":2}').
     """
 
-    @parameter
-    if format != "ndjson":
+    comptime if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] return type"]()
 
     var result = List[Value]()
@@ -446,8 +453,7 @@ fn loads[lazy: Bool](s: String) raises -> LazyValue:
         Lazy parsing is CPU-only. For GPU, use `loads[target="gpu"]` directly.
     """
 
-    @parameter
-    if not lazy:
+    comptime if not lazy:
         constrained[False, "Use lazy=True for LazyValue return type"]()
 
     return LazyValue(s)
@@ -559,8 +565,7 @@ fn load[streaming: Bool](path: String) raises -> StreamingParser:
         For GPU speed on files that fit in memory, use `load[target="gpu"]("file.ndjson")`.
     """
 
-    @parameter
-    if not streaming:
+    comptime if not streaming:
         constrained[False, "Use streaming=True for StreamingParser"]()
 
     return StreamingParser(path)

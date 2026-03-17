@@ -10,7 +10,6 @@
 
 from std.gpu.host import DeviceContext, DeviceBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
-from std.gpu.primitives import block
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
@@ -19,7 +18,7 @@ from .kernels import popcount_fast, BLOCK_SIZE_OPT
 
 
 # ===== Kernel 1: Popcount each bitmap word =====
-fn popcount_kernel(
+def popcount_kernel(
     bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     popcounts: UnsafePointer[UInt32, MutAnyOrigin],
     num_words: UInt,
@@ -31,40 +30,31 @@ fn popcount_kernel(
     popcounts[gid] = popcount_fast(bitmap[gid])
 
 
-# ===== Kernel 2: Block-level prefix sum with block totals =====
-fn prefix_sum_kernel(
+# ===== Kernel 2: Sequential exclusive prefix sum (Metal + CUDA compatible) =====
+def prefix_sum_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
     block_totals: UnsafePointer[UInt32, MutAnyOrigin],
     num_elements: UInt,
 ):
-    """Compute exclusive prefix sum within each block, output block totals."""
-    var tid = Int(thread_idx.x)
-    var gid = Int(block_dim.x) * Int(block_idx.x) + tid
-    var block_id = Int(block_idx.x)
+    """Compute exclusive prefix sum, thread-0 sequential (works on Metal + CUDA).
 
-    # Load input value (0 if out of bounds)
-    var val: UInt32 = 0
-    if gid < Int(num_elements):
-        val = input_data[gid]
+    Avoids warp-shuffle intrinsics (block.prefix_sum) that the Metal backend
+    does not support. For typical JSON bitmaps (<64K words) this is fast.
+    """
+    if Int(thread_idx.x) != 0 or Int(block_idx.x) != 0:
+        return
 
-    # Use block prefix sum (exclusive)
-    var prefix = block.prefix_sum[exclusive=True, block_size=BLOCK_SIZE_OPT](
-        val
-    )
+    var running_sum: UInt32 = 0
+    for i in range(Int(num_elements)):
+        output_prefix[i] = running_sum
+        running_sum += input_data[i]
 
-    # Write prefix sum
-    if gid < Int(num_elements):
-        output_prefix[gid] = prefix
-
-    # Last thread in block writes block total
-    barrier()
-    if tid == BLOCK_SIZE_OPT - 1 or gid == Int(num_elements) - 1:
-        block_totals[block_id] = prefix + val
+    block_totals[0] = running_sum
 
 
 # ===== Kernel 3: Add block offsets to prefix sums =====
-fn add_block_offsets_kernel(
+def add_block_offsets_kernel(
     prefix_sums: UnsafePointer[UInt32, MutAnyOrigin],
     block_offsets: UnsafePointer[UInt32, MutAnyOrigin],
     num_elements: UInt,
@@ -91,7 +81,7 @@ comptime CHAR_TYPE_OTHER: UInt8 = 0  # : or ,
 
 
 # ===== Kernel 4: Scatter positions AND char types using bitmap and prefix offsets =====
-fn scatter_positions_kernel(
+def scatter_positions_kernel(
     bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
     prefix_offsets: UnsafePointer[UInt32, MutAnyOrigin],
@@ -141,7 +131,7 @@ fn scatter_positions_kernel(
         bits = bits & (bits - 1)
 
 
-fn _ctz32_gpu(value: UInt32) -> UInt32:
+def _ctz32_gpu(value: UInt32) -> UInt32:
     """Count trailing zeros (GPU version)."""
     if value == 0:
         return 32
@@ -168,7 +158,7 @@ fn _ctz32_gpu(value: UInt32) -> UInt32:
 
 
 # ===== Helper: Recursive hierarchical prefix sum =====
-fn _compute_block_prefix_sums(
+def _compute_block_prefix_sums(
     ctx: DeviceContext,
     d_block_totals_ptr: UnsafePointer[UInt32, MutAnyOrigin],
     d_block_prefix_ptr: UnsafePointer[UInt32, MutAnyOrigin],
@@ -235,7 +225,7 @@ fn _compute_block_prefix_sums(
 
 
 # ===== Main function: GPU stream compaction =====
-fn extract_positions_gpu(
+def extract_positions_gpu(
     ctx: DeviceContext,
     d_bitmap_ptr: UnsafePointer[UInt32, MutAnyOrigin],
     d_input_ptr: UnsafePointer[UInt8, MutAnyOrigin],
@@ -266,72 +256,30 @@ fn extract_positions_gpu(
         block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Phase 2: Prefix sum of popcounts (hierarchical)
+    # Phase 2: Prefix sum of popcounts.
+    # Uses a sequential single-thread kernel (Metal + CUDA compatible).
+    # block_totals[0] receives the grand total after the scan.
     var d_prefix = ctx.enqueue_create_buffer[DType.uint32](num_words)
-    var d_block_totals = ctx.enqueue_create_buffer[DType.uint32](num_blocks)
+    var d_block_totals = ctx.enqueue_create_buffer[DType.uint32](1)
     d_block_totals.enqueue_fill(0)
+    d_prefix.enqueue_fill(0)
 
     ctx.enqueue_function_unchecked[prefix_sum_kernel](
         d_popcounts.unsafe_ptr(),
         d_prefix.unsafe_ptr(),
         d_block_totals.unsafe_ptr(),
         UInt(num_words),
-        grid_dim=num_blocks,
-        block_dim=BLOCK_SIZE_OPT,
-    )
-
-    # If multiple blocks, need to propagate block offsets recursively
-    if num_blocks > 1:
-        # Recursively compute prefix sum of block totals
-        var d_block_prefix = ctx.enqueue_create_buffer[DType.uint32](num_blocks)
-        d_block_prefix.enqueue_fill(0)
-
-        _compute_block_prefix_sums(
-            ctx,
-            d_block_totals.unsafe_ptr(),
-            d_block_prefix.unsafe_ptr(),
-            num_blocks,
-        )
-
-        # Add block offsets to element-level prefix sums
-        ctx.enqueue_function_unchecked[add_block_offsets_kernel](
-            d_prefix.unsafe_ptr(),
-            d_block_prefix.unsafe_ptr(),
-            UInt(num_words),
-            grid_dim=num_blocks,
-            block_dim=BLOCK_SIZE_OPT,
-        )
-
-    # Get total count - copy last prefix and popcount to compute total
-    ctx.synchronize()
-
-    var h_last = ctx.enqueue_create_host_buffer[DType.uint32](2)
-
-    # Copy last elements using a simple kernel
-    fn copy_last_kernel(
-        prefix: UnsafePointer[UInt32, MutAnyOrigin],
-        popcount: UnsafePointer[UInt32, MutAnyOrigin],
-        output: UnsafePointer[UInt32, MutAnyOrigin],
-        last_idx: UInt,
-    ):
-        if Int(thread_idx.x) == 0:
-            output[0] = prefix[Int(last_idx)]
-            output[1] = popcount[Int(last_idx)]
-
-    var d_last = ctx.enqueue_create_buffer[DType.uint32](2)
-    ctx.enqueue_function_unchecked[copy_last_kernel](
-        d_prefix.unsafe_ptr(),
-        d_popcounts.unsafe_ptr(),
-        d_last.unsafe_ptr(),
-        UInt(num_words - 1),
         grid_dim=1,
         block_dim=1,
     )
 
-    ctx.enqueue_copy(h_last, d_last)
+    # Read total count (grand total stored in block_totals[0])
+    ctx.synchronize()
+    var h_total = ctx.enqueue_create_host_buffer[DType.uint32](1)
+    ctx.enqueue_copy(h_total, d_block_totals)
     ctx.synchronize()
 
-    var total_count = Int(h_last.unsafe_ptr()[0] + h_last.unsafe_ptr()[1])
+    var total_count = Int(h_total.unsafe_ptr()[0])
 
     if total_count == 0:
         return (List[Int32](), List[UInt8](), 0)

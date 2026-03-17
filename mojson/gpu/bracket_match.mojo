@@ -1,16 +1,13 @@
-# Experimental GPU Bracket Matching using prefix_sum
+# Experimental GPU Bracket Matching using prefix sum
 #
 # Algorithm:
 # 1. Compute depth delta: +1 for {[, -1 for }]
 # 2. Inclusive prefix sum to get depth at each position
 # 3. For opening brackets: depth -= 1 (to match closing bracket's depth)
 # 4. Within each depth, pair opening with next closing
-#
-# Uses Mojo's block.prefix_sum for efficient GPU prefix sums
 
 from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
-from std.gpu.primitives import block, warp
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
@@ -26,17 +23,17 @@ comptime CHAR_TYPE_COLON: UInt8 = UInt8(ord(":"))
 comptime CHAR_TYPE_COMMA: UInt8 = UInt8(ord(","))
 
 
-fn is_open(c: UInt8) -> Bool:
+def is_open(c: UInt8) -> Bool:
     """Check if character is an opening bracket."""
     return c == CHAR_TYPE_OPEN_BRACE or c == CHAR_TYPE_OPEN_BRACKET
 
 
-fn is_close(c: UInt8) -> Bool:
+def is_close(c: UInt8) -> Bool:
     """Check if character is a closing bracket."""
     return c == CHAR_TYPE_CLOSE_BRACE or c == CHAR_TYPE_CLOSE_BRACKET
 
 
-fn brackets_match(open_char: UInt8, close_char: UInt8) -> Bool:
+def brackets_match(open_char: UInt8, close_char: UInt8) -> Bool:
     """Check if open and close brackets match."""
     return (
         open_char == CHAR_TYPE_OPEN_BRACE
@@ -48,7 +45,7 @@ fn brackets_match(open_char: UInt8, close_char: UInt8) -> Bool:
 
 
 # ===== Kernel 1: Compute depth deltas =====
-fn compute_depth_delta_kernel(
+def compute_depth_delta_kernel(
     char_types: UnsafePointer[UInt8, MutAnyOrigin],
     depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
@@ -70,40 +67,31 @@ fn compute_depth_delta_kernel(
 
 
 # ===== Kernel 2: Block-level inclusive prefix sum for depths =====
-fn depth_prefix_sum_kernel(
+def depth_prefix_sum_kernel(
     depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
     depths: UnsafePointer[Int32, MutAnyOrigin],
     block_totals: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
 ):
-    """Compute block-local inclusive prefix sum of depth deltas."""
-    var tid = Int(thread_idx.x)
-    var bid = Int(block_idx.x)
-    var gid = bid * Int(block_dim.x) + tid
+    """Compute inclusive prefix sum of depth deltas (Metal + CUDA compatible).
 
-    var val: Int32 = 0
-    if gid < Int(n):
-        val = depth_deltas[gid]
+    Sequential single-thread scan avoids warp-shuffle intrinsics that the
+    Metal backend does not support. The depth array is small (one entry per
+    structural character) so this is fast in practice.
+    """
+    if Int(thread_idx.x) != 0 or Int(block_idx.x) != 0:
+        return
 
-    # Inclusive prefix sum (not exclusive)
-    var prefix = block.prefix_sum[exclusive=False, block_size=BLOCK_SIZE_OPT](
-        val
-    )
+    var running_sum: Int32 = 0
+    for i in range(Int(n)):
+        running_sum += depth_deltas[i]
+        depths[i] = running_sum
 
-    if gid < Int(n):
-        depths[gid] = prefix
-
-    # Last thread writes block total
-    barrier()
-    var block_end = min((bid + 1) * Int(block_dim.x), Int(n))
-    var last_in_block = block_end - 1 - bid * Int(block_dim.x)
-
-    if tid == last_in_block:
-        block_totals[bid] = prefix
+    block_totals[0] = running_sum
 
 
 # ===== Kernel 3: Add block offsets to depths =====
-fn add_depth_offsets_kernel(
+def add_depth_offsets_kernel(
     depths: UnsafePointer[Int32, MutAnyOrigin],
     block_offsets: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
@@ -120,7 +108,7 @@ fn add_depth_offsets_kernel(
 
 
 # ===== Kernel 4: Adjust opening bracket depths =====
-fn adjust_open_depths_kernel(
+def adjust_open_depths_kernel(
     char_types: UnsafePointer[UInt8, MutAnyOrigin],
     depths: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
@@ -137,7 +125,7 @@ fn adjust_open_depths_kernel(
 
 
 # ===== Helper: Compute hierarchical prefix sum =====
-fn _compute_depth_prefix_sum(
+def _compute_depth_prefix_sum(
     ctx: DeviceContext,
     d_block_totals_ptr: UnsafePointer[Int32, MutAnyOrigin],
     d_block_prefix_ptr: UnsafePointer[Int32, MutAnyOrigin],
@@ -194,7 +182,7 @@ fn _compute_depth_prefix_sum(
     )
 
 
-fn match_brackets_gpu(
+def match_brackets_gpu(
     ctx: DeviceContext,
     d_char_types: UnsafePointer[UInt8, MutAnyOrigin],
     n: Int,
@@ -223,11 +211,11 @@ fn match_brackets_gpu(
         block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Phase 2: Inclusive prefix sum for depths
+    # Phase 2: Inclusive prefix sum for depths — single dispatch (sequential kernel).
     var d_depths = ctx.enqueue_create_buffer[DType.int32](n)
     d_depths.enqueue_fill(0)
 
-    var d_block_totals = ctx.enqueue_create_buffer[DType.int32](num_blocks)
+    var d_block_totals = ctx.enqueue_create_buffer[DType.int32](1)
     d_block_totals.enqueue_fill(0)
 
     ctx.enqueue_function_unchecked[depth_prefix_sum_kernel](
@@ -235,29 +223,9 @@ fn match_brackets_gpu(
         d_depths.unsafe_ptr(),
         d_block_totals.unsafe_ptr(),
         UInt(n),
-        grid_dim=num_blocks,
-        block_dim=BLOCK_SIZE_OPT,
+        grid_dim=1,
+        block_dim=1,
     )
-
-    # Hierarchical prefix sum for multi-block case
-    if num_blocks > 1:
-        var d_block_prefix = ctx.enqueue_create_buffer[DType.int32](num_blocks)
-        d_block_prefix.enqueue_fill(0)
-
-        _compute_depth_prefix_sum(
-            ctx,
-            d_block_totals.unsafe_ptr(),
-            d_block_prefix.unsafe_ptr(),
-            num_blocks,
-        )
-
-        ctx.enqueue_function_unchecked[add_depth_offsets_kernel](
-            d_depths.unsafe_ptr(),
-            d_block_prefix.unsafe_ptr(),
-            UInt(n),
-            grid_dim=num_blocks,
-            block_dim=BLOCK_SIZE_OPT,
-        )
 
     # Phase 3: Adjust opening bracket depths
     ctx.enqueue_function_unchecked[adjust_open_depths_kernel](

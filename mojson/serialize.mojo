@@ -269,8 +269,7 @@ fn dumps[format: StaticString = "json"](values: List[Value]) -> String:
         print(dumps[format="ndjson"](values)).
     """
 
-    @parameter
-    if format != "ndjson":
+    comptime if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
 
     var result = String()
@@ -327,8 +326,7 @@ fn dump[
             dump[format="ndjson"](values, f).
     """
 
-    @parameter
-    if format != "ndjson":
+    comptime if format != "ndjson":
         constrained[False, "Use format='ndjson' for List[Value] input"]()
 
     f.write(dumps[format="ndjson"](values))

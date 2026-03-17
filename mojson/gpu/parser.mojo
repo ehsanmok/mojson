@@ -25,7 +25,7 @@ from .kernels import (
 from .stream_compact import extract_positions_gpu
 
 
-fn parse_json_gpu(var input: JSONInput) raises -> JSONResult:
+def parse_json_gpu(var input: JSONInput) raises -> JSONResult:
     """GPU JSON parsing with parallel algorithms."""
     var size = len(input.data)
 
@@ -40,7 +40,7 @@ fn parse_json_gpu(var input: JSONInput) raises -> JSONResult:
     return _parse_json_gpu_optimized(ctx, input^, size, total_padded_32)
 
 
-fn parse_json_gpu_from_pinned(
+def parse_json_gpu_from_pinned(
     ctx: DeviceContext,
     h_input: HostBuffer[DType.uint8],
     size: Int,
@@ -61,7 +61,7 @@ fn parse_json_gpu_from_pinned(
 comptime DEBUG_TIMING: Bool = False
 
 
-fn _parse_json_gpu_optimized(
+def _parse_json_gpu_optimized(
     ctx: DeviceContext, var input: JSONInput, size: Int, total_padded_32: Int
 ) raises -> JSONResult:
     """GPU-accelerated JSON parsing with fully parallel prefix sums."""
@@ -83,23 +83,20 @@ fn _parse_json_gpu_optimized(
     # Use pinned host buffer for faster transfer
     var h_input = ctx.enqueue_create_host_buffer[DType.uint8](size)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         ctx.synchronize()
         var t_alloc = perf_counter_ns()
         print("    Buffer alloc:", Float64(t_alloc - t0) / 1e6, "ms")
 
     memcpy(dest=h_input.unsafe_ptr(), src=input.data.unsafe_ptr(), count=size)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         var t_memcpy = perf_counter_ns()
         print("    memcpy:", Float64(t_memcpy - t0) / 1e6, "ms (cumulative)")
 
     ctx.enqueue_copy(d_input, h_input)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         ctx.synchronize()
         var t_h2d = perf_counter_ns()
         print("    H2D transfer:", Float64(t_h2d - t0) / 1e6, "ms (cumulative)")
@@ -226,8 +223,7 @@ fn _parse_json_gpu_optimized(
     ctx.synchronize()
     var t1 = perf_counter_ns()
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         print("  H2D + GPU kernels:", Float64(t1 - t0) / 1e6, "ms")
 
     # ===== Phase 5: Extract positions from structural bitmap (GPU stream compaction) =====
@@ -244,8 +240,7 @@ fn _parse_json_gpu_optimized(
     result.pair_pos = List[Int32](capacity=count)
     result.pair_pos.resize(count, -1)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         var t2 = perf_counter_ns()
         print("  Position extraction:", Float64(t2 - t1) / 1e6, "ms")
         print("  Structural count:", len(result.structural))
@@ -253,8 +248,7 @@ fn _parse_json_gpu_optimized(
     # Match brackets on CPU using pre-computed char types
     _match_brackets_fast(result, char_types)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         var t4 = perf_counter_ns()
         print("  Bracket matching:", Float64(t4 - t1) / 1e6, "ms")
         print("  TOTAL GPU parse:", Float64(t4 - t0) / 1e6, "ms")
@@ -262,7 +256,7 @@ fn _parse_json_gpu_optimized(
     return result^
 
 
-fn _parse_json_gpu_from_pinned_impl(
+def _parse_json_gpu_from_pinned_impl(
     ctx: DeviceContext,
     h_input: HostBuffer[DType.uint8],
     size: Int,
@@ -284,8 +278,7 @@ fn _parse_json_gpu_from_pinned_impl(
     var d_input = ctx.enqueue_create_buffer[DType.uint8](size)
     ctx.enqueue_copy(d_input, h_input)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         ctx.synchronize()
         var t_h2d = perf_counter_ns()
         print("    H2D (from pinned):", Float64(t_h2d - t0) / 1e6, "ms")
@@ -397,8 +390,7 @@ fn _parse_json_gpu_from_pinned_impl(
     ctx.synchronize()
     var t1 = perf_counter_ns()
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         print("  H2D + GPU kernels:", Float64(t1 - t0) / 1e6, "ms")
 
     # Phase 5: Extract positions using GPU stream compaction
@@ -416,16 +408,14 @@ fn _parse_json_gpu_from_pinned_impl(
     result.pair_pos = List[Int32](capacity=count)
     result.pair_pos.resize(count, -1)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         var t2 = perf_counter_ns()
         print("  Position extraction:", Float64(t2 - t1) / 1e6, "ms")
 
     # Match brackets on CPU
     _match_brackets_fast(result, char_types)
 
-    @parameter
-    if DEBUG_TIMING:
+    comptime if DEBUG_TIMING:
         var t4 = perf_counter_ns()
         print("  Bracket matching:", Float64(t4 - t1) / 1e6, "ms")
         print("  TOTAL GPU parse (from pinned):", Float64(t4 - t0) / 1e6, "ms")
@@ -436,7 +426,7 @@ fn _parse_json_gpu_from_pinned_impl(
 # ===== GPU Kernels =====
 
 
-fn _quote_popcount_kernel(
+def _quote_popcount_kernel(
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
     output_quote: UnsafePointer[UInt32, MutAnyOrigin],
     output_popcount: UnsafePointer[UInt32, MutAnyOrigin],
@@ -474,7 +464,7 @@ fn _quote_popcount_kernel(
     output_popcount[gid] = popcount_fast(real_quotes)
 
 
-fn _block_prefix_kernel(
+def _block_prefix_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
     block_sums: UnsafePointer[UInt32, MutAnyOrigin],
@@ -507,7 +497,7 @@ fn _block_prefix_kernel(
         block_sums[bid] = prefix + val
 
 
-fn _add_block_offset_kernel(
+def _add_block_offset_kernel(
     data: UnsafePointer[UInt32, MutAnyOrigin],
     block_offsets: UnsafePointer[UInt32, MutAnyOrigin],
     total_size: UInt,
@@ -531,7 +521,7 @@ comptime CHAR_TYPE_OPEN_BRACKET: UInt8 = 3  # [
 comptime CHAR_TYPE_CLOSE_BRACKET: UInt8 = 4  # ]
 
 
-fn _match_brackets_fast(mut result: JSONResult, char_types: List[UInt8]):
+def _match_brackets_fast(mut result: JSONResult, char_types: List[UInt8]):
     """Match brackets using pre-computed char types (no memory reads)."""
     var stack = List[Int]()
     var n = len(result.structural)
