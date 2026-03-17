@@ -48,7 +48,8 @@ fn main() raises:
     with open("gpu_test.json", "r") as f:
         var file_data = load[target="gpu"](f)
         print("   Loaded from file successfully!")
-        print("   Object keys:", file_data.object_keys().__str__())
+        var keys = file_data.object_keys()
+        print("   Object keys:", ", ".join(keys))
     print()
 
     # Comparing CPU vs GPU (for demonstration)
