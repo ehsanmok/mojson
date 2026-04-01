@@ -254,21 +254,6 @@ def example_round_trip() raises:
     print()
 
 
-def example_gpu_parsing() raises:
-    """Parse JSON on GPU, deserialize struct on CPU."""
-    print("=== GPU Round-Trip ===\n")
-
-    var json_str = '{"name":"GPU User","age":99,"active":true}'
-    var person = deserialize_json[Person, target="gpu"](json_str)
-    print(
-        "Deserialized (GPU): "
-        + person.name
-        + " age="
-        + String(person.age)
-    )
-    print()
-
-
 def example_try_deserialize() raises:
     """Non-raising deserialization returns Optional."""
     print("=== try_deserialize_json ===\n")
@@ -359,7 +344,6 @@ def main() raises:
     example_nested_structs()
     example_optional_and_list()
     example_round_trip()
-    example_gpu_parsing()
     example_try_deserialize()
     example_value_api()
     example_custom_traits()

@@ -4,6 +4,7 @@
 from std.testing import assert_equal, assert_true, TestSuite
 
 from mojson import loads, dumps, Value, Null
+from mojson import serialize_json, deserialize_json
 
 
 # =============================================================================
@@ -133,6 +134,32 @@ def test_gpu_dumps_roundtrip() raises:
     # Verify output is valid JSON by loading again
     var v2 = loads[target="cpu"](output)
     assert_true(v2.is_object(), "GPU roundtrip should produce valid object")
+
+
+@fieldwise_init
+struct _GPUPerson(Defaultable, Movable):
+    var name: String
+    var age: Int
+    var active: Bool
+
+    def __init__(out self):
+        self.name = ""
+        self.age = 0
+        self.active = False
+
+
+def test_gpu_reflection_roundtrip() raises:
+    """Test reflection-based deserialize_json with GPU backend."""
+    var json_str = '{"name":"GPU Test","age":42,"active":true}'
+    var person = deserialize_json[_GPUPerson, target="gpu"](json_str)
+    assert_equal(person.name, "GPU Test")
+    assert_equal(person.age, 42)
+    assert_equal(person.active, True)
+
+    var back = serialize_json(person)
+    var rt = deserialize_json[_GPUPerson, target="gpu"](back)
+    assert_equal(rt.name, "GPU Test")
+    assert_equal(rt.age, 42)
 
 
 def main() raises:

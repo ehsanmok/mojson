@@ -553,26 +553,6 @@ def test_custom_deserialize() raises:
 
 
 # ===================================================================
-# GPU round-trip test
-# ===================================================================
-
-
-def test_gpu_roundtrip() raises:
-    """Deserialize JSON parsed on GPU into a struct on CPU."""
-    var json_str = '{"name":"GPU Test","age":42,"active":true}'
-    var person = deserialize_json[Person, target="gpu"](json_str)
-    assert_equal(person.name, "GPU Test")
-    assert_equal(person.age, 42)
-    assert_equal(person.active, True)
-
-    var back = serialize_json(person)
-    var rt = deserialize_json[Person, target="gpu"](back)
-    assert_equal(rt.name, "GPU Test")
-    assert_equal(rt.age, 42)
-    print("  test_gpu_roundtrip passed")
-
-
-# ===================================================================
 # Runner
 # ===================================================================
 
@@ -628,10 +608,6 @@ def main() raises:
     print("Custom traits:")
     test_custom_serialize()
     test_custom_deserialize()
-    print()
-
-    print("GPU round-trip:")
-    test_gpu_roundtrip()
     print()
 
     print("All reflection serde tests passed!")
