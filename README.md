@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/ehsanmok/mojson/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanmok/mojson/actions/workflows/ci.yml)
 [![Docs](https://github.com/ehsanmok/mojson/actions/workflows/docs.yaml/badge.svg)](https://github.com/ehsanmok/mojson/actions/workflows/docs.yaml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 - **Python-like API** — `loads`, `dumps`, `load`, `dump`
 - **Reflection serde** — Zero-boilerplate struct serialization via compile-time reflection
