@@ -1,4 +1,4 @@
-# mojson - Streaming JSON parsing for large files
+# json - Streaming JSON parsing for large files
 #
 # Process JSON files larger than memory by reading in chunks.
 # Best suited for NDJSON (newline-delimited JSON) files.

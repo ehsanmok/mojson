@@ -3,8 +3,8 @@
 
 from std.testing import assert_equal, assert_true, TestSuite
 
-from mojson import loads, dumps, Value, Null
-from mojson import serialize_json, deserialize_json
+from json import loads, dumps, Value, Null
+from json import serialize_json, deserialize_json
 
 
 # =============================================================================

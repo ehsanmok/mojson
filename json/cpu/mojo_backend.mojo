@@ -1,4 +1,4 @@
-# mojson CPU backend - Pure Mojo JSON parser
+# json CPU backend - Pure Mojo JSON parser
 # High-performance JSON parsing with zero FFI dependencies
 # Optimized with SIMD operations for maximum performance
 

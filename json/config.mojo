@@ -1,4 +1,4 @@
-# mojson - Parser and Serializer configuration
+# json - Parser and Serializer configuration
 
 from std.collections import List
 

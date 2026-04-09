@@ -1,7 +1,7 @@
 # High-Performance JSON library for Mojo🔥
 
-[![CI](https://github.com/ehsanmok/mojson/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanmok/mojson/actions/workflows/ci.yml)
-[![Docs](https://github.com/ehsanmok/mojson/actions/workflows/docs.yaml/badge.svg)](https://github.com/ehsanmok/mojson/actions/workflows/docs.yaml)
+[![CI](https://github.com/ehsanmok/json/actions/workflows/ci.yml/badge.svg)](https://github.com/ehsanmok/json/actions/workflows/ci.yml)
+[![Docs](https://github.com/ehsanmok/json/actions/workflows/docs.yaml/badge.svg)](https://github.com/ehsanmok/json/actions/workflows/docs.yaml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 - **Python-like API** — `loads`, `dumps`, `load`, `dump`
@@ -20,7 +20,7 @@
 
 ## Installation
 
-Add mojson to your project's `pixi.toml`:
+Add json to your project's `pixi.toml`:
 
 ```toml
 [workspace]
@@ -28,7 +28,7 @@ channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 preview = ["pixi-build"]
 
 [dependencies]
-mojson = { git = "https://github.com/ehsanmok/mojson.git", branch = "main" }
+json = { git = "https://github.com/ehsanmok/json.git", branch = "main" }
 ```
 
 Then run:
@@ -42,7 +42,7 @@ pixi install
 ## Quick Start
 
 ```mojo
-from mojson import loads, dumps, load, dump
+from json import loads, dumps, load, dump
 
 # Parse & serialize strings
 var data = loads('{"name": "Alice", "scores": [95, 87, 92]}')
@@ -63,7 +63,7 @@ var big = load[target="gpu"]("large.json")
 To contribute or run tests:
 
 ```bash
-git clone https://github.com/ehsanmok/mojson.git && cd mojson
+git clone https://github.com/ehsanmok/json.git && cd json
 pixi install
 pixi run tests-cpu
 ```
@@ -93,7 +93,7 @@ pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 Automatically serialize and deserialize structs using compile-time reflection — no hand-written `to_json()` or `from_json()` methods needed.
 
 ```mojo
-from mojson import serialize_json, deserialize_json
+from json import serialize_json, deserialize_json
 
 @fieldwise_init
 struct Person(Defaultable, Movable):
@@ -120,7 +120,7 @@ print(serialize_json[pretty=True](person))
 var fast = deserialize_json[Person, target="gpu"](json)
 
 # Non-raising variant (returns Optional)
-from mojson import try_deserialize_json
+from json import try_deserialize_json
 var maybe = try_deserialize_json[Person]('{"bad json')  # None
 ```
 
@@ -138,7 +138,7 @@ var maybe = try_deserialize_json[Person]('{"bad json')  # None
 Override reflection behavior for specific types:
 
 ```mojo
-from mojson import JsonSerializable, JsonDeserializable
+from json import JsonSerializable, JsonDeserializable
 
 struct Color(JsonSerializable, Defaultable, Movable):
     var r: Int
@@ -227,7 +227,7 @@ apply_patch(doc, patch)               # JSON Patch (RFC 6902)
 
 The pure Mojo backend is the **default** and is **~2.7x faster** than the FFI approach with zero external dependencies.
 
-Full API: [ehsanmok.github.io/mojson](https://ehsanmok.github.io/mojson/)
+Full API: [ehsanmok.github.io/json](https://ehsanmok.github.io/json/)
 
 ## Examples
 

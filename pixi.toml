@@ -1,13 +1,13 @@
 [workspace]
 authors = ["ehsanmok <ehsanmok@users.noreply.github.com>"]
 channels = ["https://conda.modular.com/max-nightly", "conda-forge", "https://prefix.dev/modular-community"]
-name = "mojson"
+name = "json"
 platforms = ["linux-64", "osx-arm64"]
 version = "0.1.0"
 preview = ["pixi-build"]
 
 [package]
-name = "mojson"
+name = "json"
 version = "0.1.0"
 
 [package.build]
@@ -17,11 +17,11 @@ backend = { name = "pixi-build-rattler-build", version = "*" }
 
 [activation]
 # Auto-build FFI wrapper on environment activation (idempotent - skips if up-to-date)
-scripts = ["mojson/cpu/simdjson_ffi/build.sh"]
+scripts = ["json/cpu/simdjson_ffi/build.sh"]
 
 [dependencies]
 # Local package for development - pixi will build and install it
-mojson = { path = "." }
+
 mojo = "<1.0"
 simdjson = ">=4.2.4,<5"
 
@@ -43,11 +43,11 @@ dev     = { features = ["dev"], solve-group = "default" }
 [tasks]
 # Format
 install-pre-commit = "pre-commit install"
-format = { cmd = "mojo format mojson tests benchmark/mojo", depends-on = ["install-pre-commit"] }
-format-check = { cmd = "bash -c 'mojo format mojson tests benchmark/mojo && git diff --exit-code mojson tests benchmark/mojo || (echo \"Error: Code is not formatted. Run \\\"pixi run format\\\" to fix.\" && exit 1)'" }
+format = { cmd = "mojo format json tests benchmark/mojo", depends-on = ["install-pre-commit"] }
+format-check = { cmd = "bash -c 'mojo format json tests benchmark/mojo && git diff --exit-code json tests benchmark/mojo || (echo \"Error: Code is not formatted. Run \\\"pixi run format\\\" to fix.\" && exit 1)'" }
 
 # Build simdjson FFI (CPU backend)
-build = "bash mojson/cpu/simdjson_ffi/build.sh"
+build = "bash json/cpu/simdjson_ffi/build.sh"
 
 # Download benchmark datasets from Google Drive (cuJSON datasets)
 # Full folder: https://drive.google.com/drive/folders/1PkDEy0zWOkVREfL7VuINI-m9wJe45P2Q
@@ -96,8 +96,8 @@ examples = "mojo -I . examples/01_basic_parsing.mojo && mojo -I . examples/02_fi
 # GPU benchmark vs cuJSON (NVIDIA only, requires manual cuJSON download)
 # Usage: pixi run bench-gpu-cujson -- path/to/file.json
 # First: cd benchmark && git clone https://github.com/AutomataLab/cuJSON.git
-bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; if [ ! -f benchmark/cuJSON/build/cujson_benchmark ]; then echo \"Error: cuJSON not built. Run: pixi run build-cujson\" && exit 1; fi; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- mojson GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu"] }
+bench-gpu-cujson = { cmd = "bash -c 'F=${1:-benchmark/datasets/twitter.json}; if [ ! -f benchmark/cuJSON/build/cujson_benchmark ]; then echo \"Error: cuJSON not built. Run: pixi run build-cujson\" && exit 1; fi; echo \"--- cuJSON ---\" && benchmark/cuJSON/build/cujson_benchmark -b \"$F\" && echo && echo \"--- json GPU ---\" && benchmark/build/bench_gpu \"$F\"' --", depends-on = ["build-bench-gpu"] }
 
 # Docs
-docs = "mojodoc ./mojson --open"
-docs-build = "mojodoc ./mojson --out-dir target/doc --base-url /mojson/"
+docs = "mojodoc ./json --open"
+docs-build = "mojodoc ./json --out-dir target/doc --base-url /json/"

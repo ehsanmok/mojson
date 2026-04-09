@@ -1,4 +1,4 @@
-# mojson CPU Benchmark
+# json CPU Benchmark
 # Uses simdjson dataset: https://github.com/simdjson/simdjson/tree/master/jsonexamples
 #
 # Usage:
@@ -16,7 +16,7 @@ from std.benchmark import (
 )
 from std.pathlib import Path
 from std.sys import argv
-from mojson import loads
+from json import loads
 
 
 def main() raises:
@@ -31,7 +31,7 @@ def main() raises:
     print(
         "========================================================================"
     )
-    print("mojson CPU Benchmark")
+    print("json CPU Benchmark")
     print(
         "========================================================================"
     )
@@ -62,6 +62,6 @@ def main() raises:
 
     var measures = List[ThroughputMeasure]()
     measures.append(ThroughputMeasure(BenchMetric.bytes, file_size))
-    bench.bench_function[bench_loads](BenchId("mojson_cpu", "loads"), measures)
+    bench.bench_function[bench_loads](BenchId("json_cpu", "loads"), measures)
 
     print(bench)

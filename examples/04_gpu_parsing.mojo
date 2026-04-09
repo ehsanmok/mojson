@@ -5,7 +5,7 @@
 # Note: GPU parsing is optimized for large JSON documents. For small inputs,
 # CPU parsing may be faster due to GPU kernel launch overhead.
 
-from mojson import loads, load, dumps, Value
+from json import loads, load, dumps, Value
 
 
 def main() raises:

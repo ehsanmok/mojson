@@ -1,4 +1,4 @@
-# mojson CPU backend - Optimized JSON parser
+# json CPU backend - Optimized JSON parser
 # High-performance parsing with optimized algorithms
 # Target: Match simdjson performance
 

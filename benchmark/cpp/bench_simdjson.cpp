@@ -1,4 +1,4 @@
-// simdjson native benchmark - Full DOM traversal (comparable to mojson)
+// simdjson native benchmark - Full DOM traversal (comparable to json)
 // Compile: clang++ -O3 -std=c++17 -o bench_simdjson bench_simdjson.cpp -I$CONDA_PREFIX/include -L$CONDA_PREFIX/lib -lsimdjson
 
 #include <iostream>
@@ -9,7 +9,7 @@
 #include <string>
 #include "simdjson.h"
 
-// Count all values by traversing the DOM (similar to what mojson does)
+// Count all values by traversing the DOM (similar to what json does)
 size_t traverse_element(simdjson::dom::element elem)
 {
     size_t count = 1;
@@ -24,7 +24,7 @@ size_t traverse_element(simdjson::dom::element elem)
     case simdjson::dom::element_type::OBJECT:
         for (auto [key, value] : elem.get_object().value())
         {
-            (void)key; // Access key (like mojson extracts keys)
+            (void)key; // Access key (like json extracts keys)
             count += traverse_element(value);
         }
         break;
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
     std::cout << "Size: " << file_size << " bytes (" << (file_size / 1024.0) << " KB)" << std::endl;
     std::cout << std::endl;
 
-    // Use DOM parser which builds full tree (like mojson)
+    // Use DOM parser which builds full tree (like json)
     simdjson::dom::parser parser;
 
     // Warmup

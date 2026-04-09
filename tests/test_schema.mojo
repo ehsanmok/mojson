@@ -2,7 +2,7 @@
 
 from std.testing import assert_equal, assert_true, TestSuite
 
-from mojson import loads, validate, is_valid
+from json import loads, validate, is_valid
 
 
 # Type validation tests

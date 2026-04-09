@@ -2,7 +2,7 @@
 
 from std.testing import assert_equal, assert_true, TestSuite
 
-from mojson import loads, jsonpath_query, jsonpath_one
+from json import loads, jsonpath_query, jsonpath_one
 
 
 def test_jsonpath_root() raises:

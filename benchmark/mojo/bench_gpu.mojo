@@ -1,4 +1,4 @@
-# mojson GPU Benchmark
+# json GPU Benchmark
 # Uses cuJSON dataset: https://github.com/AutomataLab/cuJSON
 #
 # Usage:
@@ -19,9 +19,9 @@ from std.time import perf_counter_ns
 from std.memory import memcpy
 from std.collections import List
 
-from mojson import loads
-from mojson.gpu import parse_json_gpu, parse_json_gpu_from_pinned
-from mojson.types import JSONInput
+from json import loads
+from json.gpu import parse_json_gpu, parse_json_gpu_from_pinned
+from json.types import JSONInput
 from std.gpu.host import DeviceContext
 
 
@@ -35,7 +35,7 @@ def main() raises:
 
     print()
     print("=" * 72)
-    print("mojson GPU Benchmark")
+    print("json GPU Benchmark")
     print("=" * 72)
     print()
 
@@ -137,7 +137,7 @@ def main() raises:
     var measures = List[ThroughputMeasure]()
     measures.append(ThroughputMeasure(BenchMetric.bytes, size))
     bench.bench_function[bench_gpu_loads](
-        BenchId("mojson_gpu", "loads[target='gpu']"), measures
+        BenchId("json_gpu", "loads[target='gpu']"), measures
     )
 
     print(bench)

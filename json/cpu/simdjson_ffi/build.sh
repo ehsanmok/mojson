@@ -22,6 +22,9 @@ _needs_rebuild() {
     # Rebuild if target doesn't exist
     [ ! -f "$TARGET" ] && return 0
 
+    # Rebuild if CONDA_PREFIX copy is missing
+    [ ! -f "$CONDA_PREFIX/lib/libsimdjson_wrapper.so" ] && return 0
+
     # Rebuild if source files are newer than target
     [ "$SOURCE" -nt "$TARGET" ] && return 0
     [ "$HEADER" -nt "$TARGET" ] && return 0
@@ -77,6 +80,9 @@ if $CXX -O3 -std=c++17 -fPIC -DNDEBUG -shared \
     echo "Build complete!"
     echo "Library: $TARGET"
     ls -la "$TARGET"
+    # Also install into CONDA_PREFIX/lib so mojo can find it via $CONDA_PREFIX
+    cp "$TARGET" "$CONDA_PREFIX/lib/libsimdjson_wrapper.so"
+    echo "Installed: $CONDA_PREFIX/lib/libsimdjson_wrapper.so"
 else
     echo "Build failed!"
     return 1 2>/dev/null || true

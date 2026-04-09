@@ -1,8 +1,8 @@
-# Tests for mojson/serialize.mojo
+# Tests for json/serialize.mojo
 
 from std.testing import assert_equal, assert_true, TestSuite
 
-from mojson import Value, Null, dumps
+from json import Value, Null, dumps
 
 
 def test_serialize_null() raises:
@@ -62,7 +62,7 @@ def test_serialize_string_with_escapes() raises:
 
 def test_dumps_pretty_simple_object() raises:
     """Test pretty printing a simple object."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"name":"Alice","age":30}')
     var result = dumps(data, indent="  ")
@@ -75,7 +75,7 @@ def test_dumps_pretty_simple_object() raises:
 
 def test_dumps_pretty_nested_object() raises:
     """Test pretty printing a nested object."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"user":{"name":"Bob","scores":[1,2,3]}}')
     var result = dumps(data, indent="  ")
@@ -87,7 +87,7 @@ def test_dumps_pretty_nested_object() raises:
 
 def test_dumps_pretty_array() raises:
     """Test pretty printing an array."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('[1,2,3,"hello",true,null]')
     var result = dumps(data, indent="  ")
@@ -98,7 +98,7 @@ def test_dumps_pretty_array() raises:
 
 def test_dumps_pretty_empty_object() raises:
     """Test pretty printing an empty object."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("{}")
     var result = dumps(data, indent="  ")
@@ -107,7 +107,7 @@ def test_dumps_pretty_empty_object() raises:
 
 def test_dumps_pretty_empty_array() raises:
     """Test pretty printing an empty array."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[]")
     var result = dumps(data, indent="  ")
@@ -116,7 +116,7 @@ def test_dumps_pretty_empty_array() raises:
 
 def test_dumps_compact_default() raises:
     """Test that dumps without indent is compact."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a":1,"b":2}')
     var result = dumps(data)

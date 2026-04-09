@@ -1,12 +1,12 @@
 # Architecture
 
-mojson provides a unified API with multiple high-performance backends: CPU (simdjson FFI or pure Mojo) and GPU (native Mojo kernels).
+json provides a unified API with multiple high-performance backends: CPU (simdjson FFI or pure Mojo) and GPU (native Mojo kernels).
 
 ## System Overview
 
 ```mermaid
 graph TB
-    subgraph "mojson API"
+    subgraph "json API"
         loads["loads(json_string)"]
         dumps["dumps(value)"]
     end
@@ -48,14 +48,14 @@ graph TB
 **Implementation:** Native Mojo JSON parser with optimized parsing
 
 **Location:**
-- `mojson/cpu/mojo_backend.mojo` - MojoJSONParser struct
-- `mojson/cpu/types.mojo` - Common JSON type constants
+- `json/cpu/mojo_backend.mojo` - MojoJSONParser struct
+- `json/cpu/types.mojo` - Common JSON type constants
 
 **Performance:** ~1.31 GB/s (on twitter.json)
 
 **Usage:**
 ```mojo
-from mojson import loads
+from json import loads
 var data = loads('{"key": "value"}')  # Default is Mojo backend
 ```
 
@@ -69,21 +69,21 @@ var data = loads('{"key": "value"}')  # Default is Mojo backend
 **Implementation:** FFI wrapper around [simdjson](https://github.com/simdjson/simdjson)
 
 **Location:**
-- `mojson/cpu/simdjson_ffi/` - C++ wrapper
-- `mojson/cpu/simdjson_ffi.mojo` - Mojo FFI bindings
+- `json/cpu/simdjson_ffi/` - C++ wrapper
+- `json/cpu/simdjson_ffi.mojo` - Mojo FFI bindings
 
 **Performance:** ~0.48 GB/s (on twitter.json)
 
 **Usage:**
 ```mojo
-from mojson import loads
+from json import loads
 var data = loads[target="cpu-simdjson"]('{"key": "value"}')
 ```
 
 ### CPU Parsing Flow (simdjson)
 
 1. Load JSON string into memory
-2. Call simdjson via FFI (`mojson/cpu/simdjson_ffi.mojo`)
+2. Call simdjson via FFI (`json/cpu/simdjson_ffi.mojo`)
 3. Recursively build `Value` tree from simdjson result
 4. Return parsed `Value`
 
@@ -162,7 +162,7 @@ flowchart LR
 
 The `Value` struct represents any JSON value (null, bool, int, float, string, array, object).
 
-See [API Reference](https://ehsanmok.github.io/mojson/) for complete `Value` methods.
+See [API Reference](https://ehsanmok.github.io/json/) for complete `Value` methods.
 
 ## Directory Structure
 
@@ -230,9 +230,9 @@ pixi run tests-cpu  # CPU parser tests
 pixi run tests-gpu  # GPU parser tests
 
 # Benchmarks
-pixi run bench-cpu   # CPU: mojson vs simdjson
-pixi run bench-gpu   # GPU: mojson only
-pixi run bench-gpu-cujson  # GPU: mojson vs cuJSON
+pixi run bench-cpu   # CPU: json vs simdjson
+pixi run bench-gpu   # GPU: json only
+pixi run bench-gpu-cujson  # GPU: json vs cuJSON
 ```
 
 ## Dependencies

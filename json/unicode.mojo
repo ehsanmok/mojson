@@ -1,4 +1,4 @@
-# mojson - Unicode handling for JSON
+# json - Unicode handling for JSON
 
 from std.collections import List
 

@@ -1,4 +1,4 @@
-# mojson - On-demand (lazy) JSON parsing
+# json - On-demand (lazy) JSON parsing
 #
 # LazyValue defers parsing until values are actually accessed.
 # This is efficient when you only need a few fields from a large document.

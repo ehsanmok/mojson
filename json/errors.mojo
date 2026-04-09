@@ -1,4 +1,4 @@
-# mojson - JSON error handling with line/column information
+# json - JSON error handling with line/column information
 
 
 def compute_line_column(source: String, position: Int) -> Tuple[Int, Int]:

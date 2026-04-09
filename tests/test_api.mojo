@@ -2,7 +2,7 @@
 
 from std.testing import assert_equal, assert_true, TestSuite
 
-from mojson import (
+from json import (
     loads,
     dumps,
     load,

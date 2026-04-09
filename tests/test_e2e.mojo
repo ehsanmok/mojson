@@ -1,4 +1,4 @@
-# End-to-end tests for mojson
+# End-to-end tests for json
 # Tests JSON roundtrip (loads -> dumps -> loads) and error handling
 #
 # Usage:
@@ -12,7 +12,7 @@
 from std.os import getenv
 from std.testing import assert_equal, assert_true, assert_raises, TestSuite
 
-from mojson import loads, dumps, Value
+from json import loads, dumps, Value
 
 
 def _is_gpu_mode() -> Bool:

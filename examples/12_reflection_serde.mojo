@@ -1,6 +1,6 @@
 """Example: Zero-boilerplate struct serde with compile-time reflection.
 
-Demonstrates mojson's reflection-based serialization and deserialization,
+Demonstrates json's reflection-based serialization and deserialization,
 which automatically maps struct fields to/from JSON without hand-writing
 to_json() or from_json() methods.
 
@@ -10,8 +10,8 @@ Supported field types:
     Nested structs, Value (raw JSON pass-through)
 """
 
-from mojson import loads, Value, Null
-from mojson import (
+from json import loads, Value, Null
+from json import (
     serialize_json,
     serialize_value,
     deserialize_json,

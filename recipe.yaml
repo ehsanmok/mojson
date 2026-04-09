@@ -1,8 +1,8 @@
-# rattler-build recipe for mojson
-# This builds the mojson package as a .mojopkg for distribution
+# rattler-build recipe for json
+# This builds the json package as a .mojopkg for distribution
 
 context:
-  name: mojson
+  name: json
   version: "0.1.0"
 
 package:
@@ -17,9 +17,9 @@ build:
     - mojo --version
     # Build the simdjson FFI wrapper
     - mkdir -p $PREFIX/lib
-    - $CXX -O3 -std=c++17 -fPIC -DNDEBUG -shared -o $PREFIX/lib/libsimdjson_wrapper.so mojson/cpu/simdjson_ffi/simdjson_wrapper.cpp -I$PREFIX/include -L$PREFIX/lib -lsimdjson
+    - $CXX -O3 -std=c++17 -fPIC -DNDEBUG -shared -o $PREFIX/lib/libsimdjson_wrapper.so json/cpu/simdjson_ffi/simdjson_wrapper.cpp -I$PREFIX/include -L$PREFIX/lib -lsimdjson
     # Build the Mojo package
-    - mojo package mojson -o $PREFIX/lib/mojo/mojson.mojopkg
+    - mojo package json -o $PREFIX/lib/mojo/json.mojopkg
 
 requirements:
   build:
@@ -32,11 +32,11 @@ requirements:
     - simdjson >=4.2.4,<5
 
 about:
-  homepage: https://github.com/ehsanmok/mojson
+  homepage: https://github.com/ehsanmok/json
   license: Apache-2.0
   summary: High-performance JSON library for Mojo with CPU and GPU support
   description: |
-    mojson is a high-performance JSON parsing library for Mojo.
+    json is a high-performance JSON parsing library for Mojo.
     Features include:
     - Fast CPU parsing via simdjson FFI
     - GPU-accelerated parsing for large files

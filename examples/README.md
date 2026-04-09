@@ -1,6 +1,6 @@
-# mojson Examples
+# json Examples
 
-This directory contains examples demonstrating the mojson library API.
+This directory contains examples demonstrating the json library API.
 
 ## Running Examples
 

@@ -1,7 +1,7 @@
 """Tests for Serializable/Deserializable traits and serialize/deserialize functions."""
 
 from std.testing import assert_equal, assert_true, assert_raises
-from mojson import (
+from json import (
     loads,
     to_json_value,
     get_string,
@@ -10,8 +10,8 @@ from mojson import (
     get_float,
     Value,
 )
-from mojson.serialize import Serializable, serialize
-from mojson.deserialize import Deserializable, deserialize
+from json.serialize import Serializable, serialize
+from json.deserialize import Deserializable, deserialize
 
 
 @fieldwise_init

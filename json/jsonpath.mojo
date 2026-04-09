@@ -1,4 +1,4 @@
-# mojson - JSONPath query language
+# json - JSONPath query language
 #
 # JSONPath is a query language for JSON, similar to XPath for XML.
 # Syntax examples:

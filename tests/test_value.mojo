@@ -1,8 +1,8 @@
-# Tests for mojson/value.mojo
+# Tests for json/value.mojo
 
 from std.testing import assert_equal, assert_true, assert_false, TestSuite
 
-from mojson import Value, Null
+from json import Value, Null
 
 
 def test_null_creation() raises:
@@ -122,7 +122,7 @@ def test_type_mismatch() raises:
 # JSON Pointer (RFC 6901) tests
 def test_json_pointer_empty() raises:
     """Test empty pointer returns whole document."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a":1}')
     var result = data.at("")
@@ -133,7 +133,7 @@ def test_json_pointer_empty() raises:
 
 def test_json_pointer_simple_object() raises:
     """Test simple object access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"name":"Alice","age":30}')
     var name = data.at("/name")
@@ -147,7 +147,7 @@ def test_json_pointer_simple_object() raises:
 
 def test_json_pointer_nested_object() raises:
     """Test nested object access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"user":{"name":"Bob","email":"bob@test.com"}}')
     var name = data.at("/user/name")
@@ -159,7 +159,7 @@ def test_json_pointer_nested_object() raises:
 
 def test_json_pointer_array_index() raises:
     """Test array index access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"items":[10,20,30]}')
     var first = data.at("/items/0")
@@ -174,7 +174,7 @@ def test_json_pointer_array_index() raises:
 
 def test_json_pointer_array_of_objects() raises:
     """Test array of objects access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"users":[{"name":"Alice"},{"name":"Bob"}]}')
     var first_name = data.at("/users/0/name")
@@ -186,7 +186,7 @@ def test_json_pointer_array_of_objects() raises:
 
 def test_json_pointer_escape_tilde() raises:
     """Test ~0 escape for tilde."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a~b":42}')
     var result = data.at("/a~0b")
@@ -195,7 +195,7 @@ def test_json_pointer_escape_tilde() raises:
 
 def test_json_pointer_escape_slash() raises:
     """Test ~1 escape for slash."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a/b":42}')
     var result = data.at("/a~1b")
@@ -204,7 +204,7 @@ def test_json_pointer_escape_slash() raises:
 
 def test_json_pointer_deep_nesting() raises:
     """Test deeply nested access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a":{"b":{"c":{"d":"deep"}}}}')
     var result = data.at("/a/b/c/d")
@@ -213,7 +213,7 @@ def test_json_pointer_deep_nesting() raises:
 
 def test_json_pointer_null_value() raises:
     """Test accessing null value."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"value":null}')
     var result = data.at("/value")
@@ -222,7 +222,7 @@ def test_json_pointer_null_value() raises:
 
 def test_json_pointer_bool_value() raises:
     """Test accessing boolean value."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"active":true,"deleted":false}')
     var active = data.at("/active")
@@ -237,7 +237,7 @@ def test_json_pointer_bool_value() raises:
 # Value iteration tests
 def test_array_items() raises:
     """Test iterating over array items."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[1, 2, 3]")
     var items = data.array_items()
@@ -249,7 +249,7 @@ def test_array_items() raises:
 
 def test_array_items_mixed() raises:
     """Test iterating over mixed array items."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('[1, "hello", true, null]')
     var items = data.array_items()
@@ -262,7 +262,7 @@ def test_array_items_mixed() raises:
 
 def test_object_items() raises:
     """Test iterating over object items."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"a": 1, "b": 2}')
     var items = data.object_items()
@@ -271,7 +271,7 @@ def test_object_items() raises:
 
 def test_array_getitem() raises:
     """Test array index access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[10, 20, 30]")
     assert_equal(Int(data[0].int_value()), 10)
@@ -281,7 +281,7 @@ def test_array_getitem() raises:
 
 def test_object_getitem() raises:
     """Test object key access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"name": "Alice", "age": 30}')
     assert_equal(data["name"].string_value(), "Alice")
@@ -290,7 +290,7 @@ def test_object_getitem() raises:
 
 def test_nested_access() raises:
     """Test nested array/object access."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"users": [{"name": "Alice"}, {"name": "Bob"}]}')
     var users = data["users"]
@@ -302,7 +302,7 @@ def test_nested_access() raises:
 # Value mutation tests
 def test_object_set_new_key() raises:
     """Test adding a new key to an object."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"name": "Alice"}')
     data.set("age", Value(30))
@@ -311,7 +311,7 @@ def test_object_set_new_key() raises:
 
 def test_object_set_update_key() raises:
     """Test updating an existing key."""
-    from mojson import loads
+    from json import loads
 
     var data = loads('{"name": "Alice"}')
     data.set("name", Value("Bob"))
@@ -320,7 +320,7 @@ def test_object_set_update_key() raises:
 
 def test_array_set() raises:
     """Test setting array element."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[1, 2, 3]")
     data.set(1, Value(20))
@@ -329,7 +329,7 @@ def test_array_set() raises:
 
 def test_array_append() raises:
     """Test appending to array."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[1, 2]")
     data.append(Value(3))
@@ -338,7 +338,7 @@ def test_array_append() raises:
 
 def test_array_append_empty() raises:
     """Test appending to empty array."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("[]")
     data.append(Value(1))
@@ -348,7 +348,7 @@ def test_array_append_empty() raises:
 
 def test_object_set_empty() raises:
     """Test adding to empty object."""
-    from mojson import loads
+    from json import loads
 
     var data = loads("{}")
     data.set("key", Value("value"))

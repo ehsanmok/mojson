@@ -1,4 +1,4 @@
-# mojson - JSON Schema validation (draft-07 subset)
+# json - JSON Schema validation (draft-07 subset)
 #
 # Validates JSON documents against JSON Schema.
 # Implements a useful subset of JSON Schema draft-07.

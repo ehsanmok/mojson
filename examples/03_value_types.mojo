@@ -2,7 +2,7 @@
 #
 # Demonstrates: Value type checking and value extraction
 
-from mojson import loads, dumps, Value, Null, make_array_value, make_object_value
+from json import loads, dumps, Value, Null, make_array_value, make_object_value
 from std.collections import List
 
 

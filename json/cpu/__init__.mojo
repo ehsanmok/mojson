@@ -1,4 +1,4 @@
-# mojson CPU backends
+# json CPU backends
 # Supports multiple backends:
 #   - simdjson (FFI): High-performance C++ backend (default)
 #   - mojo (native): Pure Mojo implementation (zero FFI)

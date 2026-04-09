@@ -85,7 +85,7 @@ trait JsonSerializable:
     """Override reflection serialization for a struct.
 
     Implement this to control exactly how a struct is serialized to a
-    mojson Value. The reflection serializer will call ``to_json_value``
+    json Value. The reflection serializer will call ``to_json_value``
     instead of walking fields.
 
     Example::
@@ -111,7 +111,7 @@ trait JsonDeserializable:
     """Override reflection deserialization for a struct.
 
     Implement this to control exactly how a struct is deserialized from
-    a mojson Value. The reflection deserializer will call
+    a json Value. The reflection deserializer will call
     ``from_json_value`` instead of walking fields.
 
     Example::
@@ -165,7 +165,7 @@ def serialize_json[T: AnyType, pretty: Bool = False](value: T) raises -> String:
 
 
 def serialize_value[T: AnyType](value: T) raises -> Value:
-    """Serialize a struct to a mojson Value via compile-time reflection.
+    """Serialize a struct to a json Value via compile-time reflection.
 
     Parameters:
         T: The struct type (inferred).
@@ -174,7 +174,7 @@ def serialize_value[T: AnyType](value: T) raises -> Value:
         value: The struct instance.
 
     Returns:
-        A mojson Value representing the JSON.
+        A json Value representing the JSON.
     """
     return loads(_ser[T](value))
 
@@ -210,7 +210,7 @@ def deserialize_json[T: _JsonStruct, target: StaticString = "cpu"](
 
 
 def deserialize_value[T: _JsonStruct](json: Value) raises -> T:
-    """Deserialize a mojson Value into a struct via compile-time reflection.
+    """Deserialize a json Value into a struct via compile-time reflection.
 
     If ``T`` conforms to ``JsonDeserializable``, the custom
     ``from_json_value`` is called instead of walking fields.
@@ -219,7 +219,7 @@ def deserialize_value[T: _JsonStruct](json: Value) raises -> T:
         T: The target struct type (Defaultable & Movable).
 
     Args:
-        json: A mojson Value (must be a JSON object).
+        json: A json Value (must be a JSON object).
 
     Returns:
         A populated struct.

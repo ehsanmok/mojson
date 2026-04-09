@@ -1,4 +1,4 @@
-# mojson - NDJSON (Newline-Delimited JSON) support
+# json - NDJSON (Newline-Delimited JSON) support
 #
 # NDJSON format: Each line is a separate JSON value
 # Example:

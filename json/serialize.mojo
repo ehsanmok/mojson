@@ -1,4 +1,4 @@
-# mojson - JSON serialization
+# json - JSON serialization
 
 from .value import Value
 

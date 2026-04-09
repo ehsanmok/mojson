@@ -5,8 +5,8 @@ from std.gpu.host import DeviceContext
 from std.collections import List
 from std.memory import memcpy
 
-from mojson.gpu.bracket_match import match_brackets_gpu
-from mojson.types import JSONResult
+from json.gpu.bracket_match import match_brackets_gpu
+from json.types import JSONResult
 
 
 def generate_brackets(depth: Int, count: Int) -> List[UInt8]:

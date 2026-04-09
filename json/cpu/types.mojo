@@ -1,4 +1,4 @@
-# mojson CPU backend - Common types and constants
+# json CPU backend - Common types and constants
 # Backend-agnostic definitions used by all CPU parsing backends
 
 # =============================================================================

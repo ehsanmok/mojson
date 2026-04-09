@@ -1,4 +1,4 @@
-# mojson - JSON Patch (RFC 6902) and JSON Merge Patch (RFC 7396)
+# json - JSON Patch (RFC 6902) and JSON Merge Patch (RFC 7396)
 #
 # JSON Patch: Apply a sequence of operations to a JSON document
 # JSON Merge Patch: Merge two JSON documents together

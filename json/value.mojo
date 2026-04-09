@@ -1,4 +1,4 @@
-# mojson - Value type for JSON values
+# json - Value type for JSON values
 
 from std.collections import List
 from .unicode import unescape_json_string

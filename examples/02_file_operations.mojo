@@ -2,7 +2,7 @@
 #
 # Demonstrates: load() and dump() for file-based JSON operations
 
-from mojson import load, dump, loads, dumps, Value
+from json import load, dump, loads, dumps, Value
 from std.os import remove
 
 

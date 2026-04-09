@@ -1,4 +1,4 @@
-# mojson Backend Comparison Benchmark
+# json Backend Comparison Benchmark
 # Compares simdjson FFI backend vs pure Mojo backend
 #
 # Usage:
@@ -16,7 +16,7 @@ from std.benchmark import (
 )
 from std.pathlib import Path
 from std.sys import argv
-from mojson import loads
+from json import loads
 
 
 def main() raises:
@@ -31,7 +31,7 @@ def main() raises:
     print(
         "========================================================================"
     )
-    print("mojson Backend Comparison Benchmark")
+    print("json Backend Comparison Benchmark")
     print("  simdjson (FFI) vs Mojo (native, default)")
     print(
         "========================================================================"

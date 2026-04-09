@@ -3,8 +3,8 @@
 
 from std.testing import assert_equal, assert_true, assert_false, TestSuite
 
-from mojson import loads
-from mojson.value import Value
+from json import loads
+from json.value import Value
 
 
 # =============================================================================

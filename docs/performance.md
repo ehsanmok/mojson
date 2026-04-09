@@ -1,6 +1,6 @@
 # Performance Deep Dive
 
-This document explains why mojson is faster than existing parsers and the key optimizations that make it possible.
+This document explains why json is faster than existing parsers and the key optimizations that make it possible.
 
 ## GPU: 2x Faster than cuJSON
 
@@ -9,7 +9,7 @@ On NVIDIA B200 with 804MB `twitter_large_record.json`:
 | Parser | Throughput | Time | Speedup |
 |--------|------------|------|---------|
 | cuJSON (CUDA C++) | 3.6 GB/s | 236 ms | baseline |
-| **mojson GPU** | **7.0 GB/s** | **121 ms** | **2.0x** |
+| **json GPU** | **7.0 GB/s** | **121 ms** | **2.0x** |
 
 *Based on warmed-up runs. Pinned memory path (comparable scope to cuJSON).*
 
@@ -22,7 +22,7 @@ On NVIDIA B200 with 804MB `twitter_large_record.json`:
 | **Hierarchical Prefix Sums** | GPU: efficient | Parallel scans using block primitives |
 | **Fused Kernels** | Lower overhead | Single-pass quote detection + structural bitmap |
 
-## Why mojson is Faster: The Stream Compaction Advantage
+## Why json is Faster: The Stream Compaction Advantage
 
 ### The Problem with cuJSON
 
@@ -32,9 +32,9 @@ cuJSON transfers **all structural character data** back to CPU:
 - Structural chars: ~58% of input = **465MB transfer**
 - D2H time: **~160ms** (bottleneck)
 
-### mojson's Solution
+### json's Solution
 
-mojson uses **GPU stream compaction** to extract only position indices:
+json uses **GPU stream compaction** to extract only position indices:
 
 - Input: 804MB JSON file
 - Position array: ~1 million positions × 4 bytes = **4MB transfer**
@@ -58,10 +58,10 @@ TOTAL:                ~236 ms
 Throughput:           3.6 GB/s
 ```
 
-### mojson GPU Pipeline (~121ms total)
+### json GPU Pipeline (~121ms total)
 
 ```
-mojson pinned breakdown (average):
+json pinned breakdown (average):
 ├─ H2D transfer:       ~15 ms   (804MB → GPU, pinned memory)
 ├─ GPU kernels:        ~30 ms   (quote detection + prefix sums + bitmap)
 ├─ Stream compact:     ~50 ms   (GPU position extraction)
@@ -74,7 +74,7 @@ Throughput:           7.0 GB/s
 
 ## Architecture Comparison
 
-| Aspect | cuJSON | mojson |
+| Aspect | cuJSON | json |
 |--------|--------|--------|
 | **Input memory** | Pinned (cudaMallocHost) | Pinned (HostBuffer) |
 | **H2D transfer** | ✓ (15ms) | ✓ (15ms) |
@@ -85,7 +85,7 @@ Throughput:           7.0 GB/s
 
 ## Performance Metrics Explained
 
-mojson reports three timing metrics:
+json reports three timing metrics:
 
 | Metric | What It Includes | Use Case |
 |--------|------------------|----------|
@@ -113,7 +113,7 @@ GPU parallelism shines with large files where the overhead is amortized.
 
 ## CPU Performance
 
-mojson has two CPU backends:
+json has two CPU backends:
 
 | Backend | Throughput | Notes |
 |---------|------------|-------|
@@ -207,7 +207,7 @@ All benchmarks are reproducible using pinned git submodules:
 
 ```bash
 # Clone with exact versions
-git clone --recursive https://github.com/ehsanmok/mojson.git
+git clone --recursive https://github.com/ehsanmok/json.git
 
 # Build comparison benchmarks
 pixi run build-cujson

@@ -17,7 +17,7 @@ See [GPU requirements](https://docs.modular.com/max/packages#gpu-compatibility).
 
 ## Installation
 
-Add mojson to your project's `pixi.toml`:
+Add json to your project's `pixi.toml`:
 
 ```toml
 [workspace]
@@ -25,7 +25,7 @@ channels = ["https://conda.modular.com/max-nightly", "conda-forge"]
 preview = ["pixi-build"]
 
 [dependencies]
-mojson = { git = "https://github.com/ehsanmok/mojson.git" }
+json = { git = "https://github.com/ehsanmok/json.git" }
 ```
 
 Then run:
@@ -39,7 +39,7 @@ pixi install
 ## Quick Start
 
 ```mojo
-from mojson import loads, dumps, load, dump
+from json import loads, dumps, load, dump
 
 # Parse & serialize strings
 var data = loads('{"name": "Alice", "scores": [95, 87, 92]}')
@@ -79,11 +79,11 @@ with zero external dependencies.
 
 ## Documentation
 
-- [Architecture](https://github.com/ehsanmok/mojson/blob/main/docs/architecture.md) — CPU/GPU backend design
-- [Performance](https://github.com/ehsanmok/mojson/blob/main/docs/performance.md) — Optimization deep dive
-- [Benchmarks](https://github.com/ehsanmok/mojson/blob/main/benchmark/README.md) — Reproducible benchmarks
-- [Examples](https://github.com/ehsanmok/mojson/tree/main/examples) — 11 runnable examples covering all features
-- [Source](https://github.com/ehsanmok/mojson) — GitHub repository
+- [Architecture](https://github.com/ehsanmok/json/blob/main/docs/architecture.md) — CPU/GPU backend design
+- [Performance](https://github.com/ehsanmok/json/blob/main/docs/performance.md) — Optimization deep dive
+- [Benchmarks](https://github.com/ehsanmok/json/blob/main/benchmark/README.md) — Reproducible benchmarks
+- [Examples](https://github.com/ehsanmok/json/tree/main/examples) — 11 runnable examples covering all features
+- [Source](https://github.com/ehsanmok/json) — GitHub repository
 
 ## API Reference
 
@@ -92,7 +92,7 @@ The entire API is built around 4 functions: `loads`, `dumps`, `load`, `dump`.
 ### loads() - Parse Strings
 
 ```mojo
-from mojson import loads, ParserConfig
+from json import loads, ParserConfig
 
 # Basic parsing (uses fast pure Mojo backend by default)
 var data = loads('{"name": "Alice", "age": 30}')
@@ -118,7 +118,7 @@ var name = lazy.get("/users/0/name")  # Only parses this path
 ### dumps() - Serialize Strings
 
 ```mojo
-from mojson import dumps, SerializerConfig
+from json import dumps, SerializerConfig
 
 # Compact output
 var json = dumps(data)
@@ -137,7 +137,7 @@ var ndjson = dumps[format="ndjson"](list_of_values)
 ### load() - Parse Files
 
 ```mojo
-from mojson import load
+from json import load
 
 # Load JSON file
 var data = load("config.json")
@@ -159,7 +159,7 @@ parser.close()
 ### dump() - Write Files
 
 ```mojo
-from mojson import dump
+from json import dump
 
 # Basic file writing
 var f = open("output.json", "w")
@@ -242,7 +242,7 @@ arr.append(Value("new item"))       # Append to end
 ### Creating Values
 
 ```mojo
-from mojson import Value, Null
+from json import Value, Null
 
 var null_val = Value(Null())
 var bool_val = Value(True)
@@ -257,7 +257,7 @@ Automatically serialize and deserialize structs via compile-time reflection.
 No hand-written `to_json()` or `from_json()` methods required.
 
 ```mojo
-from mojson import serialize_json, deserialize_json
+from json import serialize_json, deserialize_json
 
 @fieldwise_init
 struct Person(Defaultable, Movable):
@@ -277,7 +277,7 @@ print(serialize_json[pretty=True](person))
 var fast = deserialize_json[Person, target="gpu"](json)
 
 # Non-raising (returns Optional)
-from mojson import try_deserialize_json
+from json import try_deserialize_json
 var maybe = try_deserialize_json[Person]('bad json')  # None
 ```
 
@@ -289,7 +289,7 @@ List[T], Optional[T], nested structs, Value (raw JSON pass-through).
 Override reflection for specific types:
 
 ```mojo
-from mojson import JsonSerializable, JsonDeserializable
+from json import JsonSerializable, JsonDeserializable
 
 struct Color(JsonSerializable, Defaultable, Movable):
     var r: Int
@@ -326,7 +326,7 @@ For full control, implement `Serializable` and `Deserializable` traits manually.
 ### Serializable Trait
 
 ```mojo
-from mojson import Serializable, serialize, to_json_value
+from json import Serializable, serialize, to_json_value
 
 struct Person(Serializable):
     var name: String
@@ -342,7 +342,7 @@ var json = serialize(Person("Alice", 30))  # {"name":"Alice","age":30}
 ### Deserializable Trait
 
 ```mojo
-from mojson import Deserializable, deserialize, get_string, get_int
+from json import Deserializable, deserialize, get_string, get_int
 
 struct Person(Deserializable):
     var name: String
@@ -397,7 +397,7 @@ var data = loads[target="gpu"](large_json)
 ## NDJSON (Newline-Delimited JSON)
 
 ```mojo
-from mojson import loads, dumps
+from json import loads, dumps
 
 # Parse NDJSON string -> List[Value]
 var values = loads[format="ndjson"]('{"a":1}\n{"a":2}\n{"a":3}')
@@ -409,7 +409,7 @@ var ndjson = dumps[format="ndjson"](values)
 ## Lazy/On-Demand Parsing
 
 ```mojo
-from mojson import loads
+from json import loads
 
 # Create lazy value (no parsing yet)
 var lazy = loads[lazy=True](huge_json_string)
@@ -424,7 +424,7 @@ var age = lazy.get_int("/users/0/age")
 For files larger than memory:
 
 ```mojo
-from mojson import load
+from json import load
 
 # Stream NDJSON file
 var parser = load[streaming=True]("logs.ndjson")
@@ -437,7 +437,7 @@ parser.close()
 ## Parser Configuration
 
 ```mojo
-from mojson import loads, ParserConfig
+from json import loads, ParserConfig
 
 var config = ParserConfig(
     allow_comments=True,       # Allow // and /* */
@@ -450,7 +450,7 @@ var data = loads('{"a": 1,} // comment', config)
 ## Serializer Configuration
 
 ```mojo
-from mojson import dumps, SerializerConfig
+from json import dumps, SerializerConfig
 
 var config = SerializerConfig(
     indent="  ",               # Pretty print
@@ -463,7 +463,7 @@ var json = dumps(value, config)
 ## JSON Patch (RFC 6902)
 
 ```mojo
-from mojson import apply_patch, loads
+from json import apply_patch, loads
 
 var doc = loads('{"name":"Alice","age":30}')
 var patch = loads('[{"op":"replace","path":"/name","value":"Bob"}]')
@@ -476,7 +476,7 @@ Supported operations: `add`, `remove`, `replace`, `move`, `copy`, `test`
 ## JSON Merge Patch (RFC 7396)
 
 ```mojo
-from mojson import merge_patch, create_merge_patch, loads
+from json import merge_patch, create_merge_patch, loads
 
 var target = loads('{"a":1,"b":2}')
 var patch = loads('{"b":null,"c":3}')  # null removes keys
@@ -487,7 +487,7 @@ var result = merge_patch(target, patch)
 ## JSONPath Queries
 
 ```mojo
-from mojson import jsonpath_query, jsonpath_one, loads
+from json import jsonpath_query, jsonpath_one, loads
 
 var doc = loads('{"users":[{"name":"Alice"},{"name":"Bob"}]}')
 var names = jsonpath_query(doc, "$.users[*].name")
@@ -499,7 +499,7 @@ Supported syntax: `$`, `.key`, `[n]`, `[*]`, `..`, `[start:end]`, `[?expr]`
 ## JSON Schema Validation
 
 ```mojo
-from mojson import validate, is_valid, loads
+from json import validate, is_valid, loads
 
 var schema = loads('{"type":"object","required":["name"]}')
 var doc = loads('{"name":"Alice"}')

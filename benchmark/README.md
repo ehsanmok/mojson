@@ -1,17 +1,17 @@
-# mojson Benchmarks
+# json Benchmarks
 
-Comprehensive benchmarks comparing mojson against reference implementations (cuJSON for GPU, simdjson for CPU).
+Comprehensive benchmarks comparing json against reference implementations (cuJSON for GPU, simdjson for CPU).
 
 ## Quick Start
 
 ```bash
-# GPU benchmark (mojson vs cuJSON) - apples-to-apples comparison
+# GPU benchmark (json vs cuJSON) - apples-to-apples comparison
 pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
 
-# GPU benchmark (mojson only with timing breakdown)
+# GPU benchmark (json only with timing breakdown)
 pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 
-# CPU benchmark (mojson vs simdjson)
+# CPU benchmark (json vs simdjson)
 pixi run bench-cpu benchmark/datasets/twitter.json
 ```
 
@@ -20,8 +20,8 @@ pixi run bench-cpu benchmark/datasets/twitter.json
 ### 1. Clone with Submodules
 
 ```bash
-git clone --recursive https://github.com/user/mojson.git
-cd mojson
+git clone --recursive https://github.com/user/json.git
+cd json
 
 # Or if already cloned:
 git submodule update --init --recursive
@@ -43,16 +43,16 @@ This builds `benchmark/cuJSON/build/cujson_benchmark` from the pinned submodule 
 
 ## Benchmark Results
 
-### GPU: mojson vs cuJSON (NVIDIA B200)
+### GPU: json vs cuJSON (NVIDIA B200)
 
 **Dataset:** 804MB `twitter_large_record.json`
 
 | Parser | Time | Throughput | Speedup |
 |--------|------|------------|---------|
 | cuJSON (CUDA C++) | 182 ms | 4.6 GB/s | baseline |
-| **mojson GPU** | **103 ms** | **8.2 GB/s** | **1.8x** |
+| **json GPU** | **103 ms** | **8.2 GB/s** | **1.8x** |
 
-### CPU: mojson (simdjson FFI)
+### CPU: json (simdjson FFI)
 
 **Dataset:** 804MB `twitter_large_record.json`
 
@@ -80,7 +80,7 @@ pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 
 ### What We Measure
 
-mojson reports three metrics to provide a complete picture:
+json reports three metrics to provide a complete picture:
 
 | Metric | What It Includes | Use Case |
 |--------|------------------|----------|
@@ -94,7 +94,7 @@ mojson reports three metrics to provide a complete picture:
 
 #### What Both Benchmarks Measure
 
-| Step | cuJSON | mojson |
+| Step | cuJSON | json |
 |------|--------|--------|
 | **Input memory** | Pinned (cudaMallocHost) | Pinned (HostBuffer) |
 | **H2D transfer** | ✓ (copy to GPU) | ✓ (copy to GPU) |
@@ -108,7 +108,7 @@ Both parsers produce the same output: an array of structural character positions
 #### Detailed Timing Breakdown (804MB file)
 
 ```
-cuJSON (182ms total):                mojson pinned (103ms total):
+cuJSON (182ms total):                json pinned (103ms total):
 ├─ H2D transfer:     15.2 ms         ├─ H2D transfer:      ~15 ms
 ├─ Validation:        1.5 ms         ├─ GPU kernels:       ~25 ms
 ├─ Tokenization:      5.5 ms         │  ├─ Quote detection
@@ -121,7 +121,7 @@ cuJSON (182ms total):                mojson pinned (103ms total):
 Throughput: 4.6 GB/s                 Throughput: 8.2 GB/s
 ```
 
-### Why mojson is Faster
+### Why json is Faster
 
 The **1.8x speedup** comes primarily from **GPU stream compaction**:
 
@@ -129,7 +129,7 @@ The **1.8x speedup** comes primarily from **GPU stream compaction**:
   - Structural chars = ~58% of input = 465MB for 804MB file
   - D2H transfer time: ~160ms
 
-- **mojson approach:** Use GPU stream compaction to extract only positions
+- **json approach:** Use GPU stream compaction to extract only positions
   - Position array = ~1M positions × 4 bytes = 4MB
   - D2H transfer time: ~10ms
 
@@ -142,8 +142,8 @@ The "Raw GPU parse" metric (215ms, 3.9 GB/s) includes the overhead of copying fr
 | Metric | Time | Throughput | Notes |
 |--------|------|------------|-------|
 | cuJSON (from pinned) | 182 ms | 4.6 GB/s | Assumes input is already pinned |
-| mojson pinned | 103 ms | 8.2 GB/s | Same assumption (fair comparison) |
-| mojson raw (from pageable) | 223 ms | 3.8 GB/s | Realistic scenario with memcpy overhead |
+| json pinned | 103 ms | 8.2 GB/s | Same assumption (fair comparison) |
+| json raw (from pageable) | 223 ms | 3.8 GB/s | Realistic scenario with memcpy overhead |
 
 The pageable→pinned copy takes ~120ms for 804MB. In practice, you can avoid this by:
 1. Using `HostBuffer` for initial file reads
@@ -168,10 +168,10 @@ The Value tree construction is currently CPU-bound. This is the full application
 ### GPU Benchmarks
 
 ```bash
-# Compare mojson GPU vs cuJSON (recommended)
+# Compare json GPU vs cuJSON (recommended)
 pixi run bench-gpu-cujson benchmark/datasets/twitter_large_record.json
 
-# mojson GPU only (with detailed timing breakdown)
+# json GPU only (with detailed timing breakdown)
 pixi run bench-gpu benchmark/datasets/twitter_large_record.json
 
 # Try different datasets
@@ -181,7 +181,7 @@ pixi run bench-gpu-cujson benchmark/datasets/walmart_large_record.json
 ### CPU Benchmarks
 
 ```bash
-# Compare mojson CPU vs native simdjson
+# Compare json CPU vs native simdjson
 pixi run bench-cpu benchmark/datasets/twitter.json
 
 # Try different datasets
@@ -273,8 +273,8 @@ simdjson is included as a git submodule at `src/cpu/simdjson_ffi/simdjson/`. The
 ```
 benchmark/
 ├── mojo/
-│   ├── bench_cpu.mojo          # CPU: mojson vs simdjson
-│   └── bench_gpu.mojo          # GPU: mojson detailed timing
+│   ├── bench_cpu.mojo          # CPU: json vs simdjson
+│   └── bench_gpu.mojo          # GPU: json detailed timing
 ├── cuJSON/                      # cuJSON submodule (pinned version)
 │   └── build/
 │       └── cujson_benchmark    # Built by pixi run build-cujson

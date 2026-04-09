@@ -2,8 +2,8 @@
 
 from std.testing import assert_equal, assert_true, assert_raises
 from std.collections import Optional, List
-from mojson import loads, Value, Null
-from mojson.reflection import (
+from json import loads, Value, Null
+from json.reflection import (
     serialize_json,
     serialize_value,
     deserialize_json,

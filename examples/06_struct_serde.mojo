@@ -4,9 +4,9 @@ This example shows how to implement Serializable and Deserializable traits
 for your structs to enable clean serialize/deserialize functions.
 """
 
-from mojson import loads, Value
-from mojson.serialize import Serializable, serialize, to_json_value
-from mojson.deserialize import Deserializable, deserialize, get_string, get_int, get_bool
+from json import loads, Value
+from json.serialize import Serializable, serialize, to_json_value
+from json.deserialize import Deserializable, deserialize, get_string, get_int, get_bool
 
 
 @fieldwise_init

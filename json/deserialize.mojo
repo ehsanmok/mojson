@@ -1,4 +1,4 @@
-# mojson - JSON field extraction helpers
+# json - JSON field extraction helpers
 
 from .value import Value
 from .parser import loads

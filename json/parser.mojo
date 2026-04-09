@@ -1,4 +1,4 @@
-# mojson - JSON Parser
+# json - JSON Parser
 # Unified CPU/GPU parser with compile-time target and backend selection
 
 from std.collections import List
