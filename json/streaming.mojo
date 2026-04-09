@@ -108,7 +108,7 @@ struct StreamingParser:
     def _read_chunk(mut self) raises:
         """Read a chunk of data from the file."""
         var chunk = self._file.read(self._chunk_size)
-        if len(chunk) == 0:
+        if chunk.byte_length() == 0:
             self._eof = True
         else:
             self._buffer += chunk
@@ -120,7 +120,7 @@ struct StreamingParser:
             if buffer_bytes[i] == UInt8(ord("\n")):
                 return True
         # If EOF and buffer has content, treat it as complete
-        if self._eof and len(self._buffer) > 0:
+        if self._eof and self._buffer.byte_length() > 0:
             return True
         return False
 
@@ -271,7 +271,7 @@ struct ArrayStreamingParser:
     def _read_chunk(mut self) raises:
         """Read a chunk of data."""
         var chunk = self._file.read(self._chunk_size)
-        if len(chunk) == 0:
+        if chunk.byte_length() == 0:
             self._eof = True
         else:
             self._buffer += chunk

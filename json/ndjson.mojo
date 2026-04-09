@@ -87,7 +87,7 @@ struct NDJSONIterator[target: StaticString = "cpu"]:
         """Initialize iterator with NDJSON data."""
         self._data = data
         self._pos = 0
-        self._len = len(data)
+        self._len = data.byte_length()
 
     def has_next(self) -> Bool:
         """Check if there are more JSON values to parse."""

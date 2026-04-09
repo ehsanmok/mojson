@@ -262,8 +262,6 @@ def _parse_json_gpu_from_pinned_impl(
     total_padded_32: Int,
 ) raises -> JSONResult:
     """GPU parsing from pre-loaded pinned memory - skips memcpy overhead."""
-    from time import perf_counter_ns
-
     var result = JSONResult()
     result.file_size = size
 
