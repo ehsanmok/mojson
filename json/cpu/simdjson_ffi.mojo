@@ -94,12 +94,12 @@ struct SimdjsonFFI:
         self._create_parser = self._lib.get_function[def() abi("C") -> Int](
             "simdjson_create_parser"
         )
-        self._destroy_parser = self._lib.get_function[def(Int) abi("C") -> None](
-            "simdjson_destroy_parser"
-        )
-        self._parse = self._lib.get_function[def(Int, Int, Int) abi("C") -> Int](
-            "simdjson_parse"
-        )
+        self._destroy_parser = self._lib.get_function[
+            def(Int) abi("C") -> None
+        ]("simdjson_destroy_parser")
+        self._parse = self._lib.get_function[
+            def(Int, Int, Int) abi("C") -> Int
+        ]("simdjson_parse")
         self._get_root = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_get_root"
         )
@@ -108,18 +108,18 @@ struct SimdjsonFFI:
         self._value_get_type = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_value_get_type"
         )
-        self._value_get_bool = self._lib.get_function[def(Int, Int) abi("C") -> Int](
-            "simdjson_value_get_bool"
-        )
-        self._value_get_int64 = self._lib.get_function[def(Int, Int) abi("C") -> Int](
-            "simdjson_value_get_int64"
-        )
-        self._value_get_uint64 = self._lib.get_function[def(Int, Int) abi("C") -> Int](
-            "simdjson_value_get_uint64"
-        )
-        self._value_get_double = self._lib.get_function[def(Int, Int) abi("C") -> Int](
-            "simdjson_value_get_double"
-        )
+        self._value_get_bool = self._lib.get_function[
+            def(Int, Int) abi("C") -> Int
+        ]("simdjson_value_get_bool")
+        self._value_get_int64 = self._lib.get_function[
+            def(Int, Int) abi("C") -> Int
+        ]("simdjson_value_get_int64")
+        self._value_get_uint64 = self._lib.get_function[
+            def(Int, Int) abi("C") -> Int
+        ]("simdjson_value_get_uint64")
+        self._value_get_double = self._lib.get_function[
+            def(Int, Int) abi("C") -> Int
+        ]("simdjson_value_get_double")
         self._value_get_string = self._lib.get_function[
             def(Int, Int, Int) abi("C") -> Int
         ]("simdjson_value_get_string")
@@ -131,18 +131,18 @@ struct SimdjsonFFI:
         self._array_begin = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_array_begin"
         )
-        self._array_iter_done = self._lib.get_function[def(Int) abi("C") -> Int](
-            "simdjson_array_iter_done"
-        )
+        self._array_iter_done = self._lib.get_function[
+            def(Int) abi("C") -> Int
+        ]("simdjson_array_iter_done")
         self._array_iter_get = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_array_iter_get"
         )
-        self._array_iter_next = self._lib.get_function[def(Int) abi("C") -> None](
-            "simdjson_array_iter_next"
-        )
-        self._array_iter_free = self._lib.get_function[def(Int) abi("C") -> None](
-            "simdjson_array_iter_free"
-        )
+        self._array_iter_next = self._lib.get_function[
+            def(Int) abi("C") -> None
+        ]("simdjson_array_iter_next")
+        self._array_iter_free = self._lib.get_function[
+            def(Int) abi("C") -> None
+        ]("simdjson_array_iter_free")
         self._array_count = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_array_count"
         )
@@ -151,21 +151,21 @@ struct SimdjsonFFI:
         self._object_begin = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_object_begin"
         )
-        self._object_iter_done = self._lib.get_function[def(Int) abi("C") -> Int](
-            "simdjson_object_iter_done"
-        )
+        self._object_iter_done = self._lib.get_function[
+            def(Int) abi("C") -> Int
+        ]("simdjson_object_iter_done")
         self._object_iter_get_key = self._lib.get_function[
             def(Int, Int, Int) abi("C") -> None
         ]("simdjson_object_iter_get_key")
-        self._object_iter_get_value = self._lib.get_function[def(Int) abi("C") -> Int](
-            "simdjson_object_iter_get_value"
-        )
-        self._object_iter_next = self._lib.get_function[def(Int) abi("C") -> None](
-            "simdjson_object_iter_next"
-        )
-        self._object_iter_free = self._lib.get_function[def(Int) abi("C") -> None](
-            "simdjson_object_iter_free"
-        )
+        self._object_iter_get_value = self._lib.get_function[
+            def(Int) abi("C") -> Int
+        ]("simdjson_object_iter_get_value")
+        self._object_iter_next = self._lib.get_function[
+            def(Int) abi("C") -> None
+        ]("simdjson_object_iter_next")
+        self._object_iter_free = self._lib.get_function[
+            def(Int) abi("C") -> None
+        ]("simdjson_object_iter_free")
         self._object_count = self._lib.get_function[def(Int) abi("C") -> Int](
             "simdjson_object_count"
         )

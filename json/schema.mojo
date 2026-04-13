@@ -361,7 +361,9 @@ def _validate_string(
         if pat.startswith("^") and pat.endswith("$"):
             # Exact match
             var inner = String(
-                String(unsafe_from_utf8=pat.as_bytes()[1 : pat.byte_length() - 1])
+                String(
+                    unsafe_from_utf8=pat.as_bytes()[1 : pat.byte_length() - 1]
+                )
             )
             if s != inner:
                 result.add_error(path, "String does not match pattern")
