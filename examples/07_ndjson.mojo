@@ -93,7 +93,7 @@ def main() raises:
     print()
 
     # Cleanup
-    import os
-    os.remove("example_data.ndjson")
+    import std.os
+    std.os.remove("example_data.ndjson")
 
     print("Done!")

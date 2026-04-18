@@ -17,7 +17,7 @@ from json import loads, dumps, Value
 
 def _is_gpu_mode() -> Bool:
     var val = getenv("MOJSON_TEST_GPU")
-    return len(val) > 0 and val != "0" and val != "false"
+    return val.byte_length() > 0 and val != "0" and val != "false"
 
 
 def _test_loads(json: String) raises -> Value:
