@@ -9,6 +9,7 @@
 from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
 from std.gpu.globals import MAX_THREADS_PER_BLOCK_METADATA
+from std.gpu.primitives import block
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
@@ -73,7 +74,7 @@ def compute_depth_delta_kernel(
     depth_deltas[gid] = delta
 
 
-# ===== Kernel 2: Block-level inclusive prefix sum for depths =====
+# ===== Kernel 2: Parallel block-local exclusive prefix sum for depths =====
 @__llvm_metadata(
     MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
         Int32(Int(BLOCK_SIZE_OPT))
@@ -81,25 +82,41 @@ def compute_depth_delta_kernel(
 )
 def depth_prefix_sum_kernel(
     depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
-    depths: UnsafePointer[Int32, MutAnyOrigin],
+    depth_prefix: UnsafePointer[Int32, MutAnyOrigin],
     block_totals: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
 ):
-    """Compute inclusive prefix sum of depth deltas (Metal + CUDA compatible).
+    """Parallel block-local exclusive prefix sum of depth deltas.
 
-    Sequential single-thread scan avoids warp-shuffle intrinsics that the
-    Metal backend does not support. The depth array is small (one entry per
-    structural character) so this is fast in practice.
+    Uses `block.prefix_sum` on `Int32` (which expands to warp-shuffle
+    scans internally). Each block of `BLOCK_SIZE_OPT` threads scans its
+    `BLOCK_SIZE_OPT` elements in parallel, writes the exclusive scan to
+    `depth_prefix`, and records the block's running total in
+    `block_totals[block_id]`. The hierarchical helper
+    `_compute_depth_prefix_sum` then aggregates the per-block totals
+    across levels.
     """
-    if Int(thread_idx.x) != 0 or Int(block_idx.x) != 0:
-        return
+    var tid = Int(thread_idx.x)
+    var bid = Int(block_idx.x)
+    var gid = bid * Int(block_dim.x) + tid
 
-    var running_sum: Int32 = 0
-    for i in range(Int(n)):
-        running_sum += depth_deltas[i]
-        depths[i] = running_sum
+    var val: Int32 = 0
+    if gid < Int(n):
+        val = depth_deltas[gid]
 
-    block_totals[0] = running_sum
+    var prefix = block.prefix_sum[
+        exclusive=True, block_size=BLOCK_SIZE_OPT
+    ](val)
+
+    if gid < Int(n):
+        depth_prefix[gid] = prefix
+
+    # Last active thread in the block writes the block total.
+    var block_end = min((bid + 1) * Int(block_dim.x), Int(n))
+    var last_in_block = block_end - 1 - bid * Int(block_dim.x)
+
+    if tid == last_in_block:
+        block_totals[bid] = prefix + val
 
 
 # ===== Kernel 3: Add block offsets to depths =====
@@ -109,19 +126,30 @@ def depth_prefix_sum_kernel(
     )
 )
 def add_depth_offsets_kernel(
-    depths: UnsafePointer[Int32, MutAnyOrigin],
+    depth_prefix_excl: UnsafePointer[Int32, MutAnyOrigin],
     block_offsets: UnsafePointer[Int32, MutAnyOrigin],
+    depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
+    depths_out: UnsafePointer[Int32, MutAnyOrigin],
     n: UInt,
 ):
-    """Add block offset to each depth value."""
+    """Convert block-local exclusive prefix into a global inclusive scan.
+
+    Combines three inputs in one pass:
+      - `depth_prefix_excl[gid]`: exclusive scan within this CTA.
+      - `block_offsets[bid]`    : exclusive prefix of per-CTA totals.
+      - `depth_deltas[gid]`     : original +1/-1/0 delta.
+
+    Writes the global inclusive depth `depths_out[gid] = sum(deltas[0..=gid])`.
+    """
     var bid = Int(block_idx.x)
     var gid = bid * Int(block_dim.x) + Int(thread_idx.x)
 
     if gid >= Int(n):
         return
 
-    if bid > 0:
-        depths[gid] = depths[gid] + block_offsets[bid]
+    depths_out[gid] = (
+        depth_prefix_excl[gid] + block_offsets[bid] + depth_deltas[gid]
+    )
 
 
 # ===== Kernel 4: Adjust opening bracket depths =====
@@ -146,21 +174,47 @@ def adjust_open_depths_kernel(
         depths[gid] = depths[gid] - 1
 
 
-# ===== Helper: Compute hierarchical prefix sum =====
-def _compute_depth_prefix_sum(
+# ===== Helper: Shift per-block inclusive scan so it adds to a buffer =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
+def _shift_in_place_kernel(
+    values: UnsafePointer[Int32, MutAnyOrigin],
+    offsets: UnsafePointer[Int32, MutAnyOrigin],
+    n: UInt,
+):
+    """values[gid] += offsets[block_idx]."""
+    var bid = Int(block_idx.x)
+    var gid = bid * Int(block_dim.x) + Int(thread_idx.x)
+    if gid >= Int(n):
+        return
+    values[gid] = values[gid] + offsets[bid]
+
+
+# ===== Helper: Exclusive prefix sum over block totals (hierarchical) =====
+def _exclusive_scan_block_totals(
     ctx: DeviceContext,
-    d_block_totals_ptr: UnsafePointer[Int32, MutAnyOrigin],
-    d_block_prefix_ptr: UnsafePointer[Int32, MutAnyOrigin],
+    d_block_totals: UnsafePointer[Int32, MutAnyOrigin],
+    d_block_offsets: UnsafePointer[Int32, MutAnyOrigin],
     num_blocks: Int,
 ) raises:
-    """Recursively compute prefix sum of block totals."""
+    """Compute `d_block_offsets` = exclusive prefix of `d_block_totals`.
+
+    Uses `depth_prefix_sum_kernel` recursively, following the same pattern
+    as `stream_compact._compute_block_prefix_sums`.
+    """
     if num_blocks <= BLOCK_SIZE_OPT:
+        # Single-block case: one CTA can scan the entire block_totals array.
+        # The block's grand total is unused by callers; funnel it into a
+        # 1-element dummy buffer.
         var d_dummy = ctx.enqueue_create_buffer[DType.int32](1)
         d_dummy.enqueue_fill(0)
 
         ctx.enqueue_function_unchecked[depth_prefix_sum_kernel](
-            d_block_totals_ptr,
-            d_block_prefix_ptr,
+            d_block_totals,
+            d_block_offsets,
             d_dummy.unsafe_ptr(),
             UInt(num_blocks),
             grid_dim=1,
@@ -169,35 +223,36 @@ def _compute_depth_prefix_sum(
         return
 
     var num_blocks_l1 = ceildiv(num_blocks, BLOCK_SIZE_OPT)
+
     var d_block_totals_l1 = ctx.enqueue_create_buffer[DType.int32](
         num_blocks_l1
     )
     d_block_totals_l1.enqueue_fill(0)
 
     ctx.enqueue_function_unchecked[depth_prefix_sum_kernel](
-        d_block_totals_ptr,
-        d_block_prefix_ptr,
+        d_block_totals,
+        d_block_offsets,
         d_block_totals_l1.unsafe_ptr(),
         UInt(num_blocks),
         grid_dim=num_blocks_l1,
         block_dim=BLOCK_SIZE_OPT,
     )
 
-    var d_block_prefix_l1 = ctx.enqueue_create_buffer[DType.int32](
+    var d_block_offsets_l1 = ctx.enqueue_create_buffer[DType.int32](
         num_blocks_l1
     )
-    d_block_prefix_l1.enqueue_fill(0)
+    d_block_offsets_l1.enqueue_fill(0)
 
-    _compute_depth_prefix_sum(
+    _exclusive_scan_block_totals(
         ctx,
         d_block_totals_l1.unsafe_ptr(),
-        d_block_prefix_l1.unsafe_ptr(),
+        d_block_offsets_l1.unsafe_ptr(),
         num_blocks_l1,
     )
 
-    ctx.enqueue_function_unchecked[add_depth_offsets_kernel](
-        d_block_prefix_ptr,
-        d_block_prefix_l1.unsafe_ptr(),
+    ctx.enqueue_function_unchecked[_shift_in_place_kernel](
+        d_block_offsets,
+        d_block_offsets_l1.unsafe_ptr(),
         UInt(num_blocks),
         grid_dim=num_blocks_l1,
         block_dim=BLOCK_SIZE_OPT,
@@ -221,7 +276,7 @@ def match_brackets_gpu(
 
     var num_blocks = ceildiv(n, BLOCK_SIZE_OPT)
 
-    # Phase 1: Compute depth deltas
+    # Phase 1: Compute depth deltas (+1 for open, -1 for close, 0 otherwise).
     var d_depth_deltas = ctx.enqueue_create_buffer[DType.int32](n)
     d_depth_deltas.enqueue_fill(0)
 
@@ -233,23 +288,64 @@ def match_brackets_gpu(
         block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Phase 2: Inclusive prefix sum for depths — single dispatch (sequential kernel).
-    var d_depths = ctx.enqueue_create_buffer[DType.int32](n)
-    d_depths.enqueue_fill(0)
-
-    var d_block_totals = ctx.enqueue_create_buffer[DType.int32](1)
+    # Phase 2a: Per-CTA parallel exclusive scan of depth deltas via
+    # `block.prefix_sum`. Produces block-local exclusive prefixes and a
+    # grand-total per CTA.
+    var d_depth_excl = ctx.enqueue_create_buffer[DType.int32](n)
+    var d_block_totals = ctx.enqueue_create_buffer[DType.int32](num_blocks)
     d_block_totals.enqueue_fill(0)
 
     ctx.enqueue_function_unchecked[depth_prefix_sum_kernel](
         d_depth_deltas.unsafe_ptr(),
-        d_depths.unsafe_ptr(),
+        d_depth_excl.unsafe_ptr(),
         d_block_totals.unsafe_ptr(),
         UInt(n),
-        grid_dim=1,
-        block_dim=1,
+        grid_dim=num_blocks,
+        block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Phase 3: Adjust opening bracket depths
+    # Phase 2b: Hierarchical exclusive scan of the per-CTA totals, yielding
+    # a per-CTA global offset to add into every lane of the block-local
+    # exclusive prefix.
+    var d_depths = ctx.enqueue_create_buffer[DType.int32](n)
+    d_depths.enqueue_fill(0)
+
+    if num_blocks == 1:
+        # One CTA: block-local exclusive IS global exclusive; the delta
+        # step below turns it into a global inclusive scan.
+        ctx.enqueue_function_unchecked[add_depth_offsets_kernel](
+            d_depth_excl.unsafe_ptr(),
+            d_block_totals.unsafe_ptr(),  # unused but need a valid pointer
+            d_depth_deltas.unsafe_ptr(),
+            d_depths.unsafe_ptr(),
+            UInt(n),
+            grid_dim=num_blocks,
+            block_dim=BLOCK_SIZE_OPT,
+        )
+    else:
+        var d_block_offsets = ctx.enqueue_create_buffer[DType.int32](
+            num_blocks
+        )
+        d_block_offsets.enqueue_fill(0)
+
+        _exclusive_scan_block_totals(
+            ctx,
+            d_block_totals.unsafe_ptr(),
+            d_block_offsets.unsafe_ptr(),
+            num_blocks,
+        )
+
+        ctx.enqueue_function_unchecked[add_depth_offsets_kernel](
+            d_depth_excl.unsafe_ptr(),
+            d_block_offsets.unsafe_ptr(),
+            d_depth_deltas.unsafe_ptr(),
+            d_depths.unsafe_ptr(),
+            UInt(n),
+            grid_dim=num_blocks,
+            block_dim=BLOCK_SIZE_OPT,
+        )
+
+    # Phase 3: Adjust opening bracket depths so they match their close's.
     ctx.enqueue_function_unchecked[adjust_open_depths_kernel](
         d_char_types,
         d_depths.unsafe_ptr(),
