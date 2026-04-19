@@ -26,12 +26,21 @@ from std.gpu.host import DeviceContext
 
 
 def main() raises:
+    # Parse argv: one optional positional path + optional --debug-timing flag.
+    # Either order is accepted:
+    #   bench_gpu <path>
+    #   bench_gpu --debug-timing
+    #   bench_gpu --debug-timing <path>
+    #   bench_gpu <path> --debug-timing
     var args = argv()
-    var path: String
-    if len(args) > 1:
-        path = String(args[1])
-    else:
-        path = "benchmark/datasets/twitter.json"
+    var path: String = "benchmark/datasets/twitter.json"
+    var verbose = False
+    for i in range(1, len(args)):
+        var a = String(args[i])
+        if a == "--debug-timing":
+            verbose = True
+        else:
+            path = a
 
     print()
     print("=" * 72)
@@ -68,7 +77,7 @@ def main() raises:
         var input_obj = JSONInput(bytes^)
 
         var start = perf_counter_ns()
-        var result = parse_json_gpu(input_obj^)
+        var result = parse_json_gpu(input_obj^, verbose=verbose)
         var end = perf_counter_ns()
 
         var elapsed = end - start
@@ -94,7 +103,9 @@ def main() raises:
         memcpy(dest=h_input.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
 
         var start = perf_counter_ns()
-        var result = parse_json_gpu_from_pinned(ctx, h_input, n)
+        var result = parse_json_gpu_from_pinned(
+            ctx, h_input, n, verbose=verbose
+        )
         var end = perf_counter_ns()
 
         var elapsed = end - start

@@ -26,8 +26,16 @@ from .kernels import (
 from .stream_compact import extract_positions_gpu
 
 
-def parse_json_gpu(var input: JSONInput) raises -> JSONResult:
-    """GPU JSON parsing with parallel algorithms."""
+def parse_json_gpu(
+    var input: JSONInput, verbose: Bool = False
+) raises -> JSONResult:
+    """GPU JSON parsing with parallel algorithms.
+
+    Args:
+        input: Owned byte buffer with the JSON document.
+        verbose: If True, print per-phase timings to stdout. Useful for
+            profiling with `pixi run bench-gpu -- --debug-timing <file>`.
+    """
     var size = len(input.data)
 
     if size == 0:
@@ -38,32 +46,44 @@ def parse_json_gpu(var input: JSONInput) raises -> JSONResult:
 
     # Always use GPU (assume it's available)
     var ctx = DeviceContext()
-    return _parse_json_gpu_optimized(ctx, input^, size, total_padded_32)
+    return _parse_json_gpu_optimized(
+        ctx, input^, size, total_padded_32, verbose
+    )
 
 
 def parse_json_gpu_from_pinned(
     ctx: DeviceContext,
     h_input: HostBuffer[DType.uint8],
     size: Int,
+    verbose: Bool = False,
 ) raises -> JSONResult:
     """GPU JSON parsing from pre-loaded pinned memory (fastest path).
 
     This skips the memcpy to pinned memory, saving ~100ms for large files.
     Use this when you can read the file directly into pinned memory.
+
+    Args:
+        ctx: Device context (reused across calls).
+        h_input: Pinned host buffer with the JSON document already copied in.
+        size: Length of the document in bytes.
+        verbose: If True, print per-phase timings to stdout.
     """
     if size == 0:
         var result = JSONResult()
         return result^
 
     var total_padded_32 = (size + 31) // 32
-    return _parse_json_gpu_from_pinned_impl(ctx, h_input, size, total_padded_32)
-
-
-comptime DEBUG_TIMING: Bool = False
+    return _parse_json_gpu_from_pinned_impl(
+        ctx, h_input, size, total_padded_32, verbose
+    )
 
 
 def _parse_json_gpu_optimized(
-    ctx: DeviceContext, var input: JSONInput, size: Int, total_padded_32: Int
+    ctx: DeviceContext,
+    var input: JSONInput,
+    size: Int,
+    total_padded_32: Int,
+    verbose: Bool,
 ) raises -> JSONResult:
     """GPU-accelerated JSON parsing with fully parallel prefix sums."""
     var result = JSONResult()
@@ -82,20 +102,20 @@ def _parse_json_gpu_optimized(
     # Use pinned host buffer for faster transfer
     var h_input = ctx.enqueue_create_host_buffer[DType.uint8](size)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         ctx.synchronize()
         var t_alloc = perf_counter_ns()
         print("    Buffer alloc:", Float64(t_alloc - t0) / 1e6, "ms")
 
     memcpy(dest=h_input.unsafe_ptr(), src=input.data.unsafe_ptr(), count=size)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         var t_memcpy = perf_counter_ns()
         print("    memcpy:", Float64(t_memcpy - t0) / 1e6, "ms (cumulative)")
 
     ctx.enqueue_copy(d_input, h_input)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         ctx.synchronize()
         var t_h2d = perf_counter_ns()
         print("    H2D transfer:", Float64(t_h2d - t0) / 1e6, "ms (cumulative)")
@@ -222,7 +242,7 @@ def _parse_json_gpu_optimized(
     ctx.synchronize()
     var t1 = perf_counter_ns()
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         print("  H2D + GPU kernels:", Float64(t1 - t0) / 1e6, "ms")
 
     # ===== Phase 5: Extract positions from structural bitmap (GPU stream compaction) =====
@@ -239,7 +259,7 @@ def _parse_json_gpu_optimized(
     result.pair_pos = List[Int32](capacity=count)
     result.pair_pos.resize(count, -1)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         var t2 = perf_counter_ns()
         print("  Position extraction:", Float64(t2 - t1) / 1e6, "ms")
         print("  Structural count:", len(result.structural))
@@ -247,7 +267,7 @@ def _parse_json_gpu_optimized(
     # Match brackets on CPU using pre-computed char types
     _match_brackets_fast(result, char_types)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         var t4 = perf_counter_ns()
         print("  Bracket matching:", Float64(t4 - t1) / 1e6, "ms")
         print("  TOTAL GPU parse:", Float64(t4 - t0) / 1e6, "ms")
@@ -260,6 +280,7 @@ def _parse_json_gpu_from_pinned_impl(
     h_input: HostBuffer[DType.uint8],
     size: Int,
     total_padded_32: Int,
+    verbose: Bool,
 ) raises -> JSONResult:
     """GPU parsing from pre-loaded pinned memory - skips memcpy overhead."""
     var result = JSONResult()
@@ -275,7 +296,7 @@ def _parse_json_gpu_from_pinned_impl(
     var d_input = ctx.enqueue_create_buffer[DType.uint8](size)
     ctx.enqueue_copy(d_input, h_input)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         ctx.synchronize()
         var t_h2d = perf_counter_ns()
         print("    H2D (from pinned):", Float64(t_h2d - t0) / 1e6, "ms")
@@ -387,7 +408,7 @@ def _parse_json_gpu_from_pinned_impl(
     ctx.synchronize()
     var t1 = perf_counter_ns()
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         print("  H2D + GPU kernels:", Float64(t1 - t0) / 1e6, "ms")
 
     # Phase 5: Extract positions using GPU stream compaction
@@ -405,14 +426,14 @@ def _parse_json_gpu_from_pinned_impl(
     result.pair_pos = List[Int32](capacity=count)
     result.pair_pos.resize(count, -1)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         var t2 = perf_counter_ns()
         print("  Position extraction:", Float64(t2 - t1) / 1e6, "ms")
 
     # Match brackets on CPU
     _match_brackets_fast(result, char_types)
 
-    comptime if DEBUG_TIMING:
+    if verbose:
         var t4 = perf_counter_ns()
         print("  Bracket matching:", Float64(t4 - t1) / 1e6, "ms")
         print("  TOTAL GPU parse (from pinned):", Float64(t4 - t0) / 1e6, "ms")

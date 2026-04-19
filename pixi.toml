@@ -76,11 +76,12 @@ tests-gpu = "mojo -I . tests/test_gpu.mojo && mojo -I . examples/04_gpu_parsing.
 tests-e2e = "mojo -I . tests/test_e2e.mojo"
 tests-e2e-gpu = "MOJSON_TEST_GPU=1 mojo -I . tests/test_e2e.mojo"
 
-# Benchmarks - pass file path as argument, defaults to twitter.json
+# Benchmarks - pass file path and flags as arguments, path defaults to twitter.json
 # Usage: pixi run bench-cpu path/to/file.json
 #        pixi run bench-gpu path/to/file.json
+#        pixi run bench-gpu --debug-timing path/to/file.json
 bench-cpu = { cmd = "bash -c 'F=\"${1:-benchmark/datasets/twitter.json}\"; benchmark/build/bench_simdjson \"$F\" && echo && benchmark/build/bench_cpu \"$F\"' _", depends-on = ["build-bench-cpu", "build-bench-simdjson"] }
-bench-gpu = { cmd = "bash -c 'benchmark/build/bench_gpu \"${1:-benchmark/datasets/twitter.json}\"' _", depends-on = ["build-bench-gpu"] }
+bench-gpu = { cmd = "bash -c 'if [ \"$#\" -eq 0 ]; then benchmark/build/bench_gpu benchmark/datasets/twitter.json; else benchmark/build/bench_gpu \"$@\"; fi' _", depends-on = ["build-bench-gpu"] }
 
 # Run all GPU benchmarks (3 runs each, large datasets only)
 # Usage: pixi run bench-gpu-all
