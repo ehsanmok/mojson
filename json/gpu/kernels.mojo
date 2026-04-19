@@ -9,9 +9,11 @@
 # 5. Coalesced memory access patterns
 
 from std.gpu import thread_idx, block_idx, block_dim, barrier
+from std.gpu.globals import MAX_THREADS_PER_BLOCK_METADATA
 from std.gpu.host import DeviceContext
 from std.gpu.memory import AddressSpace
 from std.memory import UnsafePointer
+from std.utils.static_tuple import StaticTuple
 from ..types import (
     CHAR_OPEN_BRACE,
     CHAR_CLOSE_BRACE,
@@ -52,6 +54,11 @@ def prefix_xor_fast(value: UInt32) -> UInt32:
     return result
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def fused_json_kernel(
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
     output_structural: UnsafePointer[UInt32, MutAnyOrigin],
@@ -148,6 +155,11 @@ def fused_json_kernel(
     output_open_close[global_id] = structural_open_close
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def parallel_prefix_sum_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
@@ -173,6 +185,11 @@ def parallel_prefix_sum_kernel(
     output_prefix[global_id] = local_count
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def extract_positions_kernel(
     structural_bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     prefix_counts: UnsafePointer[UInt32, MutAnyOrigin],
@@ -212,6 +229,11 @@ def extract_positions_kernel(
         remaining = remaining & (remaining - 1)  # Clear lowest bit
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def structural_popcount_kernel(
     structural_bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     output_popcounts: UnsafePointer[UInt32, MutAnyOrigin],

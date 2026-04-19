@@ -8,9 +8,11 @@
 
 from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
+from std.gpu.globals import MAX_THREADS_PER_BLOCK_METADATA
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
+from std.utils.static_tuple import StaticTuple
 
 from .kernels import BLOCK_SIZE_OPT
 
@@ -45,6 +47,11 @@ def brackets_match(open_char: UInt8, close_char: UInt8) -> Bool:
 
 
 # ===== Kernel 1: Compute depth deltas =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def compute_depth_delta_kernel(
     char_types: UnsafePointer[UInt8, MutAnyOrigin],
     depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
@@ -67,6 +74,11 @@ def compute_depth_delta_kernel(
 
 
 # ===== Kernel 2: Block-level inclusive prefix sum for depths =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def depth_prefix_sum_kernel(
     depth_deltas: UnsafePointer[Int32, MutAnyOrigin],
     depths: UnsafePointer[Int32, MutAnyOrigin],
@@ -91,6 +103,11 @@ def depth_prefix_sum_kernel(
 
 
 # ===== Kernel 3: Add block offsets to depths =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def add_depth_offsets_kernel(
     depths: UnsafePointer[Int32, MutAnyOrigin],
     block_offsets: UnsafePointer[Int32, MutAnyOrigin],
@@ -108,6 +125,11 @@ def add_depth_offsets_kernel(
 
 
 # ===== Kernel 4: Adjust opening bracket depths =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def adjust_open_depths_kernel(
     char_types: UnsafePointer[UInt8, MutAnyOrigin],
     depths: UnsafePointer[Int32, MutAnyOrigin],

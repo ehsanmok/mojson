@@ -8,12 +8,14 @@
 
 from std.gpu.host import DeviceContext, DeviceBuffer, HostBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier, global_idx
+from std.gpu.globals import MAX_THREADS_PER_BLOCK_METADATA
 from std.gpu.primitives import block
 from std.gpu.memory import AddressSpace
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
 from std.time import perf_counter_ns
+from std.utils.static_tuple import StaticTuple
 
 from ..types import JSONInput, JSONResult
 from .kernels import (
@@ -444,6 +446,11 @@ def _parse_json_gpu_from_pinned_impl(
 # ===== GPU Kernels =====
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def _quote_popcount_kernel(
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
     output_quote: UnsafePointer[UInt32, MutAnyOrigin],
@@ -482,6 +489,11 @@ def _quote_popcount_kernel(
     output_popcount[gid] = popcount_fast(real_quotes)
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def _block_prefix_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
@@ -515,6 +527,11 @@ def _block_prefix_kernel(
         block_sums[bid] = prefix + val
 
 
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def _add_block_offset_kernel(
     data: UnsafePointer[UInt32, MutAnyOrigin],
     block_offsets: UnsafePointer[UInt32, MutAnyOrigin],

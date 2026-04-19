@@ -10,15 +10,22 @@
 
 from std.gpu.host import DeviceContext, DeviceBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
+from std.gpu.globals import MAX_THREADS_PER_BLOCK_METADATA
 from std.gpu.primitives import block
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
+from std.utils.static_tuple import StaticTuple
 
 from .kernels import popcount_fast, BLOCK_SIZE_OPT
 
 
 # ===== Kernel 1: Popcount each bitmap word =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def popcount_kernel(
     bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     popcounts: UnsafePointer[UInt32, MutAnyOrigin],
@@ -32,6 +39,11 @@ def popcount_kernel(
 
 
 # ===== Kernel 2: Parallel block-local exclusive prefix sum =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def prefix_sum_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
@@ -70,6 +82,11 @@ def prefix_sum_kernel(
 
 
 # ===== Kernel 3: Add block offsets to prefix sums =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def add_block_offsets_kernel(
     prefix_sums: UnsafePointer[UInt32, MutAnyOrigin],
     block_offsets: UnsafePointer[UInt32, MutAnyOrigin],
@@ -97,6 +114,11 @@ comptime CHAR_TYPE_OTHER: UInt8 = 0  # : or ,
 
 
 # ===== Kernel 4: Scatter positions AND char types using bitmap and prefix offsets =====
+@__llvm_metadata(
+    MAX_THREADS_PER_BLOCK_METADATA=StaticTuple[Int32, 1](
+        Int32(Int(BLOCK_SIZE_OPT))
+    )
+)
 def scatter_positions_kernel(
     bitmap: UnsafePointer[UInt32, MutAnyOrigin],
     input_data: UnsafePointer[UInt8, MutAnyOrigin],
