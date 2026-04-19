@@ -19,8 +19,7 @@ from std.memory import memcpy
 from std.collections import List
 
 from json import loads
-from json.gpu import parse_json_gpu, parse_json_gpu_from_pinned
-from json.types import JSONInput
+from json.gpu import parse_json_gpu_from_pinned
 from std.gpu.host import DeviceContext
 
 
@@ -87,26 +86,32 @@ def main() raises:
     measures.append(ThroughputMeasure(BenchMetric.bytes, size))
 
     # -----------------------------------------------------------------
-    # 1. Raw: new JSONInput buffer + CPU memcpy + H2D + GPU kernels + CPU
-    # post-processing, wall-clock (matches `parse_json_gpu` public API).
+    # 1. From host bytes: host->pinned memcpy + GPU kernels + CPU post,
+    # wall-clock. Models a steady-state "I have N bytes in memory, parse
+    # them via GPU" workload, reusing the already-allocated pinned buffer
+    # and DeviceContext across iterations (both are expected to be
+    # long-lived in real applications). Equivalent to the "raw" path in
+    # earlier bench versions, minus the per-iteration DeviceContext and
+    # pinned-buffer allocation overhead that the old bench accidentally
+    # included inside its timed region.
     # -----------------------------------------------------------------
     @parameter
     @always_inline
-    def bench_raw(mut b: Bencher) raises capturing:
+    def bench_from_host(mut b: Bencher) raises capturing:
         @parameter
         @always_inline
         def call_fn() raises:
-            var bytes = List[UInt8](capacity=n)
-            bytes.resize(n, 0)
-            memcpy(dest=bytes.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
-            var input_obj = JSONInput(bytes^)
-            var result = parse_json_gpu(input_obj^, verbose=verbose)
+            memcpy(dest=h_input.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
+            var result = parse_json_gpu_from_pinned(
+                ctx, h_input, n, verbose=verbose
+            )
             _ = len(result.structural)
 
         b.iter[call_fn]()
 
-    bench.bench_function[bench_raw](
-        BenchId("json_gpu", "parse_json_gpu (raw, wall-clock)"), measures
+    bench.bench_function[bench_from_host](
+        BenchId("json_gpu", "from host bytes: memcpy + parse (wall-clock)"),
+        measures,
     )
 
     # -----------------------------------------------------------------
