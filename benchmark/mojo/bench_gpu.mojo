@@ -2,7 +2,7 @@
 # Uses cuJSON dataset: https://github.com/AutomataLab/cuJSON
 #
 # Usage:
-#   mojo -I . benchmark/mojo/bench_gpu.mojo [json_file]
+#   mojo -I . benchmark/mojo/bench_gpu.mojo [json_file] [--debug-timing]
 
 from std.benchmark import (
     Bench,
@@ -15,7 +15,6 @@ from std.benchmark import (
 )
 from std.pathlib import Path
 from std.sys import argv
-from std.time import perf_counter_ns
 from std.memory import memcpy
 from std.collections import List
 
@@ -64,68 +63,19 @@ def main() raises:
         _ = result.is_object()
     print()
 
-    # ===== Raw GPU Parser Timing (manual for precision) =====
-    print("=== Raw GPU Parser Timing ===")
     var data = content.as_bytes()
     var n = len(data)
 
-    var raw_min_time: UInt = 0xFFFFFFFFFFFFFFFF
-    for _ in range(3):
-        var bytes = List[UInt8](capacity=n)
-        bytes.resize(n, 0)
-        memcpy(dest=bytes.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
-        var input_obj = JSONInput(bytes^)
-
-        var start = perf_counter_ns()
-        var result = parse_json_gpu(input_obj^, verbose=verbose)
-        var end = perf_counter_ns()
-
-        var elapsed = end - start
-        if elapsed < raw_min_time:
-            raw_min_time = elapsed
-
-        _ = len(result.structural)
-
-    var raw_ms = Float64(raw_min_time) / 1_000_000.0
-    var raw_throughput = Float64(size) / Float64(raw_min_time) * 1e9 / 1e9
-    print("Raw GPU parse time (ms):", raw_ms)
-    print("Raw GPU throughput (GB/s):", raw_throughput)
-    print()
-
-    # ===== Pinned Memory Path (manual for precision) =====
-    print("=== Pinned Memory Path (Skip memcpy) ===")
+    # Long-lived context + pinned buffer reused across every iteration of
+    # every benchmark below. The pinned allocation itself is slow (~100 ms
+    # on a B200) so doing it once outside the Bencher is important.
     var ctx = DeviceContext()
-    # Allocate pinned buffer ONCE outside the loop (pinned alloc is slow)
     var h_input = ctx.enqueue_create_host_buffer[DType.uint8](n)
-    var pinned_min_time: UInt = 0xFFFFFFFFFFFFFFFF
-    for _ in range(3):
-        # Only memcpy each iteration, reuse the pinned buffer
-        memcpy(dest=h_input.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
+    memcpy(dest=h_input.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
+    ctx.synchronize()
 
-        var start = perf_counter_ns()
-        var result = parse_json_gpu_from_pinned(
-            ctx, h_input, n, verbose=verbose
-        )
-        var end = perf_counter_ns()
-
-        var elapsed = end - start
-        if elapsed < pinned_min_time:
-            pinned_min_time = elapsed
-
-        _ = len(result.structural)
-
-    var pinned_ms = Float64(pinned_min_time) / 1_000_000.0
-    var pinned_throughput = Float64(size) / Float64(pinned_min_time) * 1e9 / 1e9
-    print("Pinned memory parse time (ms):", pinned_ms)
-    print("Pinned memory throughput (GB/s):", pinned_throughput)
-    print("Speedup vs raw:", raw_ms / pinned_ms, "x")
-    print()
-
-    # ===== Full loads[target='gpu'] Benchmark using official API =====
-    print("=== Full loads[target='gpu'] Benchmark ===")
-    print()
-
-    # Configure based on file size
+    # Configure max_iters based on file size so the large-file runs finish
+    # in a reasonable wall time.
     var max_iters = 100
     if size_mb > 100:
         max_iters = 10
@@ -133,7 +83,83 @@ def main() raises:
         max_iters = 20
 
     var bench = Bench(BenchConfig(max_iters=max_iters))
+    var measures = List[ThroughputMeasure]()
+    measures.append(ThroughputMeasure(BenchMetric.bytes, size))
 
+    # -----------------------------------------------------------------
+    # 1. Raw: new JSONInput buffer + CPU memcpy + H2D + GPU kernels + CPU
+    # post-processing, wall-clock (matches `parse_json_gpu` public API).
+    # -----------------------------------------------------------------
+    @parameter
+    @always_inline
+    def bench_raw(mut b: Bencher) raises capturing:
+        @parameter
+        @always_inline
+        def call_fn() raises:
+            var bytes = List[UInt8](capacity=n)
+            bytes.resize(n, 0)
+            memcpy(dest=bytes.unsafe_ptr(), src=data.unsafe_ptr(), count=n)
+            var input_obj = JSONInput(bytes^)
+            var result = parse_json_gpu(input_obj^, verbose=verbose)
+            _ = len(result.structural)
+
+        b.iter[call_fn]()
+
+    bench.bench_function[bench_raw](
+        BenchId("json_gpu", "parse_json_gpu (raw, wall-clock)"), measures
+    )
+
+    # -----------------------------------------------------------------
+    # 2. Pinned: reuses the already-loaded pinned buffer so we skip the
+    # host-side memcpy, wall-clock (matches `parse_json_gpu_from_pinned`).
+    # -----------------------------------------------------------------
+    @parameter
+    @always_inline
+    def bench_pinned(mut b: Bencher) raises capturing:
+        @parameter
+        @always_inline
+        def call_fn() raises:
+            var result = parse_json_gpu_from_pinned(
+                ctx, h_input, n, verbose=verbose
+            )
+            _ = len(result.structural)
+
+        b.iter[call_fn]()
+
+    bench.bench_function[bench_pinned](
+        BenchId(
+            "json_gpu", "parse_json_gpu_from_pinned (pinned, wall-clock)"
+        ),
+        measures,
+    )
+
+    # -----------------------------------------------------------------
+    # 3. Pinned, device-only: same call wrapped in iter_custom so the
+    # Bencher uses DeviceContext.execution_time (CUDA events) instead of
+    # host wall-clock. Separates pure GPU queue time from the CPU post-
+    # processing (bracket matching, Value construction inside the call).
+    # -----------------------------------------------------------------
+    @parameter
+    @always_inline
+    def bench_pinned_device(mut b: Bencher) raises capturing:
+        @parameter
+        @always_inline
+        def launch(launch_ctx: DeviceContext) raises:
+            var result = parse_json_gpu_from_pinned(
+                launch_ctx, h_input, n, verbose=verbose
+            )
+            _ = len(result.structural)
+
+        b.iter_custom[launch](ctx)
+
+    bench.bench_function[bench_pinned_device](
+        BenchId("json_gpu", "parse_json_gpu_from_pinned (device-only)"),
+        measures,
+    )
+
+    # -----------------------------------------------------------------
+    # 4. Full public loads[target="gpu"] path (includes Value tree build).
+    # -----------------------------------------------------------------
     @parameter
     @always_inline
     def bench_gpu_loads(mut b: Bencher) raises capturing:
@@ -145,8 +171,6 @@ def main() raises:
 
         b.iter[call_fn]()
 
-    var measures = List[ThroughputMeasure]()
-    measures.append(ThroughputMeasure(BenchMetric.bytes, size))
     bench.bench_function[bench_gpu_loads](
         BenchId("json_gpu", "loads[target='gpu']"), measures
     )
