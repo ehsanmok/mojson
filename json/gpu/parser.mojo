@@ -483,18 +483,20 @@ def _quote_popcount_kernel(
     var quote_bits: UInt32 = 0
     var slash_bits: UInt32 = 0
 
-    for j in range(32):
+    # Unrolled 32-byte scan. Mirrors the unrolling already used in
+    # fused_json_kernel: letting the compiler unroll the 32-element loop
+    # dramatically improves instruction-level parallelism on NVIDIA/AMD
+    # (bit-masks become constant offsets, no loop counter, no branch).
+    # The branchless OR makes the trailing out-of-bounds iterations no-ops
+    # without needing a data-dependent break.
+    comptime for j in range(32):
         var pos = start_pos + j
-        if pos >= Int(size):
-            break
+        var in_bounds = UInt32(pos < Int(size))
+        var c = input_data[pos] if pos < Int(size) else UInt8(0)
+        var bit_mask = (UInt32(1) << UInt32(j)) * in_bounds
 
-        var c = input_data[pos]
-        var bit_mask = UInt32(1) << UInt32(j)
-
-        if c == 0x22:  # quote
-            quote_bits |= bit_mask
-        if c == 0x5C:  # backslash
-            slash_bits |= bit_mask
+        quote_bits |= bit_mask * UInt32(c == 0x22)  # "
+        slash_bits |= bit_mask * UInt32(c == 0x5C)  # \\
 
     # Simple escape detection
     var escaped = quote_bits & (slash_bits << 1)
