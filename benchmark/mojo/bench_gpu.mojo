@@ -132,9 +132,7 @@ def main() raises:
         b.iter[call_fn]()
 
     bench.bench_function[bench_pinned](
-        BenchId(
-            "json_gpu", "parse_json_gpu_from_pinned (pinned, wall-clock)"
-        ),
+        BenchId("json_gpu", "parse_json_gpu_from_pinned (pinned, wall-clock)"),
         measures,
     )
 

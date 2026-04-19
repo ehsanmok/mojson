@@ -327,9 +327,7 @@ def extract_positions_gpu(
         ctx.synchronize()
         total_count = Int(h_block_totals.unsafe_ptr()[0])
     else:
-        var d_block_prefix = ctx.enqueue_create_buffer[DType.uint32](
-            num_blocks
-        )
+        var d_block_prefix = ctx.enqueue_create_buffer[DType.uint32](num_blocks)
         d_block_prefix.enqueue_fill(0)
 
         _compute_block_prefix_sums(

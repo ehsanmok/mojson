@@ -104,9 +104,9 @@ def depth_prefix_sum_kernel(
     if gid < Int(n):
         val = depth_deltas[gid]
 
-    var prefix = block.prefix_sum[
-        exclusive=True, block_size=BLOCK_SIZE_OPT
-    ](val)
+    var prefix = block.prefix_sum[exclusive=True, block_size=BLOCK_SIZE_OPT](
+        val
+    )
 
     if gid < Int(n):
         depth_prefix[gid] = prefix
@@ -323,9 +323,7 @@ def match_brackets_gpu(
             block_dim=BLOCK_SIZE_OPT,
         )
     else:
-        var d_block_offsets = ctx.enqueue_create_buffer[DType.int32](
-            num_blocks
-        )
+        var d_block_offsets = ctx.enqueue_create_buffer[DType.int32](num_blocks)
         d_block_offsets.enqueue_fill(0)
 
         _exclusive_scan_block_totals(
