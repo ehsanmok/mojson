@@ -10,6 +10,7 @@
 
 from std.gpu.host import DeviceContext, DeviceBuffer
 from std.gpu import block_dim, block_idx, thread_idx, barrier
+from std.gpu.primitives import block
 from std.collections import List
 from std.memory import UnsafePointer, memcpy
 from std.math import ceildiv
@@ -30,27 +31,42 @@ def popcount_kernel(
     popcounts[gid] = popcount_fast(bitmap[gid])
 
 
-# ===== Kernel 2: Sequential exclusive prefix sum (Metal + CUDA compatible) =====
+# ===== Kernel 2: Parallel block-local exclusive prefix sum =====
 def prefix_sum_kernel(
     input_data: UnsafePointer[UInt32, MutAnyOrigin],
     output_prefix: UnsafePointer[UInt32, MutAnyOrigin],
     block_totals: UnsafePointer[UInt32, MutAnyOrigin],
     num_elements: UInt,
 ):
-    """Compute exclusive prefix sum, thread-0 sequential (works on Metal + CUDA).
+    """Compute a per-block exclusive prefix sum using `block.prefix_sum`.
 
-    Avoids warp-shuffle intrinsics (block.prefix_sum) that the Metal backend
-    does not support. For typical JSON bitmaps (<64K words) this is fast.
+    Each block scans `BLOCK_SIZE_OPT` elements in parallel and stores its
+    grand total into `block_totals[block_id]`. Callers must launch this with
+    `block_dim=BLOCK_SIZE_OPT` and a grid large enough to cover `num_elements`;
+    the hierarchical helper `_compute_block_prefix_sums` then aggregates block
+    totals across levels.
     """
-    if Int(thread_idx.x) != 0 or Int(block_idx.x) != 0:
-        return
+    var tid = Int(thread_idx.x)
+    var bid = Int(block_idx.x)
+    var gid = bid * Int(block_dim.x) + tid
 
-    var running_sum: UInt32 = 0
-    for i in range(Int(num_elements)):
-        output_prefix[i] = running_sum
-        running_sum += input_data[i]
+    var val: UInt32 = 0
+    if gid < Int(num_elements):
+        val = input_data[gid]
 
-    block_totals[0] = running_sum
+    var prefix = block.prefix_sum[exclusive=True, block_size=BLOCK_SIZE_OPT](
+        val
+    )
+
+    if gid < Int(num_elements):
+        output_prefix[gid] = prefix
+
+    # Last active thread in this block writes the block total.
+    var block_end = min((bid + 1) * Int(block_dim.x), Int(num_elements))
+    var last_in_block = block_end - 1 - bid * Int(block_dim.x)
+
+    if tid == last_in_block:
+        block_totals[bid] = prefix + val
 
 
 # ===== Kernel 3: Add block offsets to prefix sums =====
@@ -256,30 +272,73 @@ def extract_positions_gpu(
         block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Phase 2: Prefix sum of popcounts.
-    # Uses a sequential single-thread kernel (Metal + CUDA compatible).
-    # block_totals[0] receives the grand total after the scan.
+    # Phase 2: Parallel hierarchical exclusive prefix sum of popcounts.
+    #
+    # Step 2a: Launch one block per `BLOCK_SIZE_OPT` words and compute a
+    # block-local exclusive scan using `block.prefix_sum`. Each block writes
+    # its running total to `d_block_totals[block_id]`.
     var d_prefix = ctx.enqueue_create_buffer[DType.uint32](num_words)
-    var d_block_totals = ctx.enqueue_create_buffer[DType.uint32](1)
+    var d_block_totals = ctx.enqueue_create_buffer[DType.uint32](num_blocks)
     d_block_totals.enqueue_fill(0)
-    d_prefix.enqueue_fill(0)
 
     ctx.enqueue_function_unchecked[prefix_sum_kernel](
         d_popcounts.unsafe_ptr(),
         d_prefix.unsafe_ptr(),
         d_block_totals.unsafe_ptr(),
         UInt(num_words),
-        grid_dim=1,
-        block_dim=1,
+        grid_dim=num_blocks,
+        block_dim=BLOCK_SIZE_OPT,
     )
 
-    # Read total count (grand total stored in block_totals[0])
-    ctx.synchronize()
-    var h_total = ctx.enqueue_create_host_buffer[DType.uint32](1)
-    ctx.enqueue_copy(h_total, d_block_totals)
-    ctx.synchronize()
+    # Step 2b: If there is more than one block, build global offsets by
+    # exclusive-scanning the block totals (recursively, to support any size)
+    # and add the per-block offset into every element of `d_prefix`.
+    var total_count: Int
+    if num_blocks == 1:
+        # Single block already holds a full exclusive scan in `d_prefix`; the
+        # block's running total is the grand total.
+        ctx.synchronize()
+        var h_block_totals = ctx.enqueue_create_host_buffer[DType.uint32](
+            num_blocks
+        )
+        ctx.enqueue_copy(h_block_totals, d_block_totals)
+        ctx.synchronize()
+        total_count = Int(h_block_totals.unsafe_ptr()[0])
+    else:
+        var d_block_prefix = ctx.enqueue_create_buffer[DType.uint32](
+            num_blocks
+        )
+        d_block_prefix.enqueue_fill(0)
 
-    var total_count = Int(h_total.unsafe_ptr()[])
+        _compute_block_prefix_sums(
+            ctx,
+            d_block_totals.unsafe_ptr(),
+            d_block_prefix.unsafe_ptr(),
+            num_blocks,
+        )
+
+        ctx.enqueue_function_unchecked[add_block_offsets_kernel](
+            d_prefix.unsafe_ptr(),
+            d_block_prefix.unsafe_ptr(),
+            UInt(num_words),
+            grid_dim=num_blocks,
+            block_dim=BLOCK_SIZE_OPT,
+        )
+
+        # Grand total = last block's exclusive offset + last block's total.
+        ctx.synchronize()
+        var h_block_totals = ctx.enqueue_create_host_buffer[DType.uint32](
+            num_blocks
+        )
+        var h_block_prefix = ctx.enqueue_create_host_buffer[DType.uint32](
+            num_blocks
+        )
+        ctx.enqueue_copy(h_block_totals, d_block_totals)
+        ctx.enqueue_copy(h_block_prefix, d_block_prefix)
+        ctx.synchronize()
+        total_count = Int(h_block_prefix.unsafe_ptr()[num_blocks - 1]) + Int(
+            h_block_totals.unsafe_ptr()[num_blocks - 1]
+        )
 
     if total_count == 0:
         return (List[Int32](), List[UInt8](), 0)
