@@ -183,9 +183,9 @@ def serialize_value[T: AnyType](value: T) raises -> Value:
 # ===================================================================
 
 
-def deserialize_json[T: _JsonStruct, target: StaticString = "cpu"](
-    json_str: String,
-) raises -> T:
+def deserialize_json[
+    T: _JsonStruct, target: StaticString = "cpu"
+](json_str: String,) raises -> T:
     """Deserialize a JSON string into a struct via compile-time reflection.
 
     Uses ``out``-parameter initialization so the struct does **not** need
@@ -223,8 +223,7 @@ def deserialize_value[T: _JsonStruct](json: Value) raises -> T:
     Returns:
         A populated struct.
     """
-    comptime
-    if conforms_to(T, JsonDeserializable):
+    comptime if conforms_to(T, JsonDeserializable):
         return downcast[T, JsonDeserializable].from_json_value(json)
     else:
         if not json.is_object():
@@ -237,9 +236,9 @@ def deserialize_value[T: _JsonStruct](json: Value) raises -> T:
         return result^
 
 
-def try_deserialize_json[T: _JsonStruct, target: StaticString = "cpu"](
-    json_str: String,
-) -> Optional[T]:
+def try_deserialize_json[
+    T: _JsonStruct, target: StaticString = "cpu"
+](json_str: String,) -> Optional[T]:
     """Non-raising variant of ``deserialize_json``.
 
     Parameters:
@@ -267,8 +266,7 @@ def _ser[T: AnyType](value: T) raises -> String:
     """Dispatch serialization by compile-time type."""
     comptime tname = get_type_name[T]()
 
-    comptime
-    if tname == _STRING_NAME:
+    comptime if tname == _STRING_NAME:
         return _escape_string(rebind[String](value))
     elif tname == _INT_NAME:
         return String(rebind[Int](value))
@@ -299,8 +297,7 @@ def _ser[T: AnyType](value: T) raises -> String:
     elif tname == _LIST_BOOL_NAME:
         return _ser_list_bool(rebind[List[Bool]](value))
     elif is_struct_type[T]():
-        comptime
-        if conforms_to(T, JsonSerializable):
+        comptime if conforms_to(T, JsonSerializable):
             ref custom = trait_downcast[JsonSerializable](value)
             var val = custom.to_json_value()
             return _ser_value(val)
@@ -322,8 +319,7 @@ def _ser_struct[T: AnyType](value: T) raises -> String:
     var out = String("{")
     var first = True
 
-    comptime
-    for idx in range(field_count):
+    comptime for idx in range(field_count):
         if not first:
             out += ","
         first = False
@@ -342,6 +338,7 @@ def _ser_struct[T: AnyType](value: T) raises -> String:
 
 # --- Value pass-through ---
 
+
 def _ser_value(v: Value) -> String:
     if v.is_string():
         return _escape_string(v.string_value())
@@ -359,6 +356,7 @@ def _ser_value(v: Value) -> String:
 
 
 # --- Optional helpers ---
+
 
 def _ser_opt_int(opt: Optional[Int]) -> String:
     if opt:
@@ -385,6 +383,7 @@ def _ser_opt_bool(opt: Optional[Bool]) -> String:
 
 
 # --- List helpers ---
+
 
 def _ser_list_int(lst: List[Int]) -> String:
     var out = String("[")
@@ -442,8 +441,7 @@ def _deser_fill[T: AnyType](mut result: T, json: Value) raises:
     comptime field_names = struct_field_names[T]()
     comptime field_types = struct_field_types[T]()
 
-    comptime
-    for idx in range(field_count):
+    comptime for idx in range(field_count):
         comptime field_name = field_names[idx]
         comptime field_type = field_types[idx]
         comptime field_type_name = get_type_name[field_type]()
@@ -452,8 +450,7 @@ def _deser_fill[T: AnyType](mut result: T, json: Value) raises:
         ref field = trait_downcast[_Base](__struct_field_ref(idx, result))
         var ptr = UnsafePointer(to=field)
 
-        comptime
-        if field_type_name == _STRING_NAME:
+        comptime if field_type_name == _STRING_NAME:
             ptr.destroy_pointee()
             ptr.bitcast[String]().init_pointee_move(get_string(json, key))
         elif field_type_name == _INT_NAME:
@@ -555,9 +552,7 @@ def _deser_opt_string(json: Value, key: String) raises -> Optional[String]:
     return get_string(json, key)
 
 
-def _deser_opt_float64(
-    json: Value, key: String
-) raises -> Optional[Float64]:
+def _deser_opt_float64(json: Value, key: String) raises -> Optional[Float64]:
     if not _has_key(json, key) or _is_null_field(json, key):
         return None
     return get_float(json, key)
@@ -582,7 +577,11 @@ def _deser_list_int(json: Value, key: String) raises -> List[Int]:
     for i in range(len(items)):
         if not items[i].is_int():
             raise Error(
-                "Element " + String(i) + " of '" + key + "' expected int, got "
+                "Element "
+                + String(i)
+                + " of '"
+                + key
+                + "' expected int, got "
                 + _type_label(items[i])
             )
         result.append(Int(items[i].int_value()))
@@ -599,16 +598,18 @@ def _deser_list_string(json: Value, key: String) raises -> List[String]:
     for i in range(len(items)):
         if not items[i].is_string():
             raise Error(
-                "Element " + String(i) + " of '" + key + "' expected string, got "
+                "Element "
+                + String(i)
+                + " of '"
+                + key
+                + "' expected string, got "
                 + _type_label(items[i])
             )
         result.append(items[i].string_value())
     return result^
 
 
-def _deser_list_float64(
-    json: Value, key: String
-) raises -> List[Float64]:
+def _deser_list_float64(json: Value, key: String) raises -> List[Float64]:
     var raw = json.get(key)
     var arr = loads(raw)
     if not arr.is_array():
@@ -622,7 +623,11 @@ def _deser_list_float64(
             result.append(Float64(items[i].int_value()))
         else:
             raise Error(
-                "Element " + String(i) + " of '" + key + "' expected number, got "
+                "Element "
+                + String(i)
+                + " of '"
+                + key
+                + "' expected number, got "
                 + _type_label(items[i])
             )
     return result^
@@ -638,7 +643,11 @@ def _deser_list_bool(json: Value, key: String) raises -> List[Bool]:
     for i in range(len(items)):
         if not items[i].is_bool():
             raise Error(
-                "Element " + String(i) + " of '" + key + "' expected bool, got "
+                "Element "
+                + String(i)
+                + " of '"
+                + key
+                + "' expected bool, got "
                 + _type_label(items[i])
             )
         result.append(items[i].bool_value())
@@ -692,5 +701,10 @@ def _type_label(v: Value) -> String:
 def _field_type_error(field: String, expected: String, got: Value) -> Error:
     """Build a descriptive error for a type mismatch on a field."""
     return Error(
-        "Field '" + field + "' expected " + expected + ", got " + _type_label(got)
+        "Field '"
+        + field
+        + "' expected "
+        + expected
+        + ", got "
+        + _type_label(got)
     )
