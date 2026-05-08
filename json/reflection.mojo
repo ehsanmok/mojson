@@ -34,14 +34,6 @@ Deserialization requires Defaultable and Movable:
     var p = deserialize_json[Point]('{"x":1,"y":2}')
 """
 
-from std.reflection import (
-    struct_field_count,
-    struct_field_names,
-    struct_field_types,
-    get_type_name,
-    get_base_type_name,
-    is_struct_type,
-)
 from std.builtin.rebind import trait_downcast, downcast
 from std.collections import Optional, List
 
@@ -54,26 +46,26 @@ from .deserialize import get_string, get_int, get_bool, get_float
 # Compile-time type name constants
 # ---------------------------------------------------------------------------
 
-comptime _INT_NAME = get_type_name[Int]()
-comptime _INT64_NAME = get_type_name[Int64]()
-comptime _BOOL_NAME = get_type_name[Bool]()
-comptime _STRING_NAME = get_type_name[String]()
-comptime _FLOAT64_NAME = get_type_name[Float64]()
-comptime _FLOAT32_NAME = get_type_name[Float32]()
-comptime _VALUE_NAME = get_type_name[Value]()
+comptime _INT_NAME = reflect[Int]().name()
+comptime _INT64_NAME = reflect[Int64]().name()
+comptime _BOOL_NAME = reflect[Bool]().name()
+comptime _STRING_NAME = reflect[String]().name()
+comptime _FLOAT64_NAME = reflect[Float64]().name()
+comptime _FLOAT32_NAME = reflect[Float32]().name()
+comptime _VALUE_NAME = reflect[Value]().name()
 
-comptime _OPT_INT_NAME = get_type_name[Optional[Int]]()
-comptime _OPT_STRING_NAME = get_type_name[Optional[String]]()
-comptime _OPT_FLOAT64_NAME = get_type_name[Optional[Float64]]()
-comptime _OPT_BOOL_NAME = get_type_name[Optional[Bool]]()
+comptime _OPT_INT_NAME = reflect[Optional[Int]]().name()
+comptime _OPT_STRING_NAME = reflect[Optional[String]]().name()
+comptime _OPT_FLOAT64_NAME = reflect[Optional[Float64]]().name()
+comptime _OPT_BOOL_NAME = reflect[Optional[Bool]]().name()
 
-comptime _LIST_INT_NAME = get_type_name[List[Int]]()
-comptime _LIST_STRING_NAME = get_type_name[List[String]]()
-comptime _LIST_FLOAT64_NAME = get_type_name[List[Float64]]()
-comptime _LIST_BOOL_NAME = get_type_name[List[Bool]]()
+comptime _LIST_INT_NAME = reflect[List[Int]]().name()
+comptime _LIST_STRING_NAME = reflect[List[String]]().name()
+comptime _LIST_FLOAT64_NAME = reflect[List[Float64]]().name()
+comptime _LIST_BOOL_NAME = reflect[List[Bool]]().name()
 
 comptime _Base = ImplicitlyDestructible & Movable
-comptime _JsonStruct = Defaultable & Movable
+comptime _JsonStruct = Defaultable & Movable & ImplicitlyDestructible
 
 
 # ===================================================================
@@ -264,7 +256,7 @@ def try_deserialize_json[
 
 def _ser[T: AnyType](value: T) raises -> String:
     """Dispatch serialization by compile-time type."""
-    comptime tname = get_type_name[T]()
+    comptime tname = reflect[T]().name()
 
     comptime if tname == _STRING_NAME:
         return _escape_string(rebind[String](value))
@@ -296,7 +288,7 @@ def _ser[T: AnyType](value: T) raises -> String:
         return _ser_list_float64(rebind[List[Float64]](value))
     elif tname == _LIST_BOOL_NAME:
         return _ser_list_bool(rebind[List[Bool]](value))
-    elif is_struct_type[T]():
+    elif reflect[T]().is_struct():
         comptime if conforms_to(T, JsonSerializable):
             ref custom = trait_downcast[JsonSerializable](value)
             var val = custom.to_json_value()
@@ -309,9 +301,9 @@ def _ser[T: AnyType](value: T) raises -> String:
 
 def _ser_struct[T: AnyType](value: T) raises -> String:
     """Serialize a struct as ``{"field":value, ...}``."""
-    comptime field_count = struct_field_count[T]()
-    comptime field_names = struct_field_names[T]()
-    comptime field_types = struct_field_types[T]()
+    comptime field_count = reflect[T]().field_count()
+    comptime field_names = reflect[T]().field_names()
+    comptime field_types = reflect[T]().field_types()
 
     if field_count == 0:
         return "{}"
@@ -329,7 +321,7 @@ def _ser_struct[T: AnyType](value: T) raises -> String:
 
         out += '"' + String(field_name) + '":'
 
-        ref field = __struct_field_ref(idx, value)
+        ref field = reflect[T]().field_ref[idx](value)
         out += _ser[field_type](rebind[field_type](field))
 
     out += "}"
@@ -437,17 +429,17 @@ def _deser_fill[T: AnyType](mut result: T, json: Value) raises:
     values into reflected struct fields. The struct must already be
     default-initialized; old field values are destroyed before writing.
     """
-    comptime field_count = struct_field_count[T]()
-    comptime field_names = struct_field_names[T]()
-    comptime field_types = struct_field_types[T]()
+    comptime field_count = reflect[T]().field_count()
+    comptime field_names = reflect[T]().field_names()
+    comptime field_types = reflect[T]().field_types()
 
     comptime for idx in range(field_count):
         comptime field_name = field_names[idx]
         comptime field_type = field_types[idx]
-        comptime field_type_name = get_type_name[field_type]()
+        comptime field_type_name = reflect[field_type]().name()
         var key = String(field_name)
 
-        ref field = trait_downcast[_Base](__struct_field_ref(idx, result))
+        ref field = trait_downcast[_Base](reflect[T]().field_ref[idx](result))
         var ptr = UnsafePointer(to=field)
 
         comptime if field_type_name == _STRING_NAME:
@@ -522,7 +514,7 @@ def _deser_fill[T: AnyType](mut result: T, json: Value) raises:
                 _deser_list_bool(json, key)
             )
         # ----- Nested struct (fill existing default in-place) -----
-        elif is_struct_type[field_type]():
+        elif reflect[field_type]().is_struct():
             var raw = json.get(key)
             var sub_json = loads(raw)
             if not sub_json.is_object():
